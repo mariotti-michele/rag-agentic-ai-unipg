@@ -48,27 +48,36 @@ def to_documents_from_html(file_path: Path, source_url: str, page_title: str) ->
     return [doc]
 
 
-
 def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
     """
-    Estrae testo grezzo dal PDF utilizzando unstructured.partition_pdf,
-    ma ignora la struttura e unisce tutto in un solo blocco di testo.
-    Mantiene il caso speciale degli orari.
+    Estrae testo grezzo dal PDF usando unstructured.partition_pdf.
+    Usa Camelot SOLO per il caso speciale degli orari (tabelle a griglia).
     """
     docs = []
     crawl_ts = datetime.now(timezone.utc).isoformat()
 
-    # === Caso speciale: PDF orario ===
+    # caso PDF orario
     if "orario" in source_url.lower():
-        print(f"[INFO] PDF orario rilevato → estrazione solo JSON: {source_url}")
+        print(f"[INFO] PDF orario rilevato → estrazione tabellare con Camelot: {source_url}")
         tables = extract_tables_camelot(file_path)
         if not tables:
             print(f"[WARN] Nessuna tabella trovata in {file_path.name}")
             return []
-        # (mantieni la logica per orario come già hai)
+        schedule = build_schedule_json(tables)
+        docs.append(Document(
+            page_content=json.dumps(schedule, ensure_ascii=False),
+            metadata={
+                "source_url": source_url,
+                "doc_type": "pdf-schedule",
+                "file_name": file_path.name,
+                "element_type": "ScheduleJSON",
+                "crawl_ts": crawl_ts,
+                "doc_id": sha(source_url),
+            },
+        ))
         return docs
 
-    # === Caso normale ===
+    # caso standard: solo testo, senza camelot
     try:
         elements = partition_pdf(
             filename=str(file_path),
@@ -88,7 +97,6 @@ def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
         print(f"[WARN] Nessun testo estratto da {file_path.name}")
         return []
 
-    # Crea un solo Document con tutto il testo
     docs.append(Document(
         page_content=text_all.strip(),
         metadata={
@@ -101,25 +109,7 @@ def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
         },
     ))
 
-    # Mantieni le tabelle Camelot come prima
-    tables = extract_tables_camelot(file_path)
-    for t in tables:
-        docs.append(Document(
-            page_content=json.dumps(t["row"], ensure_ascii=False),
-            metadata={
-                "source_url": source_url,
-                "doc_type": "pdf-table",
-                "page_number": t["page_number"],
-                "file_name": t["file_name"],
-                "table_index": t["table_index"],
-                "element_type": "Table",
-                "crawl_ts": crawl_ts,
-                "doc_id": sha(source_url),
-            },
-        ))
-
     return docs
-
 
 
 def extract_tables_camelot(file_path: Path) -> list[dict]:
