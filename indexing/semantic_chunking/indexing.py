@@ -145,7 +145,7 @@ import json
 
 def indexing_exam_calendar():
     collection_name = "ing_info_mag_calendario_esami"
-    json_path = Path(__file__).resolve().parent / "data" / "tab-calendario-appelli.json"
+    json_path = Path(__file__).resolve().parent / "data" / "tab-calendario-esami.json"
 
     if not json_path.exists():
         print(f"[ERRORE] File non trovato: {json_path}")

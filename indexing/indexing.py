@@ -151,7 +151,7 @@ import json
 
 def indexing_exam_calendar():
     collection_name = "ing_info_mag_calendario_esami"
-    json_path = Path(__file__).resolve().parent / "data" / "tab-calendario-appelli.json"
+    json_path = Path(__file__).resolve().parent / "data" / "tab-calendario-esami.json"
 
     if not json_path.exists():
         print(f"[ERRORE] File non trovato: {json_path}")
@@ -181,8 +181,8 @@ def indexing_exam_program_regulations():
     json_files = [
         "tab-regolamento-data-science.json",
         "tab-regolamento-data-science-2024.json",
-        "tab-regolamento-robotica.json",
-        "tab-regolamento-robotica-2024.json",
+        "tab-regolamento-robotics.json",
+        "tab-regolamento-robotics-2024.json",
     ]
 
     docs = []
