@@ -14,21 +14,22 @@ from ragas.metrics._answer_relevance import answer_relevancy
 from ragas import evaluate
 from langsmith import Client
 # importa dall'agente da valutare
-from timetable_agent import answer_query, embeddings, vectorstore
+#from timetable_agent import answer_query, embeddings, vectorstore
 from langchain_google_genai import ChatGoogleGenerativeAI
+
+from filter_rag import answer_query_dense, answer_query_bm25, hybrid_search, embeddings
 
 
 def get_llm():
     return ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
-def run_evaluation(version: str = "v1"):
-    print(f"Avvio validazione RAG - versione {version}")
+def evaluate_variant(name: str, answer_func, version: str):
+    print(f"\n=== Valutazione variante: {name.upper()} ===")
     base_dir = Path("evaluations") / version
     base_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = base_dir / f"ragas_results_{name}.csv"
 
     VALIDATION_DIR = Path(__file__).resolve().parent / "validation_set"
-    print(f"Caricamento dataset da: {VALIDATION_DIR}")
-
     validation_data = []
     for json_file in sorted(VALIDATION_DIR.glob("*.json")):
         print(f"  → Trovato file: {json_file.name}")
@@ -49,26 +50,13 @@ def run_evaluation(version: str = "v1"):
 
     answers, retrieved_contexts = [], []
 
-    print(f"Generazione risposte con il Retrieval Agent ({len(questions)} domande)...")
+    print(f"\nGenerazione risposte con variante {name} ({len(questions)} domande)...")
     for i, q in enumerate(questions, start=1):
         print(f" → [{i}/{len(questions)}] {q}")
         try:
-            vec = embeddings.embed_query(q)
-            docs = vectorstore.similarity_search_by_vector(vec, k=5)
-            retrieved_ctx = [d.page_content for d in docs]
-
-            #response = answer_query(q)
-            #response = hybrid_search(q, alpha=0.6, k=5)
-            response = answer_query_bm25(q)
-            #if "Risposta:" in response:
-            if "Risposta BM25:" in response:
-                #answer = response.split("Risposta:")[1].split("\n")[0].strip()
-                answer = response.split(":")[-1].strip()
-            else:
-                answer = response.strip()
-
-            answers.append(answer)
-            retrieved_contexts.append(retrieved_ctx)
+            response, ctxs = answer_func(q)
+            answers.append(response.split(":", 1)[-1].strip())
+            retrieved_contexts.append(ctxs)
         except Exception as e:
             print(f"Errore durante la domanda '{q}': {e}")
             answers.append("")
@@ -81,24 +69,11 @@ def run_evaluation(version: str = "v1"):
         "ground_truth": ground_truths
     })
 
-    print("\nValutazione con Ragas...")
+    print(f"\nValutazione Ragas per {name}...")
     llm = get_llm()
+    metrics_list = [faithfulness, answer_relevancy, context_precision, context_recall, answer_correctness]
 
-    metrics_list = [
-        faithfulness,
-        answer_relevancy,
-        context_precision,
-        context_recall,
-        answer_correctness,
-    ]
-
-    result = evaluate(
-        dataset=dataset,
-        metrics=metrics_list,
-        llm=llm,
-        embeddings=embeddings,
-    )
-
+    result = evaluate(dataset=dataset, metrics=metrics_list, llm=llm, embeddings=embeddings)
     result_df = result.to_pandas()
     results = result_df.mean(numeric_only=True).to_dict()
 
@@ -106,27 +81,31 @@ def run_evaluation(version: str = "v1"):
     for k, v in results.items():
         print(f" - {k}: {v:.3f}")
 
-    csv_path = base_dir / "ragas_results.csv"
     save_results_to_csv(csv_path, dataset, result_df, results)
+    print(f"Risultati salvati in {csv_path}")
 
+    #invio automatico a LangSmith
     langsmith_key = os.getenv("LANGCHAIN_API_KEY")
     if langsmith_key:
-        print("\nInviando risultati a LangSmith...")
-        client = Client()
-        client.create_run(
-            # cambia nome
-            name=f"RAG Evaluation tabelle orari - UNIPG ({version})",
-            run_type="chain",
-            inputs={"questions": questions},
-            outputs={"results": dict(results)},
-            metadata={"component": "ragas_evaluation"},
-            start_time=datetime.now(timezone.utc).isoformat(),
-            end_time=datetime.now(timezone.utc).isoformat(),
-            status="completed"
-        )
-        print("Risultati inviati a LangSmith.")
+        try:
+            client = Client()
+            client.create_run(
+                name=f"RAG Evaluation {name.upper()} - UNIPG ({version})",
+                run_type="chain",
+                inputs={"questions": questions},
+                outputs={"results": dict(results)},
+                metadata={"component": f"ragas_{name}_evaluation"},
+                start_time=datetime.now(timezone.utc).isoformat(),
+                end_time=datetime.now(timezone.utc).isoformat(),
+                status="completed"
+            )
+            print(f"Risultati {name} inviati a LangSmith.")
+        except Exception as e:
+            print(f"[WARN] Errore durante l’invio a LangSmith: {e}")
     else:
         print("Nessuna API key LangSmith trovata — risultati solo in locale.")
+
+    print(f"=== Fine valutazione {name.upper()} ===\n")
 
 
 def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics):
@@ -170,9 +149,9 @@ def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics):
 
     print(f"Risultati individuali e medi salvati in: {csv_path}")
 
-
-
 if __name__ == "__main__":
-    #version = os.getenv("RAG_EVAL_VERSION", "v1")
-    version = os.getenv("RAG_EVAL_VERSION", "bm25_v1")
-    run_evaluation(version)
+    version = os.getenv("RAG_EVAL_VERSION", "multi_v1")
+
+    evaluate_variant("dense", answer_query_dense, version)
+    evaluate_variant("sparse", answer_query_bm25, version)
+    evaluate_variant("hybrid", lambda q: hybrid_search(q, alpha=0.6, k=5), version)

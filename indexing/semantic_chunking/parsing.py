@@ -1,3 +1,5 @@
+# SEMANTIC CHUNKING - parsing.py
+
 import json
 import camelot
 from bs4 import BeautifulSoup
