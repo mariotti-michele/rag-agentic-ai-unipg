@@ -81,24 +81,45 @@ embeddings = OllamaEmbeddings(
     base_url=OLLAMA_BASE_URL
 )
 
-print("Connettendo a Qdrant...")
+#print("Connettendo a Qdrant...")
 qdrant_client = QdrantClient(url=QDRANT_URL)
 
-# Crea un vectorstore per ogni collezione
-vectorstores = {
-    name: QdrantVectorStore.from_existing_collection(
-        embedding=embeddings,
-        collection_name=name,
-        url=QDRANT_URL,
-    )
-    for name in COLLECTION_NAMES
-}
 
-print(f"Connesso a {len(vectorstores)} collezioni:")
+vectorstores = {}
+#print("Verifica collezioni in Qdrant...")
+
+try:
+    existing = qdrant_client.get_collections().collections
+    existing_names = [c.name for c in existing]
+    #print(f"Trovate {len(existing_names)} collezioni in Qdrant.")
+except Exception as e:
+    print(f"[WARN] Impossibile ottenere elenco collezioni: {e}")
+    existing_names = []
+
+for name in COLLECTION_NAMES:
+    if name not in existing_names:
+        #print(f"[WARN] Collezione inesistente su Qdrant: {name} (saltata)")
+        continue
+    try:
+        store = QdrantVectorStore.from_existing_collection(
+            embedding=embeddings,
+            collection_name=name,
+            url=QDRANT_URL,
+        )
+        vectorstores[name] = store
+        #print(f"Collezione connessa: {name}")
+    except Exception as e:
+        print(f"[WARN] Errore su {name}: {e}")
+
+if not vectorstores:
+    raise RuntimeError("Nessuna collezione valida trovata in Qdrant. Controlla i nomi in .env!")
+
+print(f"Connesso a {len(vectorstores)} collezioni valide:")
 for name in vectorstores:
     print(f"  - {name}")
 
-print("Inizializzando LLM...")
+
+#print("Inizializzando LLM...")
 
 import argparse
 
@@ -135,26 +156,59 @@ elif args.model == "llama-api":
 
 all_texts = []
 
+try:
+    existing = qdrant_client.get_collections().collections
+    existing_names = [c.name for c in existing]
+except Exception as e:
+    print(f"[WARN] Impossibile leggere elenco collezioni da Qdrant: {e}")
+    existing_names = []
+
 for COLLECTION_NAME in COLLECTION_NAMES:
+    if COLLECTION_NAME not in existing_names:
+        #print(f"[WARN] Collezione inesistente su Qdrant: {COLLECTION_NAME} (saltata)")
+        continue
+
     #print(f"Leggendo documenti da collezione: {COLLECTION_NAME}")
     scroll_filter = None
+    total_texts = 0
+
     while True:
-        points, next_page = qdrant_client.scroll(
-            collection_name=COLLECTION_NAME,
-            with_payload=True,
-            limit=1000,
-            offset=scroll_filter
-        )
+        try:
+            points, next_page = qdrant_client.scroll(
+                collection_name=COLLECTION_NAME,
+                with_payload=True,
+                limit=1000,
+                offset=scroll_filter
+            )
+        except Exception as e:
+            print(f"[WARN] Errore nel leggere {COLLECTION_NAME}: {e}")
+            break
+
+        if not points:
+            break
+
         for p in points:
             text = p.payload.get("page_content", "")
             if text:
                 all_texts.append(text)
+                total_texts += 1
+
         if next_page is None:
             break
         scroll_filter = next_page
 
-#print(f"Totale documenti caricati: {len(all_texts)}")
+    if total_texts == 0:
+        print(f"[WARN] Nessun testo trovato in {COLLECTION_NAME}")
+    #else:
+        #print(f"{total_texts} testi caricati da {COLLECTION_NAME}")
 
+#print(f"\nTotale complessivo di testi caricati: {len(all_texts)}")
+
+if not all_texts:
+    raise RuntimeError(
+        "Nessun testo trovato in nessuna collezione! "
+        "Controlla che i nomi in COLLECTION_NAMES coincidano con quelli effettivi su Qdrant."
+    )
 
 
 vectorizer = TfidfVectorizer()
@@ -415,16 +469,25 @@ Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o tit
 
 
 def test_connection():
-    try:
-        vec = embeddings.embed_query("test")
-        docs = vectorstore.max_marginal_relevance_search_by_vector(vec, k=3, fetch_k=10, lambda_mult=0.5)
-        print(f"Test connessione riuscito.")
-        for i, doc in enumerate(docs, 1):
-            preview = doc.page_content[:120].replace("\n", " ")
-        return True
-    except Exception as e:
-        print(f"Test connessione fallito: {e}")
+    """Testa la connessione con tutte le collezioni valide"""
+    if not vectorstores:
+        print("Nessuna collezione valida trovata.")
         return False
+
+    vec = embeddings.embed_query("test")
+    ok = False
+
+    for name, store in vectorstores.items():
+        try:
+            docs = store.max_marginal_relevance_search_by_vector(
+                vec, k=3, fetch_k=10, lambda_mult=0.5
+            )
+            print(f"[OK] Connessione riuscita per {name} ({len(docs)} risultati)")
+            ok = True
+        except Exception as e:
+            print(f"[WARN] Test fallito su {name}: {e}")
+
+    return ok
 
 
 if __name__ == "__main__":
