@@ -27,7 +27,7 @@ def evaluate_variant(name: str, answer_func, version: str):
     print(f"\n=== Valutazione variante: {name.upper()} ===")
     base_dir = Path("evaluations") / version
     base_dir.mkdir(parents=True, exist_ok=True)
-    csv_path = base_dir / f"ragas_results_{name}.csv"
+    csv_path = base_dir / f"ragas_results_{name.replace(' ', '_')}.csv"
 
     VALIDATION_DIR = Path(__file__).resolve().parent / "validation_set"
     validation_data = []
@@ -94,7 +94,12 @@ def evaluate_variant(name: str, answer_func, version: str):
                 run_type="chain",
                 inputs={"questions": questions},
                 outputs={"results": dict(results)},
-                metadata={"component": f"ragas_{name}_evaluation"},
+                 metadata={
+                    "component": f"ragas_{name.lower().replace(' ', '_')}_evaluation",
+                    "variant": name,
+                    "version": version,
+                    "num_questions": len(questions)
+                },
                 start_time=datetime.now(timezone.utc).isoformat(),
                 end_time=datetime.now(timezone.utc).isoformat(),
                 status="completed"
@@ -150,8 +155,8 @@ def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics):
     print(f"Risultati individuali e medi salvati in: {csv_path}")
 
 if __name__ == "__main__":
-    version = os.getenv("RAG_EVAL_VERSION", "multi_v1")
+    version = os.getenv("RAG_EVAL_VERSION", "document structure based")
 
-    evaluate_variant("dense", answer_query_dense, version)
-    evaluate_variant("sparse", answer_query_bm25, version)
-    evaluate_variant("hybrid", lambda q: hybrid_search(q, alpha=0.6, k=5), version)
+    evaluate_variant("dense - document structure based chunking", answer_query_dense, version)
+    evaluate_variant("sparse - document structure based chunking", answer_query_bm25, version)
+    evaluate_variant("hybrid - document structure based chunking", lambda q: hybrid_search(q, alpha=0.6, k=5), version)
