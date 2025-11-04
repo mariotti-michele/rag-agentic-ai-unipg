@@ -155,8 +155,8 @@ def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics):
     print(f"Risultati individuali e medi salvati in: {csv_path}")
 
 if __name__ == "__main__":
-    version = os.getenv("RAG_EVAL_VERSION", "document structure based")
+    version = os.getenv("RAG_EVAL_VERSION", "semantic")
 
-    evaluate_variant("dense - document structure based chunking", answer_query_dense, version)
-    evaluate_variant("sparse - document structure based chunking", answer_query_bm25, version)
-    evaluate_variant("hybrid - document structure based chunking", lambda q: hybrid_search(q, alpha=0.6, k=5), version)
+    evaluate_variant("dense - semantic chunking", answer_query_dense, version)
+    evaluate_variant("sparse - semantic chunking", answer_query_bm25, version)
+    evaluate_variant("hybrid - semantic chunking", lambda q: hybrid_search(q, alpha=0.6, k=5), version)
