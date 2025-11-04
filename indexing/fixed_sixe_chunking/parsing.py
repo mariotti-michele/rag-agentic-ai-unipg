@@ -17,13 +17,17 @@ logging.getLogger("unstructured").setLevel(logging.ERROR)
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="camelot")
 
-from pathlib import Path
 
 def to_documents_from_html(file_path: Path, source_url: str, page_title: str) -> list[Document]:
     raw_html = file_path.read_text(encoding="utf-8")
     soup = BeautifulSoup(raw_html, "html.parser")
 
     main_el = soup.find("main") or soup
+
+    # Rimuove i moduli sopra al main
+    for mod in main_el.select("div.module-container.col-xs-12"):
+        mod.decompose()
+
     text = main_el.get_text(separator="\n", strip=True)
     if not text:
         print(f"[WARN] Nessun testo trovato in {source_url}")

@@ -17,7 +17,6 @@ logging.getLogger("unstructured").setLevel(logging.ERROR)
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="camelot")
 
-from pathlib import Path
 
 def to_documents_from_html(file_path: Path, source_url: str, page_title: str) -> list[Document]:
     raw_html = file_path.read_text(encoding="utf-8")
@@ -27,11 +26,19 @@ def to_documents_from_html(file_path: Path, source_url: str, page_title: str) ->
     if not main_el:
         print(f"[WARN] Nessun <main> trovato in {source_url}, salto")
         return []
-    main_html = str(main_el)
-    tmp_path = file_path.with_suffix(".main.html")
-    tmp_path.write_text(main_html, encoding="utf-8")
+    
+    # Rimuove i moduli sopra al main
+    for mod in main_el.select("div.module-container.col-xs-12"):
+        mod.decompose()
 
-    elements = partition_html(filename=str(tmp_path), include_page_breaks=False, languages=["ita", "eng"])
+    main_html = str(main_el)
+   
+    elements = partition_html(
+        text=main_html,
+        include_page_breaks=False,
+        languages=["ita", "eng"]
+    )
+
     docs = []
     crawl_ts = datetime.now(timezone.utc).isoformat()
 

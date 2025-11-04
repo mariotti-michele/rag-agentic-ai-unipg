@@ -253,8 +253,9 @@ def classify_query(query: str) -> str:
         print(f"Errore classificazione: {e}")
         return "rag"
 
+
 def answer_query_dense(query: str):
-    """Usa tutte le collezioni Dense (Qdrant)"""
+    """Usa tutte le collezioni Dense (Qdrant) e ritorna risposta + contesto"""
     vec = embeddings.embed_query(query)
     all_docs = []
 
@@ -278,7 +279,7 @@ def answer_query_dense(query: str):
             break
 
     if not unique_docs:
-        return "Non presente nei documenti"
+        return "Non presente nei documenti.", []
 
     context = "\n\n".join(
         [f"[Fonte {i+1}] ({doc.metadata.get('collection', 'N/A')})\n{doc.page_content}"
@@ -293,7 +294,8 @@ Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o tit
     if hasattr(answer, "content"):
         answer = answer.content
 
-    return f"Risposta nomic-embed-text: {answer}"
+    return f"Risposta nomic-embed-text: {answer}", [doc.page_content for doc in unique_docs]
+
 
 
 def answer_query_tfidf(query: str):
@@ -317,11 +319,15 @@ Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o tit
 
     return f"Risposta TF-IDF: {answer}"
 
+
+
 def answer_query_bm25(query: str):
-    """Usa BM25 al posto di TF-IDF"""
+    """Usa BM25 e ritorna risposta + contesto"""
     bm25_results = bm25_search(query, k=5)
     if not bm25_results:
-        return "Non presente nei documenti"
+        return "Non presente nei documenti.", []
+
+    context_texts = [text for text, score in bm25_results]
 
     context = "\n\n".join(
         [f"[Fonte {i+1}] (BM25, score={score:.3f})\n{text}"
@@ -336,7 +342,8 @@ Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o tit
     if hasattr(answer, "content"):
         answer = answer.content
 
-    return f"Risposta BM25: {answer}"
+    return f"Risposta BM25: {answer}", context_texts
+
 
 
 
@@ -354,44 +361,40 @@ def compare_dense_vs_tfidf(query: str):
 
     print("="*70)
 
-def hybrid_search(query: str, alpha: float = 0.5, k: int = 5):
-    """
-    Esegue retrieval ibrido combinando Dense (Qdrant) e Sparse (TF-IDF).
-    alpha bilancia i due contributi: 
-      - alpha=1 usa solo Dense
-      - alpha=0 usa solo TF-IDF
-    """
-    # --- Dense retrieval ---
-    dense_vec = embeddings.embed_query(query)
-    dense_docs = vectorstore.similarity_search_with_score_by_vector(dense_vec, k=10)
-    dense_results = {}
-    for doc, score in dense_docs:
-        dense_results[doc.page_content] = 1 - score  # Qdrant restituisce distanza, la inverto
 
-    # --- Sparse retrieval ---
-    #tfidf_results = tfidf_search(query, k=10)
+def hybrid_search(query: str, alpha: float = 0.5, k: int = 5):
+    """Retrieval ibrido combinato su tutte le collezioni. Ritorna risposta + contesto"""
+    dense_vec = embeddings.embed_query(query)
+    dense_results = {}
+
+    # Recupera documenti densi
+    for name, store in vectorstores.items():
+        try:
+            docs = store.similarity_search_with_score_by_vector(dense_vec, k=5)
+            for doc, score in docs:
+                dense_results[doc.page_content] = 1 - score
+        except Exception as e:
+            print(f"[WARN] Errore su {name}: {e}")
+
+    # Recupera documenti sparsi
     tfidf_results = bm25_search(query, k=10)
     sparse_results = {text: score for text, score in tfidf_results}
 
-    # --- Normalizzazione punteggi ---
-    all_texts = set(dense_results.keys()) | set(sparse_results.keys())
+    # Fusione punteggi
+    all_texts = list(set(dense_results.keys()) | set(sparse_results.keys()))
     dense_scores = np.array([dense_results.get(t, 0) for t in all_texts])
     sparse_scores = np.array([sparse_results.get(t, 0) for t in all_texts])
 
     if dense_scores.max() > 0:
-        dense_scores = dense_scores / dense_scores.max()
+        dense_scores /= dense_scores.max()
     if sparse_scores.max() > 0:
-        sparse_scores = sparse_scores / sparse_scores.max()
+        sparse_scores /= sparse_scores.max()
 
-    # --- Fusione pesata ---
     hybrid_scores = alpha * dense_scores + (1 - alpha) * sparse_scores
-
-    # --- Ordina per punteggio combinato ---
     sorted_indices = np.argsort(hybrid_scores)[::-1][:k]
-    top_texts = [list(all_texts)[i] for i in sorted_indices]
+    top_texts = [all_texts[i] for i in sorted_indices]
     top_scores = hybrid_scores[sorted_indices]
 
-    # --- Prepara il contesto per l’LLM ---
     context = "\n\n".join(
         [f"[Fonte {i+1}] (Hybrid score={s:.3f})\n{t}" for i, (t, s) in enumerate(zip(top_texts, top_scores))]
     )
@@ -404,7 +407,7 @@ Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o tit
     if hasattr(answer, "content"):
         answer = answer.content
 
-    return f"Risposta ibrida (α={alpha}): {answer}"
+    return f"Risposta ibrida (α={alpha}): {answer}", top_texts
 
     
 
