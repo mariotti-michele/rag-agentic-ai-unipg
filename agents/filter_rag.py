@@ -362,6 +362,17 @@ def compare_dense_vs_tfidf(query: str):
     print("="*70)
 
 
+def reciprocal_rank_fusion(dense_texts, sparse_texts, k=5, alpha=60):
+    """Combina i risultati denso e sparso usando Reciprocal Rank Fusion (RRF)."""
+    combined = {}
+    for rank, text in enumerate(dense_texts):
+        combined[text] = combined.get(text, 0) + 1 / (alpha + rank + 1)
+    for rank, text in enumerate(sparse_texts):
+        combined[text] = combined.get(text, 0) + 1 / (alpha + rank + 1)
+    ranked = sorted(combined.items(), key=lambda x: x[1], reverse=True)
+    return [t for t, _ in ranked[:k]]
+
+
 def hybrid_search(query: str, alpha: float = 0.5, k: int = 5):
     """Retrieval ibrido combinato su tutte le collezioni. Ritorna risposta + contesto"""
     dense_vec = embeddings.embed_query(query)
@@ -380,24 +391,29 @@ def hybrid_search(query: str, alpha: float = 0.5, k: int = 5):
     tfidf_results = bm25_search(query, k=10)
     sparse_results = {text: score for text, score in tfidf_results}
 
-    # Fusione punteggi
-    all_texts = list(set(dense_results.keys()) | set(sparse_results.keys()))
-    dense_scores = np.array([dense_results.get(t, 0) for t in all_texts])
-    sparse_scores = np.array([sparse_results.get(t, 0) for t in all_texts])
+    # === Fusione ibrida con Reciprocal Rank Fusion ===
+    dense_texts = list(dense_results.keys())
+    sparse_texts = list(sparse_results.keys())
 
-    if dense_scores.max() > 0:
-        dense_scores /= dense_scores.max()
-    if sparse_scores.max() > 0:
-        sparse_scores /= sparse_scores.max()
+    # Fallback se uno dei due fallisce
+    if not dense_texts and not sparse_texts:
+        print("[WARN] Nessun risultato da dense né sparse → risposta vuota.")
+        return "Non presente nei documenti", []
 
-    hybrid_scores = alpha * dense_scores + (1 - alpha) * sparse_scores
-    sorted_indices = np.argsort(hybrid_scores)[::-1][:k]
-    top_texts = [all_texts[i] for i in sorted_indices]
-    top_scores = hybrid_scores[sorted_indices]
+    elif not dense_texts:
+        print("[INFO] Nessun risultato denso → uso solo BM25.")
+        top_texts = sparse_texts[:k]
 
-    context = "\n\n".join(
-        [f"[Fonte {i+1}] (Hybrid score={s:.3f})\n{t}" for i, (t, s) in enumerate(zip(top_texts, top_scores))]
-    )
+    elif not sparse_texts:
+        print("[INFO] Nessun risultato sparso → uso solo retrieval denso.")
+        top_texts = dense_texts[:k]
+
+    else:
+        top_texts = reciprocal_rank_fusion(dense_texts, sparse_texts, k=k)
+
+
+    context = "\n\n".join([f"[Fonte {i+1}]\n{t}" for i, t in enumerate(top_texts)])
+
 
     prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
 

@@ -1,0 +1,112 @@
+RISULTATI RISPOSTA DENSE (NOMIC) CON GEMINI: DOCUMENT STRUCTURE BASED CHUNKING
+
+timestamp,question,answer,faithfulness,answer_relevancy,context_precision,context_recall,answer_correctness
+2025-11-04 09:46:05,A chi sono riservati principalmente gli appelli straordinari?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.130
+2025-11-04 09:46:05,Chi decide se istituire o meno un appello straordinario?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.133
+2025-11-04 09:46:05,A chi deve comunicare il docente l'istituzione di un appello straordinario?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.131
+2025-11-04 09:46:05,Cosa accade se il Presidente del CIL non risponde entro una settimana alla proposta di un appello straordinario?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.153
+2025-11-04 09:46:05,Quali fattori può considerare il docente nel valutare una richiesta di appello straordinario?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.144
+2025-11-04 09:46:05,Esiste un limite massimo di appelli straordinari che un docente può istituire?,Non presente nei documenti.,0.000,0.000,0.000,1.000,0.928
+2025-11-04 09:46:05,Quando inizia e quando termina l'anno accademico 2025/2026?,"Il contesto menziona l'anno accademico 2025/2026. Per l'anno accademico 2025/2026, il periodo del primo semestre è 15/09/2025 - 12/12/2025. Non sono presenti le date di inizio e fine dell'intero anno accademico.",1.000,0.000,0.000,0.500,0.473
+2025-11-04 09:46:05,Quali sono le principali festività nazionali indicate nel calendario?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.127
+2025-11-04 09:46:05,Quali sono i giorni festivi specifici per la sede di Perugia?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.115
+2025-11-04 09:46:05,Qual è il periodo previsto per le vacanze natalizie?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.136
+2025-11-04 09:46:05,Quando iniziano e terminano le vacanze pasquali?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.135
+2025-11-04 09:46:05,Durante quali periodi le attività didattiche sono sospese per le vacanze?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.123
+2025-11-04 09:46:05,Le lezioni iniziano a ottobre 2025?,"Il contesto indica che le lezioni per l'anno accademico 2025/2026 iniziano il 15 settembre 2025. In particolare, la Fonte 5 riporta: ""periodo"": ""15/09/2025 - 12/12/2025"".",0.750,0.875,0.200,1.000,0.555
+2025-11-04 09:46:05,Per quale anno accademico si riferisce il calendario delle lauree?,Non presente nei documenti.,1.000,0.000,0.250,1.000,0.129
+2025-11-04 09:46:05,Quando si svolge la prima sessione di laurea dell'anno accademico 2025-2026?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.134
+2025-11-04 09:46:05,Qual è l'ultima sessione di laurea prevista nel calendario?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.129
+2025-11-04 09:46:05,Quante sessioni di laurea sono previste complessivamente nel calendario 2025-2026?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.133
+2025-11-04 09:46:05,Le date delle lauree sono identiche per i corsi triennali e magistrali?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.141
+2025-11-04 09:46:05,Vengono specificate le scadenze per la presentazione della domanda di laurea?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.158
+2025-11-04 09:46:05,È indicato l’orario preciso di inizio delle sedute di laurea?,Non presente nei documenti.,1.000,0.000,0.450,1.000,0.903
+2025-11-04 09:46:05,Che cos'è il programma Erasmus+?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.139
+2025-11-04 09:46:05,Quali sono le due tipologie principali di mobilità previste dal programma Erasmus+?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.137
+2025-11-04 09:46:05,Chi è il delegato Erasmus del Dipartimento di Ingegneria?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.131
+2025-11-04 09:46:05,Quali attività possono essere svolte durante la mobilità a fini di studio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.137
+2025-11-04 09:46:05,Quali sono i requisiti per partecipare al programma Erasmus+ Traineeship?,Non presente nei documenti.,0.000,0.000,0.000,0.500,0.132
+2025-11-04 09:46:05,In quale periodo viene pubblicato il bando Erasmus?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.156
+2025-11-04 09:46:05,Dove è possibile trovare i bandi Erasmus aggiornati?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.152
+2025-11-04 09:46:05,È possibile riconoscere CFU per un tirocinio svolto con Erasmus Traineeship?,"Sì, è possibile riconoscere CFU per attività di tirocinio svolte in ambito internazionale. Il contesto indica che ""Lo studente ha anche la possibilità di svolgere tirocini [...] sia in ambito nazionale che internazionale"" (Fonte 1). Inoltre, ""In merito alle attività di tirocinio (aziendale o interno) [...] ogni studente può fare esperienza in una singola azienda, o laboratorio interno, per un massimo di 9 CFU. Ulteriori attività di tirocinio, fino al raggiungimento del numero massimo di CFU a scelta libera a disposizione nel curriculum, potranno essere svolte solo presso altra azienda o laboratorio interno"" (Fonte 2).",0.714,0.792,0.000,1.000,0.357
+2025-11-04 09:46:05,Chi deve approvare il Learning Agreement?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.133
+2025-11-04 09:46:05,Qual è la lingua richiesta per partecipare a un tirocinio Erasmus?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.124
+2025-11-04 09:46:05,Chi approva il riconoscimento dei CFU dopo il tirocinio Erasmus?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.134
+2025-11-04 09:46:05,Quali documenti sono richiesti per un tirocinio autonomo?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.140
+2025-11-04 09:46:05,Quando si aprono le immatricolazioni per l'anno accademico 2025/2026?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.130
+2025-11-04 09:46:05,Qual è la scadenza per immatricolarsi ai corsi di laurea triennale e magistrale a ciclo unico ad accesso libero?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.128
+2025-11-04 09:46:05,Fino a quando è possibile immatricolarsi ai corsi di laurea magistrale biennali?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.126
+2025-11-04 09:46:05,Come posso presentare la domanda di immatricolazione?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.130
+2025-11-04 09:46:05,Chi può beneficiare dell'esenzione totale dalle tasse universitarie?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.119
+2025-11-04 09:46:05,Cosa si intende per 'Low-Tax Area' secondo il regolamento?,Non presente nei documenti.,0.000,0.510,0.000,0.000,0.119
+2025-11-04 09:46:05,Quali riduzioni sono previste per chi si immatricola con un voto di diploma alto?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.132
+2025-11-04 09:46:05,Quali agevolazioni sono previste per studenti dello stesso nucleo familiare iscritti contemporaneamente?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.114
+2025-11-04 09:46:05,A chi bisogna rivolgersi per chiedere l'esonero dal corso sulla sicurezza?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.126
+2025-11-04 09:46:05,Chi è il referente per informazioni e sessioni di esame aggiuntive sul corso di sicurezza?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.135
+2025-11-04 09:46:05,Come può ottenere l’attestato lo studente che supera l’esame di sicurezza?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.126
+2025-11-04 09:46:05,A cosa serve il corso sulla sicurezza nei luoghi di lavoro?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.141
+2025-11-04 09:46:05,Posso accedere al laboratorio senza aver seguito il corso sulla sicurezza?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.164
+2025-11-04 09:46:05,Qual è il link per iscriversi al corso sulla sicurezza nei luoghi di lavoro?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.632
+2025-11-04 09:46:05,Il corso sulla sicurezza è erogato in presenza o a distanza?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.142
+2025-11-04 09:46:05,Cosa deve fare uno studente che non ha seguito il corso di sicurezza nella scuola superiore?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.152
+2025-11-04 09:46:05,È possibile organizzare sessioni di esame aggiuntive per il corso sulla sicurezza?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.145
+2025-11-04 09:46:05,Qual è l'orario delle lezioni di Intelligent and Secure Networks e quali sono le date degli appelli d'esame?,"L'orario delle lezioni di Intelligent and Secure Networks è il seguente: Lunedì dalle 08:30 alle 10:30 in aula 9, Martedì dalle 16:30 alle 18:30 in aula 9, e Giovedì dalle 16:30 alle 18:30 in aula 10. Non presente nei documenti per quanto riguarda le date degli appelli d'esame.",1.000,0.746,0.000,0.500,0.730
+2025-11-04 09:46:05,Quali sono i moduli che servono per fare il tirocinio e con che tempistiche vanno consegnati?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.130
+2025-11-04 09:46:05,Qual è il nome del corso di laurea?,Il nome del corso di laurea è Ingegneria informatica e robotica.,1.000,1.000,0.639,0.000,0.725
+2025-11-04 09:46:05,Presso quale sede è attivo il corso di Ingegneria Informatica e Robotica?,"Il corso di Ingegneria Informatica e Robotica è attivo presso l'Università degli Studi di Perugia. Come indicato in [Fonte 5]: ""universita"": ""Università degli Studi di Perugia"", ""corso_di_laurea"": ""Ingegneria Informatica e Robotica"".",0.250,0.941,0.200,1.000,0.425
+2025-11-04 09:46:05,Quale titolo accademico viene rilasciato al termine del corso?,Il corso di studio rilascia il titolo di “Dottore magistrale in Ingegneria Informatica e Robotica”.,1.000,0.838,1.000,1.000,0.969
+2025-11-04 09:46:05,Quanti CFU totali prevede il corso di laurea magistrale?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.116
+2025-11-04 09:46:05,Qual è il numero massimo di studenti ammessi al corso?,"È prevista, per il Corso di laurea magistrale, un’utenza sostenibile di 80 unità.",1.000,0.688,0.250,1.000,0.895
+2025-11-04 09:46:05,Quali sono i due curricula del corso di Ingegneria Informatica e Robotica?,"Il Corso di laurea magistrale in Ingegneria Informatica e Robotica si articola in due curricula: Data Science and Data Engineering e Robotics. Il curriculum Data Science and Data Engineering è menzionato esplicitamente come uno dei due curricula, e il curriculum Robotics è identificato attraverso le informazioni sugli orari dei corsi, dove vengono specificati corsi appartenenti a entrambi i curricula.",1.000,0.920,0.417,1.000,0.670
+2025-11-04 09:46:05,Qual è l’obiettivo formativo principale del corso?,"Il contesto contiene il termine ""Obiettivi formativi specifici del corso di studio"". Il corso mira alla formazione dei profili professionali di seguito elencati.",1.000,0.842,0.000,0.000,0.373
+2025-11-04 09:46:05,Quali sono i principali sbocchi occupazionali del curriculum Data Science and Data Engineering?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.156
+2025-11-04 09:46:05,Qual è la differenza tra i due curricula del corso?,"Il contesto fornito indica che il Corso di laurea magistrale in Ingegneria Informatica e Robotica si articola in due curricula, e ne nomina uno: ""Data Science and Data Engineering"". Tuttavia, il contesto non fornisce informazioni sul nome del secondo curriculum né sulle differenze tra i due.",1.000,0.000,0.000,0.000,0.442
+2025-11-04 09:46:05,Quale docente coordina il corso di studio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.106
+2025-11-04 09:46:05,Il corso prevede tirocini in azienda?,"Lo studente ha anche la possibilità di svolgere tirocini e tesi aziendali, sia in ambito nazionale che internazionale, per sperimentare ed ampliare le proprie abilità pratiche, e per favorire il suo futuro inserimento nel mondo del lavoro. Le attività di tirocinio sono tipicamente concentrate al secondo anno, verso la fine del percorso formativo.",1.000,0.509,1.000,1.000,0.353
+2025-11-04 09:46:05,Quando è consigliato presentare la pratica di trasferimento da altro Ateneo?,"La presentazione della pratica di trasferimento da altro Ateneo deve avvenire, di norma, entro il mese di ottobre, per permettere un efficace inserimento nelle attività didattiche.",1.000,0.952,1.000,1.000,0.661
+2025-11-04 09:46:05,Il corso di laurea si svolge interamente in lingua inglese?,"Il contesto indica che non tutti gli insegnamenti del corso di laurea sono svolti in lingua inglese. La Fonte 1 afferma: ""Tutti gli insegnamenti sono svolti in modalità convenzionale, alcuni erogati in lingua italiana e alcuni in lingua inglese. Gli insegnamenti erogati in lingua inglese sono indicati con la dicitura “(in inglese)” nelle tabelle sopra riportate."".",1.000,0.601,0.833,1.000,0.578
+2025-11-04 09:46:05,Quanti anni dura il percorso formativo completo?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.145
+2025-11-04 09:46:05,Chi può accedere al corso di laurea magistrale?,Lo studente che non ha i requisiti curriculari può essere ammesso al corso di laurea magistrale in Ingegneria Informatica e Robotica previo recupero dei crediti formativi attraverso uno specifico percorso didattico concordato con il corso di laurea.,1.000,0.498,0.000,0.000,0.162
+2025-11-04 09:46:05,Quando si tiene la prova di verifica della preparazione personale?,"La prova per la valutazione dell'adeguatezza della preparazione personale si terrà prima dell’inizio delle attività didattiche, in una data definita dal corso di studio, eventualmente concordata con lo studente interessato all’iscrizione.",1.000,0.857,0.333,1.000,0.561
+2025-11-04 09:46:05,Qual è la prova finale prevista per il conseguimento della laurea?,"La prova finale, di norma basata su un'attività di progetto e realizzazione, prevede la preparazione di una monografia scritta su un argomento in uno o più settori di interesse per il Corso di Studio.",1.000,0.456,0.500,1.000,0.558
+2025-11-04 09:46:05,Chi è il docente responsabile dell'insegnamento DATA INTENSIVE APPLICATIONS AND BIG DATA?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.119
+2025-11-04 09:46:05,Qual è la differenza tra tesi compilativa e tesi sperimentale secondo il regolamento?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.141
+2025-11-04 09:46:05,Quali sono le modalità di verifica dell'apprendimento previste per l'insegnamento DATA INTENSIVE APPLICATIONS AND BIG DATA?,"Per l'insegnamento DATA INTENSIVE APPLICATIONS AND BIG DATA, la modalità di verifica dell'apprendimento prevista è l'esame. Questo è indicato in più punti del contesto fornito, ad esempio: ""Caratterizzante Ingegneria Informatica - Data Intensive Applications and Big Data (in inglese) 6 esame"".",0.667,0.981,0.000,0.000,0.431
+2025-11-04 09:46:05,Quali strutture e servizi sono disponibili per gli studenti di Ingegneria a Perugia?,"Il Dipartimento di Ingegneria dell'Università degli Studi di Perugia è una struttura situata in Via G. Duranti, 93 - 06125 - Perugia. Per gli studenti con disabilità, la struttura didattica provvederà, su richiesta, a mettere a disposizione mezzi strumentali e personale di supporto, secondo le specifiche esigenze e compatibilmente con le risorse disponibili.",1.000,0.811,0.000,0.000,0.161
+2025-11-04 09:46:05,Dove si trova il campus di Ingegneria e come è possibile raggiungerlo?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.127
+2025-11-04 09:46:05,È disponibile una rete Wi-Fi per gli studenti?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.135
+2025-11-04 09:46:05,Quali sono i giorni e gli orari di apertura al pubblico della Segreteria Studenti?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.139
+2025-11-04 09:46:05,Come si può contattare la Segreteria Studenti per telefono?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.124
+2025-11-04 09:46:05,Qual è l’indirizzo email della Segreteria Didattica del Dipartimento di Ingegneria?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.133
+2025-11-04 09:46:05,Come si può accedere ai servizi di segreteria senza recarsi fisicamente allo sportello?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.137
+2025-11-04 09:46:05,A chi scrivere per assistenza sulla segreteria online SOL?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.131
+2025-11-04 09:46:05,È possibile aprire un ticket per richiedere assistenza alla Segreteria Studenti?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.140
+2025-11-04 09:46:05,Quali sono i giorni entro cui uno studente deve presentare la domanda di laurea e consegnare la tesi?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.141
+2025-11-04 09:46:05,Dove si compila la domanda di laurea online?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.130
+2025-11-04 09:46:05,Quanto costa la stampa della pergamena se richiesta durante la domanda di laurea?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.096
+2025-11-04 09:46:05,"In base alle linee guida, quanti punti può ottenere una tesi di ricerca per la presentazione e discussione?",Non presente nei documenti.,1.000,0.000,0.000,0.000,0.123
+2025-11-04 09:46:05,Quali allegati sono obbligatori nella domanda di laurea online?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.164
+2025-11-04 09:46:05,Quali sono i criteri di valutazione per una tesi compilativa?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.151
+2025-11-04 09:46:05,Quando può essere assegnata la lode nella laurea magistrale?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.135
+2025-11-04 09:46:05,Come si calcola il voto di laurea magistrale?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.139
+2025-11-04 09:46:05,Qual è il numero massimo di CFU di tirocinio che uno studente può ottenere nella stessa azienda?,"In merito alle attività di tirocinio, ogni studente può fare esperienza in una singola azienda, o laboratorio interno, per un massimo di 9 CFU. Ulteriori attività di tirocinio, fino al raggiungimento del numero massimo di CFU a scelta libera a disposizione nel curriculum, potranno essere svolte solo presso altra azienda o laboratorio interno.",0.667,0.830,0.500,1.000,0.569
+2025-11-04 09:46:05,A quante ore di attività corrisponde un CFU di tirocinio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.113
+2025-11-04 09:46:05,Qual è il numero massimo di tirocinanti che un'azienda con 10 dipendenti può ospitare contemporaneamente?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.143
+2025-11-04 09:46:05,Un docente universitario può essere tutor di quanti tirocinanti interni?,Non presente nei documenti.,1.000,0.539,0.000,0.000,0.130
+2025-11-04 09:46:05,L’attività lavorativa passata può essere riconosciuta come tirocinio curriculare?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.180
+2025-11-04 09:46:05,Quanto tempo prima bisogna consegnare i moduli di tirocinio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.139
+2025-11-04 09:46:05,Cosa accade se l’azienda non è ancora convenzionata con il Dipartimento?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.134
+2025-11-04 09:46:05,Come si svolge la verbalizzazione del tirocinio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.185
+2025-11-04 09:46:05,Chi deve firmare il registro delle ore di tirocinio?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.093
+2025-11-04 09:46:05,Qual è la valutazione finale del tirocinio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.149
+2025-11-04 09:46:05,Il tirocinio può essere svolto in remoto?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.149
+2025-11-04 09:46:05,È possibile svolgere il tirocinio presso un laboratorio interno del Dipartimento?,"Sì, è possibile svolgere il tirocinio presso un laboratorio interno del Dipartimento. Le attività di tirocinio possono essere svolte ""in ambito aziendale o all’interno di laboratori (o altri tipi di strutture) del Dipartimento di Ingegneria"". Ogni studente può fare esperienza in una singola azienda, o laboratorio interno, per un massimo di 9 CFU. Ulteriori attività di tirocinio, fino al raggiungimento del numero massimo di CFU a scelta libera a disposizione nel curriculum, potranno essere svolte solo presso altra azienda o laboratorio interno.",0.800,1.000,1.000,1.000,0.524
+2025-11-04 09:46:05,Qual è l’indirizzo email a cui inviare il registro firme del tirocinio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.867
+2025-11-04 09:46:05,Che cosa si intende per tutorato di sostegno nei corsi di primo livello?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.134
+2025-11-04 09:46:05,Chi stabilisce i criteri e le modalità di assegnazione dei tutor ai diversi corsi di studio?,Non presente nei documenti.,0.000,0.000,0.000,0.000,0.132
+2025-11-04 09:46:05,A chi è destinato il tutorato individuale?,"Il tutorato, inteso come assistenza tutoriale, è destinato agli studenti che si iscrivono come studenti part-time e con un piano di studi personale che preveda diversa articolazione del percorso formativo, in base alle esigenze dovute a impegni lavorativi e secondo il piano di studi approvato dalla struttura didattica.",0.778,0.873,0.000,0.000,0.334
+2025-11-04 09:46:05,Cosa viene garantito agli studenti diversamente abili nel tutorato individuale?,Non presente nei documenti.,0.000,0.000,0.200,1.000,0.144
+2025-11-04 09:46:05,Chi fornisce il tutorato per gli insegnamenti di base nei corsi di primo livello?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.133
+2025-11-04 09:46:05,Qual è la finalità principale del tutorato di sostegno?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.129
+2025-11-04 09:46:05,È previsto un tutorato specifico per le lauree magistrali?,Non presente nei documenti.,1.000,0.000,0.000,0.000,0.904
+2025-11-04 09:46:05,=== MEDIA TOTALE ===,,0.497,0.158,0.081,0.171,0.247
