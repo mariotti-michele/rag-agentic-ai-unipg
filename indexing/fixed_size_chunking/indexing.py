@@ -195,7 +195,7 @@ if __name__ == "__main__":
     )
 
     indexing_json_collection(
-        collection_name="ing_info_mag_regolamenti_didattici",
+        collection_name="ing_info_mag_regolamenti_didattici_tabelle",
         json_files=[
             "tab-regolamento-data-science.json",
             "tab-regolamento-data-science-2024.json",

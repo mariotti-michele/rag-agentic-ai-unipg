@@ -1,4 +1,4 @@
-# DOCUMENT-STRUCTURE BASED CHUNKING = HYBRID DOCUMENT STRUCTURE BASED PLUS FIXED SIZE - parsing.py
+# DOCUMENT-STRUCTURE BASED CHUNKING - parsing.py
 
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
