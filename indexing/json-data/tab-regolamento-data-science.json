@@ -1,0 +1,127 @@
+{
+  "curriculum": "Data Science and Data Engineering",
+  "ciclo": "2025",
+  "anni": {
+    "I anno (2025-2026)": {
+      "totale_cfu": 51,
+      "insegnamenti": [
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Machine Learning and Data Analysis (in inglese)",
+          "SSD": "ING-INF/04",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Internet and Web Programming",
+          "SSD": "ING-INF/05",
+          "CFU": 6,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Intelligent and Secure Networks",
+          "SSD": "ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Information and Estimation Theory (in inglese)",
+          "SSD": "ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Computational Models and Advanced Algorithms",
+          "SSD": "ING-INF/05",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Software Engineering and AI-enabled Systems",
+          "SSD": "ING-INF/05",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        }
+      ]
+    },
+    "II anno (2026-2027)": {
+      "totale_cfu": 69,
+      "insegnamenti": [
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Models and Algorithms for Data Visualization (in inglese)",
+          "SSD": "ING-INF/05",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Signal Processing and Optimization for Big Data",
+          "SSD": "ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Artificial Intelligence in Cloud Computing",
+          "SSD": "ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Uno tra i seguenti insegnamenti: Data Intensive Applications and Big Data (in inglese) | Data Security and Blockchain | Deep Learning (in inglese)",
+          "SSD": "ING-INF/05 | ING-INF/05 | ING-INF/04",
+          "CFU": 6,
+          "modalita_verifica": "esame",
+          "semestre": "II | I | I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Uno tra i seguenti insegnamenti: Data Science for Health Systems | Deep Learning (in inglese)",
+          "SSD": "ING-INF/07 | ING-INF/04",
+          "CFU": 6,
+          "modalita_verifica": "esame",
+          "semestre": "II | I"
+        },
+        {
+          "attivita_formativa": "Scelta libera",
+          "CFU": 15,
+          "modalita_verifica": "esame"
+        },
+        {
+          "attivita_formativa": "Ulteriori attività formative",
+          "ambito_disciplinare": "Ulteriori conoscenze linguistiche",
+          "denominazione": "Lingua inglese B2",
+          "CFU": 3,
+          "modalita_verifica": "idoneità"
+        },
+        {
+          "attivita_formativa": "Prova finale",
+          "CFU": 12
+        }
+      ]
+    }
+  }
+}
