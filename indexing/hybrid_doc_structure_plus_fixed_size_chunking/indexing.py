@@ -149,43 +149,13 @@ async def main():
 
 import json
 
-def indexing_exam_calendar():
-    collection_name = "ing_info_mag_calendario_esami"
-    json_path = Path(__file__).resolve().parent / "data" / "tab-calendario-esami.json"
-
-    if not json_path.exists():
-        print(f"[ERRORE] File non trovato: {json_path}")
-        return
-
-    data = json.loads(json_path.read_text(encoding="utf-8"))
-    text_content = json.dumps(data, ensure_ascii=False, indent=2)
-
-    doc = Document(
-        page_content=text_content,
-        metadata={
-            "source_url": "manual",
-            "doc_type": "json",
-            "description": "Calendario appelli Ingegneria Informatica e Robotica 2025-26",
-            "doc_id": sha("calendario_appelli_2025_26")
-        },
-    )
-
-    vs = build_vectorstore(collection_name)
-    vs.add_documents([doc])
-    print(f"[OK] Inserito documento JSON nella collezione '{collection_name}'")
-    
-def indexing_exam_program_regulations():
-    collection_name = "ing_info_mag_regolamenti_didattici"
-    base_path = Path(__file__).resolve().parent / "data"
-
-    json_files = [
-        "tab-regolamento-data-science.json",
-        "tab-regolamento-data-science-2024.json",
-        "tab-regolamento-robotica.json",
-        "tab-regolamento-robotica-2024.json",
-    ]
-
+def indexing_json_collection(collection_name: str, json_files: list[str], description_prefix: str):
+    """
+    Indicizza uno o più file JSON in una collezione Qdrant.
+    """
+    base_path = Path(__file__).resolve().parent / "json-data"
     docs = []
+
     for filename in json_files:
         json_path = base_path / filename
 
@@ -201,24 +171,43 @@ def indexing_exam_program_regulations():
             metadata={
                 "source_url": "manual",
                 "doc_type": "json",
-                "description": f"Regolamento didattico - {filename}",
+                "description": f"{description_prefix} - {filename}",
                 "doc_id": sha(filename),
             },
         )
         docs.append(doc)
 
     if not docs:
-        print("[ERRORE] Nessun file caricato, indexing saltato.")
+        print(f"[ERRORE] Nessun file valido per la collezione '{collection_name}'.")
         return
 
     vs = build_vectorstore(collection_name)
     vs.add_documents(docs)
-
     print(f"[OK] Inseriti {len(docs)} documenti JSON nella collezione '{collection_name}'")
 
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-    indexing_exam_calendar()
-    indexing_exam_program_regulations()
+    indexing_json_collection(
+        collection_name="ing_info_mag_calendario_esami",
+        json_files=["tab-calendario-esami.json"],
+        description_prefix="Calendario appelli Ingegneria Informatica e Robotica 2025-26"
+    )
+
+    indexing_json_collection(
+        collection_name="ing_info_mag_regolamenti_didattici",
+        json_files=[
+            "tab-regolamento-data-science.json",
+            "tab-regolamento-data-science-2024.json",
+            "tab-regolamento-robotics.json",
+            "tab-regolamento-robotics-2024.json",
+        ],
+        description_prefix="Regolamento didattico"
+    )
+
+    indexing_json_collection(
+        collection_name="ing_info_mag_orari",
+        json_files=["tab-orari-1-anno.json", "tab-orari-2-anno.json"],
+        description_prefix="Orari lezioni"
+    )
