@@ -1,0 +1,67 @@
+{
+  "curriculum": "Data Science and Data Engineering",
+  "ciclo": "2024",
+  "anni": {
+    "II anno (2025-2026)": {
+      "totale_cfu": 69,
+      "insegnamenti": [
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Models and Algorithms for Data Visualization",
+          "SSD": "ING-INF/05",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Signal Processing and Optimization for Big Data",
+          "SSD": "ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Virtual Networks and Cloud Computing",
+          "SSD": "ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Uno tra i seguenti insegnamenti: Data Intensive Applications and Big Data | Data Security and Blockchain | Deep Learning and Robot Perception",
+          "SSD": "ING-INF/05 | ING-INF/05 | ING-INF/04",
+          "CFU": 6,
+          "modalita_verifica": "esame",
+          "semestre": "II | I | I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Uno tra i seguenti insegnamenti: Data Science for Health Systems | Deep Learning and Robot Perception",
+          "SSD": "ING-INF/07 | ING-INF/04",
+          "CFU": 6,
+          "modalita_verifica": "esame",
+          "semestre": "II | I"
+        },
+        {
+          "attivita_formativa": "Scelta libera",
+          "CFU": 15,
+          "modalita_verifica": "esame"
+        },
+        {
+          "attivita_formativa": "Ulteriori attività formative",
+          "ambito_disciplinare": "Ulteriori conoscenze linguistiche",
+          "CFU": 1
+        },
+        {
+          "attivita_formativa": "Prova finale",
+          "CFU": 14
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "curriculum": "Robotics",
+  "ciclo": "2025",
+  "anni": {
+    "I anno (2025-2026)": {
+      "totale_cfu": 51,
+      "insegnamenti": [
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Machine Learning and Data Analysis (in inglese)",
+          "SSD": "ING-INF/04",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Embedded Electronic Systems",
+          "SSD": "ING-INF/01",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Uno tra i seguenti insegnamenti: Digital Signal Processing (in inglese) | Intelligent and Secure Networks | Machine to Machine Networks",
+          "SSD": "ING-INF/03 | ING-INF/03 | ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I | I | II"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Information and Estimation Theory (in inglese)",
+          "SSD": "ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Industrial Robotics",
+          "SSD": "ING-INF/04",
+          "CFU": 6,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Uno tra i seguenti insegnamenti: Computational Models and Advanced Algorithms | Software Engineering and AI-enabled Systems",
+          "SSD": "ING-INF/05 | ING-INF/05",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II | II"
+        }
+      ]
+    },
+    "II anno (2026-2027)": {
+      "totale_cfu": 69,
+      "insegnamenti": [
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Deep Learning and Robot Perception (in inglese)",
+          "SSD": "ING-INF/04",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Autonomous Robotics",
+          "SSD": "ING-INF/04",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Nonlinear and Robust Control (in inglese)",
+          "SSD": "ING-INF/04",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "II"
+        },
+        {
+          "attivita_formativa": "Caratterizzante",
+          "ambito_disciplinare": "Ingegneria Informatica",
+          "denominazione": "Uno tra i seguenti insegnamenti: Data Intensive Applications and Big Data (in inglese) | Data Security and Blockchain | Internet and Web Programming",
+          "SSD": "ING-INF/05 | ING-INF/05 | ING-INF/05",
+          "CFU": 6,
+          "modalita_verifica": "esame",
+          "semestre": "II | I | I"
+        },
+        {
+          "attivita_formativa": "Affine",
+          "denominazione": "Uno tra i seguenti insegnamenti: Signal Processing and Optimization for Big Data | Artificial Intelligence in Cloud Computing",
+          "SSD": "ING-INF/03 | ING-INF/03",
+          "CFU": 9,
+          "modalita_verifica": "esame",
+          "semestre": "I | II"
+        },
+        {
+          "attivita_formativa": "Scelta libera",
+          "CFU": 12,
+          "modalita_verifica": "esame"
+        },
+        {
+          "attivita_formativa": "Ulteriori attività formative",
+          "ambito_disciplinare": "Ulteriori conoscenze linguistiche",
+          "denominazione": "Lingua inglese B2",
+          "CFU": 3,
+          "modalita_verifica": "idoneità"
+        },
+        {
+          "attivita_formativa": "Prova finale",
+          "CFU": 12
+        }
+      ]
+    }
+  }
+}

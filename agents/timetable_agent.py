@@ -39,21 +39,11 @@ Hai nella tua conoscenza le tabelle degli orari delle lezioni in formato JSON st
   "orario": {{
     "Giorno": {{
       "OraInizio-OraFine": [[
-        {{ "corso": "...", "aula": "..." }}
+        {{ "corso": "...", "aula": "...", "curriculum": "..."}}
       ]]
     }}
   }}
 }}
-
-Nota:
-In alcuni rari casi nello stesso slot orario possono comparire più corsi in parallelo svolti in aule diverse. Ad esempio:
-"lunedì": {{
-      "09:00-11:00": [[
-        {{ "corso": "Corso A Corso B", "aula": "A1 B2" }},
-      ]]
-    }}
-Li puoi riconoscere perché il campo "corso" contiene più nomi di corsi separati solo da spazi (senza congiunzioni) e il campo "aula" contiene più aule.
-In questo caso considera ciascun corso con la sua aula come elemento distinto.
 
 Rispondi alle domande relative a giorni, orari, corsi e aule in base ai dati forniti.
 

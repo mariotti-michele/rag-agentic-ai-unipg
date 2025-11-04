@@ -1,0 +1,162 @@
+{
+  "universita": "Università degli Studi di Perugia",
+  "corso_di_laurea": "Ingegneria Informatica e Robotica",
+  "anno_accademico": "2025-26",
+  "calendario_appelli": {
+    "I_ANNO": {
+      "I_SEMESTRE": [
+        {
+          "insegnamento": "Digital Signal Processing",
+          "date": { "note": "si veda il calendario di INGEGNERIA ELETTRONICA" },
+          "commissione": []
+        },
+        {
+          "insegnamento": "Intelligent and Secure Networks",
+          "date": {
+            "2026": { "gennaio": [9, 23], "febbraio": [10], "aprile": [13], "maggio": [29], "giugno": [16], "luglio": [7], "agosto": [25], "settembre": [11] }
+          },
+          "commissione": ["Femminella", "Reali", "Baruffa", "Frescura", "Banelli", "Rugini", "Perfetti"]
+        },
+        {
+          "insegnamento": "Machine Learning and Data Analysis",
+          "date": {
+            "2025": { "dicembre": [17] },
+            "2026": { "gennaio": [12, 28], "aprile": [8], "maggio": [25], "giugno": [10, 29], "agosto": [26], "settembre": [10] }
+          },
+          "commissione": ["Costante", "Valigi", "Fravolini", "Leomanni", "Ferrante", "Dionigi", "Legittimo", "Feliconi", "Brilli", "Crocetti"]
+        },
+        {
+          "insegnamento": "Internet and Web Programming",
+          "date": {
+            "2025": { "dicembre": [18] },
+            "2026": { "gennaio": [8, 22], "maggio": [28], "giugno": [18], "luglio": [2, 16], "settembre": [3] }
+          },
+          "commissione": ["Didimo", "Liotta", "Binucci", "Di Giacomo", "Grilli", "Montecchiani", "Tappini"]
+        },
+        {
+          "insegnamento": "Electronic Embedded Systems",
+          "date": { "note": "si veda il calendario di INGEGNERIA ELETTRONICA" },
+          "commissione": []
+        }
+      ],
+      "II_SEMESTRE": [
+        {
+          "insegnamento": "Computational Models and Advanced Algorithms",
+          "date": {
+            "2025": { "dicembre": [17] },
+            "2026": { "gennaio": [7, 21], "maggio": [27], "giugno": [17], "luglio": [1, 15], "settembre": [2] }
+          },
+          "commissione": ["Didimo", "Liotta", "Binucci", "Di Giacomo", "Grilli", "Montecchiani", "Tappini"]
+        },
+        {
+          "insegnamento": "Industrial Robotics",
+          "date": {
+            "2025": { "dicembre": [19] },
+            "2026": { "gennaio": [12, 26], "maggio": [26], "giugno": [10, 24], "agosto": [26] }
+          },
+          "commissione": ["Ferrante", "Fravolini", "Valigi", "Costante", "Crocetti", "Dionigi", "Feliconi"]
+        },
+        {
+          "insegnamento": "Information and Estimation Theory",
+          "date": {
+            "2026": { "gennaio": [8, 22], "febbraio": [5], "aprile": [1], "giugno": [8, 25], "luglio": [13], "agosto": [24], "settembre": [7] }
+          },
+          "commissione": ["Baruffa", "Rugini", "Frescura", "Banelli", "Reali", "Femminella"]
+        },
+        {
+          "insegnamento": "Software Engineering and AI-enabled Systems",
+          "date": {
+            "2025": { "dicembre": [18] },
+            "2026": { "gennaio": [15], "febbraio": [6], "maggio": [28], "giugno": [12], "luglio": [2, 16], "settembre": [3] }
+          },
+          "commissione": ["Montecchiani", "Didimo", "Liotta", "Binucci", "Di Giacomo", "Grilli", "Ortali", "Tappini"]
+        },
+        {
+          "insegnamento": "Machine to Machine Networks",
+          "date": {
+            "2026": { "gennaio": [9, 23], "febbraio": [10], "aprile": [13], "maggio": [29], "giugno": [16], "luglio": [7], "agosto": [25], "settembre": [11] }
+          },
+          "commissione": ["Femminella", "Reali", "Baruffa", "Frescura", "Banelli", "Rugini", "Perfetti"]
+        }
+      ]
+    },
+    "II_ANNO": {
+      "I_SEMESTRE": [
+        {
+          "insegnamento": "Models and Algorithms for Data Visualization",
+          "date": {
+            "2025": { "dicembre": [19] },
+            "2026": { "gennaio": [8, 22], "maggio": [27], "giugno": [10], "luglio": [1, 16], "settembre": [3] }
+          },
+          "commissione": ["Liotta", "Binucci", "Di Giacomo", "Didimo", "Grilli", "Montecchiani", "Tappini", "Ortali"]
+        },
+        {
+          "insegnamento": "Signal Processing and Optimization for Big Data",
+          "date": {
+            "2025": { "dicembre": [18] },
+            "2026": { "gennaio": [20], "febbraio": [6], "aprile": [13], "maggio": [26], "giugno": [18], "luglio": [2], "agosto": [27], "settembre": [9] }
+          },
+          "commissione": ["Banelli", "Rugini", "Baruffa", "Reali", "Frescura", "Femminella"]
+        },
+        {
+          "insegnamento": "Data Security and Blockchain",
+          "date": {
+            "2025": { "dicembre": [9] },
+            "2026": { "gennaio": [23], "febbraio": [13], "maggio": [29], "giugno": [19], "luglio": [17], "agosto": [21], "settembre": [10] }
+          },
+          "commissione": ["Grilli", "Montecchiani", "Liotta", "Didimo", "Di Giacomo", "Binucci", "Tappini", "Ortali"]
+        },
+        {
+          "insegnamento": "Deep Learning and Robot Perception",
+          "date": {
+            "2025": { "dicembre": [15] },
+            "2026": { "gennaio": [14, 30], "aprile": [9], "maggio": [28], "giugno": [11, 30], "agosto": [24], "settembre": [8] }
+          },
+          "commissione": ["Costante", "Valigi", "Fravolini", "Leomanni", "Ferrante", "Dionigi", "Legittimo", "Feliconi", "Brilli", "Crocetti"]
+        },
+        {
+          "insegnamento": "Autonomous Robotics",
+          "date": {
+            "2025": { "dicembre": [16] },
+            "2026": { "gennaio": [13], "febbraio": [4], "aprile": [8], "maggio": [25], "giugno": [15], "luglio": [8], "agosto": [26], "settembre": [11] }
+          },
+          "commissione": ["Valigi", "Fravolini", "Costante", "Ferrante", "Crocetti", "Dionigi", "Feliconi", "Legittimo"]
+        }
+      ],
+      "II_SEMESTRE": [
+        {
+          "insegnamento": "Virtual Networks and Cloud Computing",
+          "date": {
+            "2025": { "dicembre": [18] },
+            "2026": { "gennaio": [16], "febbraio": [3], "maggio": [28], "giugno": [17], "luglio": [2], "agosto": [25], "settembre": [9] }
+          },
+          "commissione": ["Reali", "Rugini", "Femminella", "Banelli", "Brescura", "Baruffa", "Perfetti"]
+        },
+        {
+          "insegnamento": "Data Intensive Applications and Big Data",
+          "date": {
+            "2025": { "dicembre": [17] },
+            "2026": { "gennaio": [14], "febbraio": [5], "maggio": [26], "giugno": [11], "luglio": [1, 15], "settembre": [2] }
+          },
+          "commissione": ["Montecchiani", "Liotta", "Didimo", "Binucci", "Di Giacomo", "Grilli", "Tappini", "Ortali"]
+        },
+        {
+          "insegnamento": "Data Science for Health Systems",
+          "date": {
+            "2025": { "dicembre": [16] },
+            "2026": { "gennaio": [15], "febbraio": [11], "aprile": [9], "giugno": [12], "luglio": [3, 23], "agosto": [24], "settembre": [7] }
+          },
+          "commissione": ["De Angelis", "Moschitta", "Carbone", "Santoni", "Alimenti", "Passeri", "Placidi", "Perfetti", "Banelli", "Valigi"]
+        },
+        {
+          "insegnamento": "Nonlinear and Robust Control",
+          "date": {
+            "2025": { "dicembre": [19] },
+            "2026": { "gennaio": [12, 26], "maggio": [27], "giugno": [10, 24], "agosto": [28], "settembre": [11] }
+          },
+          "commissione": ["Ferrante", "Valigi", "Fravolini", "Costante", "Feliconi", "Dionigi", "A."]
+        }
+      ]
+    }
+  }
+}
