@@ -124,7 +124,7 @@ for name in vectorstores:
 import argparse
 
 parser = argparse.ArgumentParser(description="Sistema Q&A con modelli selezionabili")
-parser.add_argument("--model", type=str, default="gemini",
+parser.add_argument("--model", type=str, default="llama-api",
                     choices=["llama-local", "gemini", "llama-api"],
                     help="Seleziona il modello da usare")
 args = parser.parse_args()
