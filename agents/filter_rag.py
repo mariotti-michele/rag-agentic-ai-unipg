@@ -327,6 +327,30 @@ Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o tit
     return f"Risposta Dense: {answer}", [d["text"] for d in dense_docs]
 
 
+def answer_query_bm25(query: str, k: int = 5):
+    """Retrieval solo sparso (BM25) per debug o confronto"""
+    sparse_idxs = bm25_search_idx(query, k=k)
+    if not sparse_idxs:
+        return "Non presente nei documenti", []
+
+    sparse_docs = [{**corpus[i], "score": score} for i, score in sparse_idxs]
+
+    context = ""
+    for i, d in enumerate(sparse_docs, 1):
+        section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
+        context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
+
+    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
+
+Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
+"""
+    answer = llm.invoke(prompt)
+    if hasattr(answer, "content"):
+        answer = answer.content
+
+    return f"Risposta Sparse (BM25): {answer}", [d["text"] for d in sparse_docs]
+
+
 def classify_query(query: str) -> str:
     """Classifica la query in 'semplice' o 'rag'."""
     try:
