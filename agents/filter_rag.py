@@ -59,15 +59,22 @@ QA_CHAIN_PROMPT = PromptTemplate(
 classifier_prompt = PromptTemplate(
     input_variables=["question"],
     template="""
-Sei un classificatore di query.
+Sei un classificatore di query accademiche.
 
-Se la domanda riguarda saluti, domande generiche, curiosità non legate a regolamenti o procedure accademiche → rispondi SOLO con: semplice
+Devi scegliere una sola categoria tra:
+- "semplice"
+- "rag"
 
-Se la domanda richiede informazioni ufficiali su corsi, tesi, tirocini, lauree, esami, regolamenti, scadenze → rispondi SOLO con: rag
+Rispondi SOLO con una di queste due parole.
+
+Regole:
+- Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei") → rispondi: semplice
+- In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche → rispondi: rag
 
 Domanda: {question}
 Categoria:""",
 )
+
 
 simple_prompt_template = """Sei un assistente accademico gentile.
 Rispondi in modo breve e diretto alla domanda generica seguente:
@@ -154,7 +161,8 @@ elif args.model == "llama-api":
     )
 
 
-all_texts = []
+# === COSTRUZIONE CORPUS CON METADATA ===
+corpus = []
 
 try:
     existing = qdrant_client.get_collections().collections
@@ -165,10 +173,8 @@ except Exception as e:
 
 for COLLECTION_NAME in COLLECTION_NAMES:
     if COLLECTION_NAME not in existing_names:
-        #print(f"[WARN] Collezione inesistente su Qdrant: {COLLECTION_NAME} (saltata)")
         continue
 
-    #print(f"Leggendo documenti da collezione: {COLLECTION_NAME}")
     scroll_filter = None
     total_texts = 0
 
@@ -190,7 +196,13 @@ for COLLECTION_NAME in COLLECTION_NAMES:
         for p in points:
             text = p.payload.get("page_content", "")
             if text:
-                all_texts.append(text)
+                corpus.append({
+                    "text": text,
+                    "collection": COLLECTION_NAME,
+                    "source_url": p.payload.get("source_url", ""),
+                    "section_path": p.payload.get("section_path", ""),
+                    "doc_id": p.payload.get("doc_id", ""),
+                })
                 total_texts += 1
 
         if next_page is None:
@@ -199,292 +211,139 @@ for COLLECTION_NAME in COLLECTION_NAMES:
 
     if total_texts == 0:
         print(f"[WARN] Nessun testo trovato in {COLLECTION_NAME}")
-    #else:
-        #print(f"{total_texts} testi caricati da {COLLECTION_NAME}")
 
-#print(f"\nTotale complessivo di testi caricati: {len(all_texts)}")
+if not corpus:
+    raise RuntimeError("Nessun testo trovato in nessuna collezione!")
 
-if not all_texts:
-    raise RuntimeError(
-        "Nessun testo trovato in nessuna collezione! "
-        "Controlla che i nomi in COLLECTION_NAMES coincidano con quelli effettivi su Qdrant."
-    )
+print(f"[INFO] Corpus completo: {len(corpus)} chunk con metadata")
 
-
+# === CREAZIONE MODELLI SPARSE ===
+all_texts = [c["text"] for c in corpus]
 vectorizer = TfidfVectorizer()
 tfidf_matrix = vectorizer.fit_transform(all_texts)
 
 from nltk.tokenize import word_tokenize
 import nltk
 nltk.download('punkt', quiet=True)
-
-tokenized_corpus = [word_tokenize(text.lower()) for text in all_texts]
+tokenized_corpus = [word_tokenize(t.lower()) for t in all_texts]
 bm25 = BM25Okapi(tokenized_corpus)
 
+# === FUNZIONI DI RICERCA SPARSE ===
+def tfidf_search_idx(query: str, k: int = 5):
+    qv = vectorizer.transform([query])
+    scores = (tfidf_matrix @ qv.T).toarray().ravel()
+    top_idx = np.argsort(scores)[::-1][:k]
+    return [(i, float(scores[i])) for i in top_idx]
 
-def tfidf_search(query: str, k: int = 5):
-    query_vec = vectorizer.transform([query])
-    scores = (tfidf_matrix @ query_vec.T).toarray().ravel()
-    top_indices = np.argsort(scores)[::-1][:k]
-    results = [(all_texts[i], scores[i]) for i in top_indices]
-    return results
+def bm25_search_idx(query: str, k: int = 5):
+    qtoks = word_tokenize(query.lower())
+    scores = bm25.get_scores(qtoks)
+    top_idx = np.argsort(scores)[::-1][:k]
+    return [(i, float(scores[i])) for i in top_idx]
 
-def bm25_search(query: str, k: int = 5):
-    """Ricerca sparse basata su BM25"""
-    query_tokens = word_tokenize(query.lower())
-    scores = bm25.get_scores(query_tokens)
-    top_indices = np.argsort(scores)[::-1][:k]
-    results = [(all_texts[i], scores[i]) for i in top_indices]
-    return results
+# === RETRIEVAL DENSO ===
+def dense_search(query: str, k: int = 5):
+    vec = embeddings.embed_query(query)
+    dense_hits = []
+    for name, store in vectorstores.items():
+        try:
+            docs = store.similarity_search_with_score_by_vector(vec, k=k)
+            for doc, score in docs:
+                dense_hits.append({
+                    "text": doc.page_content,
+                    "collection": name,
+                    "source_url": doc.metadata.get("source_url", ""),
+                    "section_path": doc.metadata.get("section_path", ""),
+                    "doc_id": doc.metadata.get("doc_id", ""),
+                    "score": float(1 - score),
+                })
+        except Exception as e:
+            print(f"[WARN] Errore su {name}: {e}")
+    return dense_hits
+
+# === RRF FUSION ===
+def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
+    combined = {}
+    for rank, d in enumerate(dense_docs):
+        docid = d["doc_id"] or d["text"]
+        combined[docid] = combined.get(docid, 0) + 1 / (alpha + rank + 1)
+    for rank, d in enumerate(sparse_docs):
+        docid = d["doc_id"] or d["text"]
+        combined[docid] = combined.get(docid, 0) + 1 / (alpha + rank + 1)
+
+    ranked_ids = sorted(combined.items(), key=lambda x: x[1], reverse=True)[:k]
+    id_set = {rid for rid, _ in ranked_ids}
+    merged = {d.get("doc_id") or d["text"]: d for d in dense_docs + sparse_docs}
+    return [merged[i] for i in id_set if i in merged]
+
+# === HYBRID SEARCH (con metadata) ===
+def hybrid_search(query: str, alpha: float = 0.6, k: int = 5):
+    dense_docs = dense_search(query, k=5)
+    sparse_idxs = bm25_search_idx(query, k=10)
+    sparse_docs = [{
+        **corpus[i],
+        "score": score,
+    } for i, score in sparse_idxs]
+
+    if not dense_docs and not sparse_docs:
+        return "Non presente nei documenti", []
+
+    merged_docs = reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=k)
+
+    context = ""
+    for i, d in enumerate(merged_docs, 1):
+        section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
+        context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d.get('text','')}\n\n"
+
+    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
+
+Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
+"""
+    answer = llm.invoke(prompt)
+    if hasattr(answer, "content"):
+        answer = answer.content
+
+    return f"Risposta ibrida (α={alpha}): {answer}", [d["text"] for d in merged_docs]
+
+
+def answer_query_dense(query: str, k: int = 5):
+    """Retrieval solo denso per debug o confronto"""
+    dense_docs = dense_search(query, k=k)
+    if not dense_docs:
+        return "Non presente nei documenti", []
+
+    context = ""
+    for i, d in enumerate(dense_docs, 1):
+        section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
+        context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d.get('text','')}\n\n"
+
+    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
+
+Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
+"""
+    answer = llm.invoke(prompt)
+    if hasattr(answer, "content"):
+        answer = answer.content
+    return f"Risposta Dense: {answer}", [d["text"] for d in dense_docs]
 
 
 def classify_query(query: str) -> str:
-    """Classifica la query in 'semplice' o 'rag'"""
+    """Classifica la query in 'semplice' o 'rag'."""
     try:
         classification = llm.invoke(classifier_prompt.format(question=query))
         if hasattr(classification, "content"):
             classification = classification.content
         classification = str(classification).strip().lower()
+
         if "semplice" in classification:
             return "semplice"
         else:
             return "rag"
     except Exception as e:
-        print(f"Errore classificazione: {e}")
+        print(f"[WARN] Errore classificazione query: {e}")
+        # fallback: modalità RAG se il modello fallisce
         return "rag"
 
-
-def answer_query_dense(query: str):
-    """Usa tutte le collezioni Dense (Qdrant) e ritorna risposta + contesto"""
-    vec = embeddings.embed_query(query)
-    all_docs = []
-
-    for name, store in vectorstores.items():
-        try:
-            docs = store.similarity_search_by_vector(vec, k=5)
-            for d in docs:
-                d.metadata["collection"] = name
-            all_docs.extend(docs)
-        except Exception as e:
-            print(f"[WARN] Errore su {name}: {e}")
-
-    seen = set()
-    unique_docs = []
-    for d in all_docs:
-        text = d.page_content.strip()
-        if text not in seen:
-            seen.add(text)
-            unique_docs.append(d)
-        if len(unique_docs) == 5:
-            break
-
-    if not unique_docs:
-        return "Non presente nei documenti.", []
-
-    context = "\n\n".join(
-        [f"[Fonte {i+1}] ({doc.metadata.get('collection', 'N/A')})\n{doc.page_content}"
-         for i, doc in enumerate(unique_docs)]
-    )
-
-    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
-
-Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
-"""
-    answer = llm.invoke(prompt)
-    if hasattr(answer, "content"):
-        answer = answer.content
-
-    return f"Risposta nomic-embed-text: {answer}", [doc.page_content for doc in unique_docs]
-
-
-
-def answer_query_tfidf(query: str):
-    """Usa solo Sparse (TF-IDF)"""
-    tfidf_results = tfidf_search(query, k=5)
-    if not tfidf_results:
-        return "Non presente nei documenti"
-
-    context = "\n\n".join(
-        [f"[Fonte {i+1}] (TF-IDF, score={score:.3f})\n{text}"
-         for i, (text, score) in enumerate(tfidf_results)]
-    )
-
-    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
-
-Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
-"""
-    answer = llm.invoke(prompt)
-    if hasattr(answer, "content"):
-        answer = answer.content
-
-    return f"Risposta TF-IDF: {answer}"
-
-
-
-def answer_query_bm25(query: str):
-    """Usa BM25 e ritorna risposta + contesto"""
-    bm25_results = bm25_search(query, k=5)
-    if not bm25_results:
-        return "Non presente nei documenti.", []
-
-    context_texts = [text for text, score in bm25_results]
-
-    context = "\n\n".join(
-        [f"[Fonte {i+1}] (BM25, score={score:.3f})\n{text}"
-         for i, (text, score) in enumerate(bm25_results)]
-    )
-
-    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
-
-Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
-"""
-    answer = llm.invoke(prompt)
-    if hasattr(answer, "content"):
-        answer = answer.content
-
-    return f"Risposta BM25: {answer}", context_texts
-
-
-
-
-def compare_dense_vs_tfidf(query: str):
-    """Confronta Dense vs Sparse"""
-    print(f"\n Query: {query}\n{'='*70}")
-
-    dense_answer = answer_query_dense(query)
-    print("\n--- Risposta Dense (Qdrant) ---")
-    print(dense_answer)
-
-    sparse_answer = answer_query_tfidf(query)
-    print("\n--- Risposta Sparse (TF-IDF) ---")
-    print(sparse_answer)
-
-    print("="*70)
-
-
-def reciprocal_rank_fusion(dense_texts, sparse_texts, k=5, alpha=60):
-    """Combina i risultati denso e sparso usando Reciprocal Rank Fusion (RRF)."""
-    combined = {}
-    for rank, text in enumerate(dense_texts):
-        combined[text] = combined.get(text, 0) + 1 / (alpha + rank + 1)
-    for rank, text in enumerate(sparse_texts):
-        combined[text] = combined.get(text, 0) + 1 / (alpha + rank + 1)
-    ranked = sorted(combined.items(), key=lambda x: x[1], reverse=True)
-    return [t for t, _ in ranked[:k]]
-
-
-def hybrid_search(query: str, alpha: float = 0.5, k: int = 5):
-    """Retrieval ibrido combinato su tutte le collezioni. Ritorna risposta + contesto"""
-    dense_vec = embeddings.embed_query(query)
-    dense_results = {}
-
-    # Recupera documenti densi
-    for name, store in vectorstores.items():
-        try:
-            docs = store.similarity_search_with_score_by_vector(dense_vec, k=5)
-            for doc, score in docs:
-                dense_results[doc.page_content] = 1 - score
-        except Exception as e:
-            print(f"[WARN] Errore su {name}: {e}")
-
-    # Recupera documenti sparsi
-    tfidf_results = bm25_search(query, k=10)
-    sparse_results = {text: score for text, score in tfidf_results}
-
-    # === Fusione ibrida con Reciprocal Rank Fusion ===
-    dense_texts = list(dense_results.keys())
-    sparse_texts = list(sparse_results.keys())
-
-    # Fallback se uno dei due fallisce
-    if not dense_texts and not sparse_texts:
-        print("[WARN] Nessun risultato da dense né sparse → risposta vuota.")
-        return "Non presente nei documenti", []
-
-    elif not dense_texts:
-        print("[INFO] Nessun risultato denso → uso solo BM25.")
-        top_texts = sparse_texts[:k]
-
-    elif not sparse_texts:
-        print("[INFO] Nessun risultato sparso → uso solo retrieval denso.")
-        top_texts = dense_texts[:k]
-
-    else:
-        top_texts = reciprocal_rank_fusion(dense_texts, sparse_texts, k=k)
-
-
-    context = "\n\n".join([f"[Fonte {i+1}]\n{t}" for i, t in enumerate(top_texts)])
-
-
-    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
-
-Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
-"""
-    answer = llm.invoke(prompt)
-    if hasattr(answer, "content"):
-        answer = answer.content
-
-    return f"Risposta ibrida (α={alpha}): {answer}", top_texts
-
-    
-
-# def answer_query(query: str):
-#     try:
-#         # STEP 1: classifica la query
-#         mode = classify_query(query)
-#         print(f"Classificazione query: {mode}")
-
-#         # STEP 2: risposta semplice
-#         if mode == "semplice":
-#             prompt = simple_prompt_template.format(question=query)
-#             answer = llm.invoke(prompt)
-#             if hasattr(answer, "content"):
-#                 answer = answer.content
-#             return f"Risposta semplice: {answer}"
-
-#         # STEP 3: risposta RAG
-#         print("Processando query con RAG...")
-#         vec = embeddings.embed_query(query)
-#         docs = vectorstore.similarity_search_by_vector(vec, k=8)
-
-#         seen = set()
-#         unique_docs = []
-#         for d in docs:
-#             text = d.page_content.strip()
-#             if text not in seen:
-#                 seen.add(text)
-#                 unique_docs.append(d)
-#             if len(unique_docs) == 5:
-#                 break
-
-#         if not unique_docs:
-#             return "Non presente nei documenti"
-
-#         context = "\n\n".join(
-#             [f"[Fonte {i+1}] ({doc.metadata.get('source_url', 'N/A')})\n{doc.page_content}"
-#              for i, doc in enumerate(unique_docs)]
-#         )
-
-#         prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
-
-#     Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
-#     """
-#         answer = llm.invoke(prompt)
-#         if hasattr(answer, "content"):
-#             answer = answer.content
-
-#         main_source = unique_docs[0].metadata.get("source_url", "N/A")
-#         response = f"Risposta: {answer}\n"
-#         response += f"\nPer ulteriori informazioni consulta il seguente link: {main_source}\n"
-
-#         if unique_docs:
-#             response += f"\nFonti consultate ({len(unique_docs)} documenti):"
-#             for i, doc in enumerate(unique_docs, 1):
-#                 preview = doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
-#                 response += f"\n{i}. {preview}"
-#         return response
-
-#     except Exception as e:
-#         return f"Errore durante la query: {e}"
 
 
 def test_connection():
@@ -532,9 +391,7 @@ if __name__ == "__main__":
                         answer = answer.content
                     print(f"\nRisposta semplice: {answer}\n")
                 else:
-                    # confronto automatico Dense vs Sparse
-                    compare_dense_vs_tfidf(q)
-                    print("\n--- 📙 Risposta Ibrida (Dense + TF-IDF) ---")
+                    print("\n--- Risposta Ibrida (Dense + BM25) ---")
                     hybrid_answer = hybrid_search(q, alpha=0.6, k=5)
                     print(hybrid_answer)
 
@@ -546,22 +403,3 @@ if __name__ == "__main__":
             break
         except Exception as e:
             print(f"Errore: {e}")
-
-
-
-    # while True:
-    #     try:
-    #         q = input("Domanda: ")
-    #         if q.lower() in ["exit", "quit"]:
-    #             break
-    #         if q.strip():
-    #             result = answer_query(q)
-    #             print(f"\n{result}\n")
-    #             print("-" * 50)
-    #         else:
-    #             print("Inserisci una domanda valida.")
-    #     except KeyboardInterrupt:
-    #         print("\nUscita...")
-    #         break
-    #     except Exception as e:
-    #         print(f"Errore: {e}")
