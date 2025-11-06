@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+ENV PIP_REQUIRE_HASHES=0
+RUN pip install --default-timeout=20000 --no-cache-dir -r requirements.txt
 
 RUN python -m nltk.downloader punkt punkt_tab
 

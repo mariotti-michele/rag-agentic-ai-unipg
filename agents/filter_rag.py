@@ -1,7 +1,8 @@
 import os, json
 from qdrant_client import QdrantClient
 from langchain_qdrant import QdrantVectorStore
-from langchain_ollama import OllamaEmbeddings
+#from langchain_ollama import OllamaEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 
 #llama locale:
@@ -83,9 +84,14 @@ Domanda: {question}
 Risposta:"""
 
 
-embeddings = OllamaEmbeddings(
-    model="nomic-embed-text",
-    base_url=OLLAMA_BASE_URL
+# embeddings = OllamaEmbeddings(
+#     model="nomic-embed-text",
+#     base_url=OLLAMA_BASE_URL
+# )
+
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-mpnet-base-v2",
+    encode_kwargs={"normalize_embeddings": True}
 )
 
 #print("Connettendo a Qdrant...")

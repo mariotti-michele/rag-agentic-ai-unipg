@@ -14,3 +14,7 @@ langchain_google_vertexai
 google-auth
 rank_bm25
 nltk
+langchain-community
+transformers
+torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+accelerate

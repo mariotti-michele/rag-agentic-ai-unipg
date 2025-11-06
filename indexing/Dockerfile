@@ -21,7 +21,8 @@ WORKDIR /app
 
 # Install requirements
 COPY requirements.txt .
-RUN pip install --default-timeout=10000 --no-cache-dir -r requirements.txt
+ENV PIP_REQUIRE_HASHES=0
+RUN pip install --default-timeout=20000 --no-cache-dir -r requirements.txt
 
 # Installa dipendenze Playwright + Chromium
 RUN playwright install-deps

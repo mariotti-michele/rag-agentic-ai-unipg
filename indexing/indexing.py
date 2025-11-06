@@ -4,7 +4,8 @@ import os, asyncio, uuid
 from dotenv import load_dotenv
 from pathlib import Path
 
-from langchain_ollama import OllamaEmbeddings
+#from langchain_ollama import OllamaEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_core.documents import Document
 from qdrant_client import QdrantClient
@@ -16,7 +17,8 @@ load_dotenv()
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
-EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+#EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "sentence-transformers/all-mpnet-base-v2")
 
 LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
 
@@ -42,7 +44,11 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
 
 
 def build_vectorstore(collection_name: str):
-    embeddings = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
+    #embeddings = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
+    embeddings = HuggingFaceEmbeddings(
+        model_name=EMBED_MODEL,
+        encode_kwargs={"normalize_embeddings": True}
+    )
     client = QdrantClient(url=QDRANT_URL)
 
     existing_collections = [c.name for c in client.get_collections().collections]
