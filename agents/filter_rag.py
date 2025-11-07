@@ -89,6 +89,11 @@ Risposta:"""
 #     base_url=OLLAMA_BASE_URL
 # )
 
+# embeddings = HuggingFaceEmbeddings(
+#     model_name="intfloat/e5-base-v2",
+#     encode_kwargs={"normalize_embeddings": True}
+# )
+
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-mpnet-base-v2",
     encode_kwargs={"normalize_embeddings": True}
@@ -249,6 +254,7 @@ def bm25_search_idx(query: str, k: int = 5):
 
 # === RETRIEVAL DENSO ===
 def dense_search(query: str, k: int = 5):
+    #vec = embeddings.embed_query(f"query: {query}")     #per E5
     vec = embeddings.embed_query(query)
     dense_hits = []
     for name, store in vectorstores.items():
