@@ -17,18 +17,18 @@ load_dotenv()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+#EMBED_MODEL = "intfloat/e5-base-v2"
+#EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
 
 LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
 
 
 def chunk_documents(docs: list[Document]) -> list[Document]:
-    """
-    Mantiene i chunk così come generati dal parser.
-    Non applica alcun text-splitting per lunghezza.
-    """
     clean_chunks = []
     for i, d in enumerate(docs):
         text = d.page_content.strip()
+        #text = "passage: " + text   #per E5
+        #d.page_content = text   #per E5
         if not text:
             continue
         base_id = sha(d.metadata["source_url"])
