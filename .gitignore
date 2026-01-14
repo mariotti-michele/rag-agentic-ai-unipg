@@ -1,6 +1,6 @@
 ollama_data/
 data/
 qdrant_storage/
-indexing/__pycache__/
+indexing/src/__pycache__/
 .env
-agents/__pycache__/
+agents/src/__pycache__/

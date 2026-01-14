@@ -1,11 +1,10 @@
-# SEMANTIC CHUNKING INDEXING SCRIPT
+# SECTION BASED CHUNKING INDEXING SCRIPT
 
 import os, asyncio, uuid
 from dotenv import load_dotenv
 from pathlib import Path
 
-#from langchain_ollama import OllamaEmbeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_core.documents import Document
 from qdrant_client import QdrantClient
@@ -17,16 +16,14 @@ load_dotenv()
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
-#EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
-#EMBED_MODEL = "intfloat/e5-base-v2"
-EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
+EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 
 LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
 
 
 def chunk_documents(docs: list[Document]) -> list[Document]:
     """
-    Mantiene i chunk semantici così come generati dal parser.
+    Mantiene i chunk così come generati dal parser.
     Non applica alcun text-splitting per lunghezza.
     """
     clean_chunks = []
@@ -34,24 +31,18 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
         text = d.page_content.strip()
         if not text:
             continue
-        #text = "passage: " + text   #per E5
-        #d.page_content = text   #per E5
         base_id = sha(d.metadata["source_url"])
         content_id = sha(d.page_content)
         d.metadata["chunk_id"] = f"{base_id}_{i}_{content_id[:8]}"
         clean_chunks.append(d)
 
-    print(f"[INFO] Mantieni {len(clean_chunks)} chunk semantici (nessun text split)")
+    print(f"[INFO] Mantieni {len(clean_chunks)} chunk (nessun text split)")
     return clean_chunks
 
 
 
 def build_vectorstore(collection_name: str):
-    #embeddings = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
-    embeddings = HuggingFaceEmbeddings(
-        model_name=EMBED_MODEL,
-        encode_kwargs={"normalize_embeddings": True}
-    )
+    embeddings = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
     client = QdrantClient(url=QDRANT_URL)
 
     existing_collections = [c.name for c in client.get_collections().collections]
@@ -151,7 +142,6 @@ import json
 def indexing_json_collection(collection_name: str, json_files: list[str], description_prefix: str):
     """
     Indicizza uno o più file JSON in una collezione Qdrant.
-    Ogni corso o voce viene trasformato in un chunk indipendente (più recuperabile).
     """
     base_path = Path(__file__).resolve().parent / "json-data"
     docs = []
@@ -164,38 +154,18 @@ def indexing_json_collection(collection_name: str, json_files: list[str], descri
             continue
 
         data = json.loads(json_path.read_text(encoding="utf-8"))
+        text_content = json.dumps(data, ensure_ascii=False, indent=2)
 
-        # Se il JSON è una lista di insegnamenti
-        if isinstance(data, list):
-            for i, entry in enumerate(data):
-                # genera testo leggibile per l’embedding
-                lines = [f"{k}: {v}" for k, v in entry.items()]
-                text = "\n".join(lines)
-                doc = Document(
-                    page_content=text,
-                    metadata={
-                        "source_url": "manual",
-                        "doc_type": "json",
-                        "description": f"{description_prefix} - {filename}",
-                        "item_index": i,
-                        "doc_id": sha(f"{filename}_{i}"),
-                    },
-                )
-                docs.append(doc)
-
-        else:
-            # fallback se è un singolo oggetto
-            text_content = json.dumps(data, ensure_ascii=False, indent=2)
-            doc = Document(
-                page_content=text_content,
-                metadata={
-                    "source_url": "manual",
-                    "doc_type": "json",
-                    "description": f"{description_prefix} - {filename}",
-                    "doc_id": sha(filename),
-                },
-            )
-            docs.append(doc)
+        doc = Document(
+            page_content=text_content,
+            metadata={
+                "source_url": "manual",
+                "doc_type": "json",
+                "description": f"{description_prefix} - {filename}",
+                "doc_id": sha(filename),
+            },
+        )
+        docs.append(doc)
 
     if not docs:
         print(f"[ERRORE] Nessun file valido per la collezione '{collection_name}'.")
