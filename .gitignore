@@ -4,3 +4,5 @@ qdrant_storage/
 indexing/src/__pycache__/
 .env
 agents/src/__pycache__/
+indexing_data_html/
+indexing_data_pdf/
