@@ -29,6 +29,6 @@ RUN playwright install-deps
 RUN playwright install chromium
 
 # Copia il codice
-COPY . .
+COPY src/ .
 
 CMD ["tail", "-f", "/dev/null"]

@@ -28,7 +28,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./agents:/app
+      - ./agents/src:/app
     working_dir: /app
     command: tail -f /dev/null
     depends_on:
@@ -41,7 +41,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./indexing:/app
+      - ./indexing/src:/app
       - ./qdrant_storage:/qdrant/storage
     working_dir: /app
     command: tail -f /dev/null

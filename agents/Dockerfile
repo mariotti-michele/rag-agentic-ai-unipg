@@ -18,6 +18,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 RUN python -m nltk.downloader punkt punkt_tab
 
-COPY . .
+COPY src/ .
 
 CMD ["tail", "-f", "/dev/null"]
