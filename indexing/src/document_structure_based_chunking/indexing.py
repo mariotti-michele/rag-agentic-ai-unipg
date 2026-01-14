@@ -42,7 +42,6 @@ def build_vectorstore(collection_name: str):
     embeddings = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
     client = QdrantClient(url=QDRANT_URL)
 
-    # --- Creazione automatica collezione se non esiste ---
     existing_collections = [c.name for c in client.get_collections().collections]
     if collection_name not in existing_collections:
         print(f"[INFO] Creazione nuova collezione Qdrant: {collection_name}")
@@ -53,7 +52,6 @@ def build_vectorstore(collection_name: str):
     else:
         print(f"[INFO] Collezione già esistente: {collection_name}")
 
-    # --- Costruzione vectorstore LangChain ---
     return QdrantVectorStore(
         client=client,
         collection_name=collection_name,
@@ -62,11 +60,7 @@ def build_vectorstore(collection_name: str):
 
 
 
-# === Parsing del file links.txt in blocchi ===
 def parse_links_file() -> dict[str, list[tuple[str, dict]]]:
-    """
-    Ritorna un dizionario: { 'Nome blocco' : [(url, opzioni), ...], ... }
-    """
     blocks = {}
     current_block = None
 
@@ -77,7 +71,6 @@ def parse_links_file() -> dict[str, list[tuple[str, dict]]]:
 
         if line.startswith("#"):
             current_block = line.lstrip("#").strip()
-            # Sostituisci spazi e caratteri speciali con underscore (compatibile con Qdrant)
             sanitized_name = (
                 current_block.replace(" ", "_")
                 .replace("/", "_")
@@ -104,7 +97,6 @@ def parse_links_file() -> dict[str, list[tuple[str, dict]]]:
     return blocks
 
 
-# === Main per ogni blocco ===
 async def process_block(collection_name: str, urls_with_opts: list[tuple[str, dict]]):
     print(f"\n\n=== [BLOCCO: {collection_name}] ===")
     print(f"[INFO] Creazione/aggiornamento collezione: {collection_name}")
@@ -142,9 +134,6 @@ async def main():
 import json
 
 def indexing_json_collection(collection_name: str, json_files: list[str], description_prefix: str):
-    """
-    Indicizza uno o più file JSON in una collezione Qdrant.
-    """
     base_path = Path(__file__).resolve().parent / "json-data"
     docs = []
 

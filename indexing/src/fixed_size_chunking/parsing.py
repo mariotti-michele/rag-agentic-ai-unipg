@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from pathlib import Path
 
-from unstructured.partition.html import partition_html
 from unstructured.partition.pdf import partition_pdf
 from langchain_core.documents import Document
 
@@ -24,7 +23,6 @@ def to_documents_from_html(file_path: Path, source_url: str, page_title: str) ->
 
     main_el = soup.find("main") or soup
 
-    # Rimuove i moduli sopra al main
     for mod in main_el.select("div.module-container.col-xs-12"):
         mod.decompose()
 

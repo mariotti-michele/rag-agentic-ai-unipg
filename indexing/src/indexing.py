@@ -176,7 +176,6 @@ def indexing_json_collection(collection_name: str, json_files: list[str], descri
     print(f"[OK] Inseriti {len(docs)} documenti JSON nella collezione '{collection_name}'")
 
 
-
 if __name__ == "__main__":
     asyncio.run(main())
     indexing_json_collection(

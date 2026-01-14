@@ -29,10 +29,6 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None):
         text = getattr(el, "text", None)
         if not text:
             continue
-        text = text.replace("\n", " ").strip()
-        if not text:
-            continue
-
 
         if isinstance(el, (Title, Header)):
             if current_chunk.strip():
@@ -40,7 +36,6 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None):
                 current_chunk = ""
             current_header = text.strip()
             continue
-
 
         if isinstance(el, (NarrativeText, ListItem, Text)):
             if current_header:
@@ -50,17 +45,14 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None):
                 current_chunk += ("\n" if current_chunk else "") + text
             continue
 
-
         if isinstance(el, Table):
             if current_chunk.strip():
                 merged_chunks.append(current_chunk.strip())
                 current_chunk = ""
             merged_chunks.append(f"[TABELLA]\n{text}")
 
-
     if current_chunk.strip():
         merged_chunks.append(current_chunk.strip())
-
 
     for idx, chunk in enumerate(merged_chunks):
         docs.append(Document(
@@ -90,7 +82,6 @@ def to_documents_from_html(file_path: Path, source_url: str, page_title: str) ->
         print(f"[WARN] Nessun <main> trovato in {source_url}, salto")
         return []
     
-    # Rimuove i moduli sopra al main
     for mod in main_el.select("div.module-container.col-xs-12"):
         mod.decompose()
 
@@ -101,7 +92,6 @@ def to_documents_from_html(file_path: Path, source_url: str, page_title: str) ->
         include_page_breaks=False,
         languages=["ita", "eng"]
     )
-
 
     if not elements:
         text_fallback = main_el.get_text(separator="\n", strip=True)
