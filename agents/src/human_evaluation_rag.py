@@ -1,7 +1,5 @@
 import json
-import os
 from pathlib import Path
-#from baseline_rag_agent import answer_query, embeddings, vectorstore
 from filter_rag import embeddings, vectorstore, answer_query_dense, answer_query_tfidf, answer_query_bm25, hybrid_search
 
 

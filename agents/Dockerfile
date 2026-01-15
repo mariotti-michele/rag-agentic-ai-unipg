@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     --no-deps -r requirements.txt && \
     pip install --no-cache-dir --default-timeout=20000 -r requirements.txt
 
-RUN python -m nltk.downloader punkt punkt_tab
+RUN python -m spacy download it_core_news_sm
 
 COPY src/ .
 

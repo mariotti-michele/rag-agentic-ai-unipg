@@ -21,6 +21,33 @@ services:
         limits:
           cpus: "4"
           memory: 8g
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama-init:
+    image: ollama/ollama:0.11.11
+    container_name: ollama-init
+    volumes:
+      - ./ollama_data:/root/.ollama
+    entrypoint: /bin/bash
+    command: >
+      -c "
+      echo 'Waiting for Ollama service to be ready...';
+      until ollama list > /dev/null 2>&1; do
+        sleep 2;
+      done;
+      echo 'Ollama is ready. Pulling required models...';
+      ollama pull nomic-embed-text || echo 'Failed to pull nomic-embed-text';
+      echo 'Model setup complete.';
+      "
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
 
   agents:
     build: ./agents
@@ -32,8 +59,10 @@ services:
     working_dir: /app
     command: tail -f /dev/null
     depends_on:
-      - ollama
-      - qdrant
+      ollama-init:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_started
 
   indexing:
     build: ./indexing
@@ -46,8 +75,10 @@ services:
     working_dir: /app
     command: tail -f /dev/null
     depends_on:
-      - ollama
-      - qdrant
+      ollama-init:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_started
 
 volumes:
   qdrant_data:

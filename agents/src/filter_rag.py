@@ -1,8 +1,8 @@
 import os, json
 from qdrant_client import QdrantClient
 from langchain_qdrant import QdrantVectorStore
-#from langchain_ollama import OllamaEmbeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_ollama import OllamaEmbeddings
+#from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 
 #llama locale:
@@ -15,12 +15,14 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import ChatVertexAI
 from google.oauth2 import service_account
 
-# TF-IDF
-from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
+# TF-IDF
+# from sklearn.feature_extraction.text import TfidfVectorizer
+
 # BM25
 from rank_bm25 import BM25Okapi
 
+import spacy
 
 
 if os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"):
@@ -84,20 +86,20 @@ Domanda: {question}
 Risposta:"""
 
 
-# embeddings = OllamaEmbeddings(
-#     model="nomic-embed-text",
-#     base_url=OLLAMA_BASE_URL
-# )
+embeddings = OllamaEmbeddings(
+    model="nomic-embed-text",
+    base_url=OLLAMA_BASE_URL
+)
 
 # embeddings = HuggingFaceEmbeddings(
 #     model_name="intfloat/e5-base-v2",
 #     encode_kwargs={"normalize_embeddings": True}
 # )
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-mpnet-base-v2",
-    encode_kwargs={"normalize_embeddings": True}
-)
+# embeddings = HuggingFaceEmbeddings(
+#     model_name="sentence-transformers/all-mpnet-base-v2",
+#     encode_kwargs={"normalize_embeddings": True}
+# )
 
 #print("Connettendo a Qdrant...")
 qdrant_client = QdrantClient(url=QDRANT_URL)
@@ -172,7 +174,6 @@ elif args.model == "llama-api":
     )
 
 
-# === COSTRUZIONE CORPUS CON METADATA ===
 corpus = []
 
 try:
@@ -228,69 +229,84 @@ if not corpus:
 
 print(f"[INFO] Corpus completo: {len(corpus)} chunk con metadata")
 
-# === CREAZIONE MODELLI SPARSE ===
-all_texts = [c["text"] for c in corpus]
-vectorizer = TfidfVectorizer()
-tfidf_matrix = vectorizer.fit_transform(all_texts)
 
-from nltk.tokenize import word_tokenize
-import nltk
-nltk.download('punkt', quiet=True)
-tokenized_corpus = [word_tokenize(t.lower()) for t in all_texts]
+all_texts = [c["text"] for c in corpus]
+
+# vectorizer = TfidfVectorizer()
+# tfidf_matrix = vectorizer.fit_transform(all_texts)
+
+nlp = spacy.load("it_core_news_sm", disable=["parser", "ner", "tagger", "lemmatizer"])
+
+def spacy_tokenize(text: str):
+    doc = nlp(text.lower())
+    return [t.text for t in doc if not t.is_space and not t.is_punct and not t.is_stop]
+
+# nlp = spacy.load("it_core_news_sm", disable=["parser", "ner"])
+# def spacy_tokenize(text: str):
+#     doc = nlp(text.lower())
+#     return [t.lemma_ for t in doc if not t.is_stop and not t.is_punct and not t.is_space]
+
+
+tokenized_corpus = [spacy_tokenize(t) for t in all_texts]
 bm25 = BM25Okapi(tokenized_corpus)
 
-# === FUNZIONI DI RICERCA SPARSE ===
-def tfidf_search_idx(query: str, k: int = 5):
-    qv = vectorizer.transform([query])
-    scores = (tfidf_matrix @ qv.T).toarray().ravel()
-    top_idx = np.argsort(scores)[::-1][:k]
-    return [(i, float(scores[i])) for i in top_idx]
+
+# def tfidf_search_idx(query: str, k: int = 5):
+#     qv = vectorizer.transform([query])
+#     scores = (tfidf_matrix @ qv.T).toarray().ravel()
+#     top_idx = np.argsort(scores)[::-1][:k]
+#     return [(i, float(scores[i])) for i in top_idx]
 
 def bm25_search_idx(query: str, k: int = 5):
-    qtoks = word_tokenize(query.lower())
+    qtoks = spacy_tokenize(query)
     scores = bm25.get_scores(qtoks)
     top_idx = np.argsort(scores)[::-1][:k]
     return [(i, float(scores[i])) for i in top_idx]
 
-# === RETRIEVAL DENSO ===
-def dense_search(query: str, k: int = 5):
-    #vec = embeddings.embed_query(f"query: {query}")     #per E5
+
+def dense_search(query: str, top_k: int = 5):
     vec = embeddings.embed_query(query)
-    dense_hits = []
+    hits = []
+
     for name, store in vectorstores.items():
         try:
-            docs = store.similarity_search_with_score_by_vector(vec, k=k)
-            for doc, score in docs:
-                dense_hits.append({
+            docs_scores = store.similarity_search_with_score_by_vector(vec, k=top_k)
+
+            print("\n[DEBUG dense scores]")
+            for doc, score in docs_scores:
+                print(f"score={score:.6f} | {doc.page_content[:80]}")
+            for doc, score in docs_scores:
+                hits.append({
                     "text": doc.page_content,
                     "collection": name,
                     "source_url": doc.metadata.get("source_url", ""),
                     "section_path": doc.metadata.get("section_path", ""),
                     "doc_id": doc.metadata.get("doc_id", ""),
-                    "score": float(1 - score),
+                    "score": float(score),
                 })
         except Exception as e:
             print(f"[WARN] Errore su {name}: {e}")
-    return dense_hits
 
-# === RRF FUSION ===
+    hits.sort(key=lambda x: x["score"], reverse=True)
+    return hits[:top_k]
+
+
 def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
     combined = {}
     for rank, d in enumerate(dense_docs):
-        docid = d["doc_id"] or d["text"]
+        docid = d.get("doc_id") if d.get("doc_id") else d["text"]
         combined[docid] = combined.get(docid, 0) + 1 / (alpha + rank + 1)
     for rank, d in enumerate(sparse_docs):
-        docid = d["doc_id"] or d["text"]
+        docid = d.get("doc_id") if d.get("doc_id") else d["text"]
         combined[docid] = combined.get(docid, 0) + 1 / (alpha + rank + 1)
 
-    ranked_ids = sorted(combined.items(), key=lambda x: x[1], reverse=True)[:k]
-    id_set = {rid for rid, _ in ranked_ids}
-    merged = {d.get("doc_id") or d["text"]: d for d in dense_docs + sparse_docs}
-    return [merged[i] for i in id_set if i in merged]
+    ranked_ids = [rid for rid, _ in sorted(combined.items(), key=lambda x: x[1], reverse=True)[:k]]
+    merged = {(d.get("doc_id") if d.get("doc_id") else d["text"]): d for d in dense_docs + sparse_docs}
+    return [merged[rid] for rid in ranked_ids if rid in merged]
 
-# === HYBRID SEARCH (con metadata) ===
-def hybrid_search(query: str, alpha: float = 0.6, k: int = 5):
-    dense_docs = dense_search(query, k=5)
+
+def hybrid_search(query: str, alpha: int = 60, k: int = 5):
+    dense_docs = dense_search(query)
     sparse_idxs = bm25_search_idx(query, k=10)
     sparse_docs = [{
         **corpus[i],
@@ -300,7 +316,7 @@ def hybrid_search(query: str, alpha: float = 0.6, k: int = 5):
     if not dense_docs and not sparse_docs:
         return "Non presente nei documenti", []
 
-    merged_docs = reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=k)
+    merged_docs = reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=alpha, k=k)
 
     context = ""
     for i, d in enumerate(merged_docs, 1):
@@ -318,53 +334,50 @@ Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o tit
     return f"Risposta ibrida (α={alpha}): {answer}", [d["text"] for d in merged_docs]
 
 
-def answer_query_dense(query: str, k: int = 5):
-    """Retrieval solo denso per debug o confronto"""
-    dense_docs = dense_search(query, k=k)
-    if not dense_docs:
-        return "Non presente nei documenti", []
+# def answer_query_dense(query: str, k: int = 5):
+#     dense_docs = dense_search(query, top_k=k)
+#     if not dense_docs:
+#         return "Non presente nei documenti", []
 
-    context = ""
-    for i, d in enumerate(dense_docs, 1):
-        section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
-        context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d.get('text','')}\n\n"
+#     context = ""
+#     for i, d in enumerate(dense_docs, 1):
+#         section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
+#         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d.get('text','')}\n\n"
 
-    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
+#     prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
 
-Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
-"""
-    answer = llm.invoke(prompt)
-    if hasattr(answer, "content"):
-        answer = answer.content
-    return f"Risposta Dense: {answer}", [d["text"] for d in dense_docs]
+# Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
+# """
+#     answer = llm.invoke(prompt)
+#     if hasattr(answer, "content"):
+#         answer = answer.content
+#     return f"Risposta Dense: {answer}", [d["text"] for d in dense_docs]
 
 
-def answer_query_bm25(query: str, k: int = 5):
-    """Retrieval solo sparso (BM25) per debug o confronto"""
-    sparse_idxs = bm25_search_idx(query, k=k)
-    if not sparse_idxs:
-        return "Non presente nei documenti", []
+# def answer_query_bm25(query: str, k: int = 5):
+#     sparse_idxs = bm25_search_idx(query, k=k)
+#     if not sparse_idxs:
+#         return "Non presente nei documenti", []
 
-    sparse_docs = [{**corpus[i], "score": score} for i, score in sparse_idxs]
+#     sparse_docs = [{**corpus[i], "score": score} for i, score in sparse_idxs]
 
-    context = ""
-    for i, d in enumerate(sparse_docs, 1):
-        section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
-        context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
+#     context = ""
+#     for i, d in enumerate(sparse_docs, 1):
+#         section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
+#         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
 
-    prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
+#     prompt = f"""{QA_CHAIN_PROMPT.format(context=context, question=query)}
 
-Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
-"""
-    answer = llm.invoke(prompt)
-    if hasattr(answer, "content"):
-        answer = answer.content
+# Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
+# """
+#     answer = llm.invoke(prompt)
+#     if hasattr(answer, "content"):
+#         answer = answer.content
 
-    return f"Risposta Sparse (BM25): {answer}", [d["text"] for d in sparse_docs]
+#     return f"Risposta Sparse (BM25): {answer}", [d["text"] for d in sparse_docs]
 
 
 def classify_query(query: str) -> str:
-    """Classifica la query in 'semplice' o 'rag'."""
     try:
         classification = llm.invoke(classifier_prompt.format(question=query))
         if hasattr(classification, "content"):
@@ -377,13 +390,11 @@ def classify_query(query: str) -> str:
             return "rag"
     except Exception as e:
         print(f"[WARN] Errore classificazione query: {e}")
-        # fallback: modalità RAG se il modello fallisce
         return "rag"
 
 
 
 def test_connection():
-    """Testa la connessione con tutte le collezioni valide"""
     if not vectorstores:
         print("Nessuna collezione valida trovata.")
         return False
@@ -428,7 +439,7 @@ if __name__ == "__main__":
                     print(f"\nRisposta semplice: {answer}\n")
                 else:
                     print("\n--- Risposta Ibrida (Dense + BM25) ---")
-                    hybrid_answer = hybrid_search(q, alpha=0.6, k=5)
+                    hybrid_answer = hybrid_search(q)
                     print(hybrid_answer)
 
                 print("-" * 50)

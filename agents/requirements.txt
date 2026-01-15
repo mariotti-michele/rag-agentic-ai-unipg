@@ -13,7 +13,7 @@ langchain-google-genai
 langchain_google_vertexai
 google-auth
 rank_bm25
-nltk
+spacy>=3.7,<4.0
 langchain-community
 transformers
 torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu

@@ -13,8 +13,6 @@ from ragas.metrics import (
 from ragas.metrics._answer_relevance import answer_relevancy
 from ragas import evaluate
 from langsmith import Client
-# importa dall'agente da valutare
-#from timetable_agent import answer_query, embeddings, vectorstore
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from filter_rag import answer_query_dense, answer_query_bm25, hybrid_search, embeddings

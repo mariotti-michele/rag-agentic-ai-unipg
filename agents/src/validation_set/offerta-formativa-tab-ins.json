@@ -1,0 +1,50 @@
+[
+  {
+    "question": "Quanti CFU vale l’insegnamento Machine Learning and Data Analysis?",
+    "reference_context": "Machine Learning and Data Analysis – 9 CFU, Primo Semestre.",
+    "ground_truth": "9 CFU.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_fe40e9070eb4.main.html"
+  },
+  {
+    "question": "Quale corso del primo anno è comune a tutti i curricula?",
+    "reference_context": "Machine Learning and Data Analysis è indicato come 'Comune a tutti i curricula'.",
+    "ground_truth": "Machine Learning and Data Analysis.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_c663e15eb8a5.main.html"
+  },
+  {
+    "question": "Qual è il periodo di erogazione del corso 'Artificial Intelligence in Cloud Computing' nel curriculum Robotics?",
+    "reference_context": "ARTIFICIAL INTELLIGENCE IN CLOUD COMPUTING – Secondo Semestre – 9 CFU.",
+    "ground_truth": "Secondo semestre.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_fe40e9070eb4.main.html"
+  },
+  {
+    "question": "Quali corsi appartengono al primo semestre del primo anno nel curriculum Robotics?",
+    "reference_context": "DIGITAL SIGNAL PROCESSING, EMBEDDED ELECTRONIC SYSTEMS, INTELLIGENT AND SECURE NETWORKS, MACHINE LEARNING AND DATA ANALYSIS.",
+    "ground_truth": "Digital Signal Processing, Embedded Electronic Systems, Intelligent and Secure Networks, Machine Learning and Data Analysis.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_fe40e9070eb4.main.html"
+  },
+  {
+    "question": "Quanti CFU ha il corso Data Intensive Applications and Big Data?",
+    "reference_context": "DATA INTENSIVE APPLICATIONS AND BIG DATA – 6 CFU – Secondo Semestre.",
+    "ground_truth": "6 CFU.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_c663e15eb8a5.main.html"
+  },
+  {
+    "question": "Quale curriculum comprende il corso Deep Learning and Robot Perception?",
+    "reference_context": "DEEP LEARNING AND ROBOT PERCEPTION – Curriculum Robotics – 9 CFU – Primo Semestre.",
+    "ground_truth": "Curriculum Robotics.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_fe40e9070eb4.main.html"
+  },
+  {
+    "question": "Quanti CFU totali si ottengono sommando tutti gli insegnamenti comuni ai due curricula?",
+    "reference_context": "Machine Learning and Data Analysis (9 CFU), Information and Estimation Theory (9 CFU), Data Intensive Applications and Big Data (6 CFU), Lingua Inglese B2 (3 CFU).",
+    "ground_truth": "27 CFU comuni.",
+    "document": "cross-document (fe40e9070eb4.main.html + c663e15eb8a5.main.html)"
+  },
+  {
+    "question": "In quale anno e semestre viene erogato il corso DATA INTENSIVE APPLICATIONS AND BIG DATA?",
+    "reference_context": "Anno: 2; Periodo: Secondo Semestre.",
+    "ground_truth": "Secondo anno, secondo semestre.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_435f1273c877.main.html"
+  }
+]
