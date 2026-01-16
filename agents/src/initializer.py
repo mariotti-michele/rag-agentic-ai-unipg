@@ -4,13 +4,10 @@ from langchain_qdrant import QdrantVectorStore
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
-#llama locale:
 from langchain_ollama import OllamaLLM
 
-#gemini:
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-#llama 3.3 70b api:
 from langchain_google_vertexai import ChatVertexAI
 from google.oauth2 import service_account
 
@@ -21,6 +18,7 @@ def load_google_creds():
         creds = service_account.Credentials.from_service_account_info(creds_dict)
     else:
         creds = None
+    return creds
 
 
 def load_env_config(): 
@@ -108,11 +106,9 @@ def test_connection(vectorstores, embeddings):
 
 def build_llm(model_name: str, ollama_base_url: str, creds):
     if model_name == "llama-local":
-        # llama locale
         llm = OllamaLLM(model="llama3.2:3b", base_url=ollama_base_url)
 
     elif model_name == "gemini":
-        # gemini
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash",
             google_api_key=os.getenv("GOOGLE_API_KEY"),
@@ -120,7 +116,6 @@ def build_llm(model_name: str, ollama_base_url: str, creds):
         )
 
     elif model_name == "llama-api":
-        # llama 3.3 70b API (Vertex AI)
         llm = ChatVertexAI(
             model="llama-3.3-70b-instruct-maas",
             location="us-central1",
@@ -140,4 +135,4 @@ def init_components(embedding_model_name: str, llm_model_name: str):
     vectorstores = build_vectorstores(qdrant_client, embeddings, QDRANT_URL, COLLECTION_NAMES)
     llm = build_llm(llm_model_name, OLLAMA_BASE_URL, creds)
 
-    return embeddings, vectorstores, llm, COLLECTION_NAMES
+    return embeddings, vectorstores, llm, COLLECTION_NAMES, qdrant_client

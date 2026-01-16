@@ -9,6 +9,8 @@ Non aggiungere nulla di tuo e non inventare.
 
 Se davvero non ci sono riferimenti nemmeno parziali, rispondi esattamente: "Non presente nei documenti".
 
+Rispondi in un unico paragrafo chiaro e completo, senza aggiungere sezioni o titoli.
+
 Domanda: {question}
 
 Contesto:
@@ -21,7 +23,7 @@ QA_CHAIN_PROMPT = PromptTemplate(
     template=rag_prompt_template,
 )
 
-classifier_prompt = PromptTemplate(
+CLASSIFIER_PROMPT = PromptTemplate(
     input_variables=["question"],
     template="""
 Sei un classificatore di query accademiche.

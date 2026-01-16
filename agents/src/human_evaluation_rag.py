@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
-from filter_rag import embeddings, vectorstore, answer_query_dense, answer_query_tfidf, answer_query_bm25, hybrid_search
+from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid
+from initializer import init_components
 
 
 def run_manual_eval():
@@ -43,7 +44,7 @@ def run_manual_eval():
             #response_bm25 = answer_query_bm25(q)
 
             #print("→ Retrieval Ibrido (Hybrid)")
-            #response_hybrid = hybrid_search(q, alpha=0.6)
+            #response_hybrid = answer_query_hybrid(q)
 
             print(response_dense, "\n")
             #print(response_sparse, "\n")
@@ -68,7 +69,7 @@ def run_manual_eval():
             print(f"Errore durante la domanda '{q}': {e}")
             print("Risposta generata: [ERRORE]\n")
 
-    print("="*80)
+    print("-"*50)
     print("Completato. Tutte le risposte sono state stampate.")
 
 

@@ -15,7 +15,8 @@ from ragas import evaluate
 from langsmith import Client
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from filter_rag import answer_query_dense, answer_query_bm25, hybrid_search, embeddings
+from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid
+from initializer import init_components
 
 
 def get_llm():
@@ -73,6 +74,7 @@ def evaluate_variant(name: str, answer_func, version: str):
     llm = get_llm()
     metrics_list = [faithfulness, answer_relevancy, context_precision, context_recall, answer_correctness]
 
+    embeddings, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name="nomic", llm_model_name="gemini")
     result = evaluate(dataset=dataset, metrics=metrics_list, llm=llm, embeddings=embeddings)
     result_df = result.to_pandas()
     results = result_df.mean(numeric_only=True).to_dict()
@@ -159,4 +161,4 @@ if __name__ == "__main__":
 
     evaluate_variant("dense-semantic chunking", answer_query_dense, version)
     evaluate_variant("sparse-semantic chunking", answer_query_bm25, version)
-    evaluate_variant("hybrid-semantic chunking", lambda q: hybrid_search(q, alpha=0.6, k=5), version)
+    evaluate_variant("hybrid-semantic chunking", answer_query_hybrid, version)
