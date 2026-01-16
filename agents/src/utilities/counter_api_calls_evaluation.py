@@ -121,7 +121,7 @@ def run_evaluation(version: str = "v1"):
 
     validation_data = []
     for json_file in sorted(VALIDATION_DIR.glob("*.json")):
-        print(f"  → Trovato file: {json_file.name}")
+        print(f"  -> Trovato file: {json_file.name}")
         try:
             with open(json_file, "r", encoding="utf-8") as f:
                 content = json.load(f)
@@ -141,7 +141,7 @@ def run_evaluation(version: str = "v1"):
 
     print(f"Generazione risposte con il Retrieval Agent ({len(questions)} domande)...")
     for i, q in enumerate(questions, start=1):
-        print(f" → [{i}/{len(questions)}] {q}")
+        print(f" -> [{i}/{len(questions)}] {q}")
         try:
             # Recupera contesti effettivi dal retriever
             vec = embeddings.embed_query(q)

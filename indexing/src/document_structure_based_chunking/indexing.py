@@ -43,7 +43,7 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
 
 
 def build_vectorstore(collection_name: str):
-    embeddings = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
+    embedding_model = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
     client = QdrantClient(url=QDRANT_URL)
 
     existing_collections = [c.name for c in client.get_collections().collections]
@@ -59,7 +59,7 @@ def build_vectorstore(collection_name: str):
     return QdrantVectorStore(
         client=client,
         collection_name=collection_name,
-        embedding=embeddings,
+        embedding=embedding_model,
     )
 
 

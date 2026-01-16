@@ -18,16 +18,16 @@ args = parser.parse_args()
 
 
 if __name__ == "__main__":
-    llm, embedding, search_technique = args.llm_model, args.embedding_model, args.search
+    llm_model_name, embedding_model_name, search_technique = args.llm_model, args.embedding_model, args.search
 
-    embeddings, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name=embedding, llm_model_name=llm)
+    embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)
     corpus, corpus_texts = build_corpus(qdrant_client, COLLECTION_NAMES)
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
     
     print("Sistema di Q&A avviato.")
 
-    if not test_connection(vectorstores, embeddings):
+    if not test_connection(vectorstores, embedding_model):
         print("Impossibile connettersi al vector store. Verificare che la collezione esista.")
         exit(1)
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             if q.lower() in ["exit", "quit"]:
                 break
             if q.strip():
-                answer, contexts, mode = generate_answer(llm, q, search_technique, embeddings, vectorstores, corpus, bm25, spacy_tokenizer)
+                answer, contexts, mode = generate_answer(llm, q, search_technique, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer)
                 if(mode == "semplice"):
                     print(f"\nRisposta semplice:\n")
                 else:

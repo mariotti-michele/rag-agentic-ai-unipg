@@ -86,7 +86,7 @@ def run_evaluation(version: str = "v1"):
     # Caricamento dataset JSON
     validation_data = []
     for json_file in sorted(VALIDATION_DIR.glob("*.json")):
-        print(f"  → Trovato file: {json_file.name}")
+        print(f"  -> Trovato file: {json_file.name}")
         try:
             with open(json_file, "r", encoding="utf-8") as f:
                 content = json.load(f)
@@ -106,7 +106,7 @@ def run_evaluation(version: str = "v1"):
 
     print(f"Generazione risposte con il Retrieval Agent ({len(questions)} domande)...")
     for i, q in enumerate(questions, start=1):
-        print(f" → [{i}/{len(questions)}] {q}")
+        print(f" -> [{i}/{len(questions)}] {q}")
         try:
             # Recupera contesti effettivi dal retriever
             vec = embeddings.embed_query(q)
@@ -234,9 +234,9 @@ def run_evaluation(version: str = "v1"):
     # === Stampa risultati su console ===
     print("\n===== STIMA COSTI VERTEX AI (GOOGLE) =====")
     print(f"(correzione token applicata: +15%)")
-    print(f"Gemini 2.5 Flash  → ${cost_gemini:.3f}")
-    print(f"Llama 3.3 70B     → ${cost_llama:.3f}")
-    print(f"Gemini 1.5 Pro    → ${cost_gemini_pro:.3f}")
+    print(f"Gemini 2.5 Flash  -> ${cost_gemini:.3f}")
+    print(f"Llama 3.3 70B     -> ${cost_llama:.3f}")
+    print(f"Gemini 1.5 Pro    -> ${cost_gemini_pro:.3f}")
 
     # === Salvataggio su CSV ===
     csv_vertex_path = Path('evaluations') / version / 'vertexai_costs.csv'

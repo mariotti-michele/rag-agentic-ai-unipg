@@ -8,7 +8,7 @@
   {
     "question": "Dove si compila la domanda di laurea online?",
     "reference_context": "Entrando nel SOL con le proprie credenziali dal menù scegliere il link ‘Laurea’ e cliccare su ‘Conseguimento titolo’.",
-    "ground_truth": "La domanda di laurea si compila accedendo al portale SOL, sezione 'Laurea' → 'Conseguimento titolo'.",
+    "ground_truth": "La domanda di laurea si compila accedendo al portale SOL, sezione 'Laurea' -> 'Conseguimento titolo'.",
     "document": "didattica_procedure-amministrative_procedure_laureandi_7a068270d5dc.main.html"
   },
   {

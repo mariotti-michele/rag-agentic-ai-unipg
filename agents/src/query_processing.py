@@ -24,8 +24,8 @@ def process_query(docs: list, query: str, llm) -> tuple[str, list]:
     return answer, [d["text"] for d in docs]
 
 
-def answer_query_dense(query: str, embeddings, vectorstores, llm):
-    dense_docs = dense_search(query, embeddings, vectorstores)
+def answer_query_dense(query: str, embedding_model, vectorstores, llm):
+    dense_docs = dense_search(query, embedding_model, vectorstores)
     return process_query(dense_docs, query, llm)
 
 def answer_query_bm25(query: str, corpus, bm25, nlp, llm):
@@ -33,8 +33,8 @@ def answer_query_bm25(query: str, corpus, bm25, nlp, llm):
     sparse_docs = [{**corpus[i], "score": score} for i, score in sparse_idxs] if sparse_idxs else []
     return process_query(sparse_docs, query, llm)
 
-def answer_query_hybrid(query: str, embeddings, vectorstores, corpus, bm25, nlp, llm):
-    merged_docs = hybrid_search(query, embeddings, vectorstores, corpus, bm25, nlp)
+def answer_query_hybrid(query: str, embedding_model, vectorstores, corpus, bm25, nlp, llm):
+    merged_docs = hybrid_search(query, embedding_model, vectorstores, corpus, bm25, nlp)
     return process_query(merged_docs, query, llm)
 
 
@@ -53,7 +53,7 @@ def classify_query(llm, query: str) -> str:
         print(f"[WARN] Errore classificazione query: {e}")
         return "rag"
 
-def generate_answer(llm, query: str, search_technique, embeddings, vectorstores, corpus, bm25, nlp):
+def generate_answer(llm, query: str, search_technique, embedding_model, vectorstores, corpus, bm25, nlp):
     mode = classify_query(llm, query)
     if mode == "semplice":
         prompt = simple_prompt_template.format(question=query)
@@ -64,9 +64,9 @@ def generate_answer(llm, query: str, search_technique, embeddings, vectorstores,
     else:
         answer, contexts = None, []
         if search_technique == "dense":
-            answer, contexts = answer_query_dense(query, embeddings, vectorstores, llm)
+            answer, contexts = answer_query_dense(query, embedding_model, vectorstores, llm)
         elif search_technique == "sparse":
             answer, contexts = answer_query_bm25(query, corpus, bm25, nlp, llm)
         elif search_technique == "hybrid":
-            answer, contexts = answer_query_hybrid(query, embeddings, vectorstores, corpus, bm25, nlp, llm)
+            answer, contexts = answer_query_hybrid(query, embedding_model, vectorstores, corpus, bm25, nlp, llm)
     return answer, contexts, mode

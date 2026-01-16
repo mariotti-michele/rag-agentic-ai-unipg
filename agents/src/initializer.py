@@ -29,24 +29,24 @@ def load_env_config():
     return OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES
 
 
-def build_embeddings(ollama_base_url, model_name="nomic"): 
+def build_embedding_model(ollama_base_url, model_name="nomic"): 
     if model_name == "nomic":
-        embeddings = OllamaEmbeddings(
+        embedding_model = OllamaEmbeddings(
             model="nomic-embed-text",
             base_url=ollama_base_url
         )
     elif model_name == "e5":
-        embeddings = HuggingFaceEmbeddings(
+        embedding_model = HuggingFaceEmbeddings(
             model_name="intfloat/e5-base-v2",
             encode_kwargs={"normalize_embeddings": True}
         )
     elif model_name == "all-mpnet":
-        embeddings = HuggingFaceEmbeddings(
+        embedding_model = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2",
             encode_kwargs={"normalize_embeddings": True}
         )
 
-    return embeddings
+    return embedding_model
 
 
 def build_qdrant_client(qdrant_url): 
@@ -54,7 +54,7 @@ def build_qdrant_client(qdrant_url):
     return qdrant_client
 
 
-def build_vectorstores(qdrant_client, embeddings, qdrant_url, collection_names):
+def build_vectorstores(qdrant_client, embedding_model, qdrant_url, collection_names):
     vectorstores = {}
     try:
         existing = qdrant_client.get_collections().collections
@@ -69,7 +69,7 @@ def build_vectorstores(qdrant_client, embeddings, qdrant_url, collection_names):
             continue
         try:
             store = QdrantVectorStore.from_existing_collection(
-                embedding=embeddings,
+                embedding=embedding_model,
                 collection_name=name,
                 url=qdrant_url,
             )
@@ -83,12 +83,12 @@ def build_vectorstores(qdrant_client, embeddings, qdrant_url, collection_names):
     return vectorstores
 
 
-def test_connection(vectorstores, embeddings):
+def test_connection(vectorstores, embedding_model):
     if not vectorstores:
         print("Nessuna collezione valida trovata.")
         return False
 
-    vec = embeddings.embed_query("test")
+    vec = embedding_model.embed_query("test")
     ok = False
 
     for name, store in vectorstores.items():
@@ -96,7 +96,7 @@ def test_connection(vectorstores, embeddings):
             docs = store.max_marginal_relevance_search_by_vector(
                 vec, k=3, fetch_k=10, lambda_mult=0.5
             )
-            print(f"[OK] Connessione riuscita per {name} ({len(docs)} risultati)")
+            print(f"[OK] Connessione riuscita per {name} ({len(docs)} risultati, su max 3).")
             ok = True
         except Exception as e:
             print(f"[WARN] Test fallito su {name}: {e}")
@@ -130,9 +130,9 @@ def build_llm(model_name: str, ollama_base_url: str, creds):
 def init_components(embedding_model_name: str, llm_model_name: str):
     OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES = load_env_config()
     creds = load_google_creds()
-    embeddings = build_embeddings(OLLAMA_BASE_URL, model_name=embedding_model_name)
+    embedding_model = build_embedding_model(OLLAMA_BASE_URL, model_name=embedding_model_name)
     qdrant_client = build_qdrant_client(QDRANT_URL)
-    vectorstores = build_vectorstores(qdrant_client, embeddings, QDRANT_URL, COLLECTION_NAMES)
+    vectorstores = build_vectorstores(qdrant_client, embedding_model, QDRANT_URL, COLLECTION_NAMES)
     llm = build_llm(llm_model_name, OLLAMA_BASE_URL, creds)
 
-    return embeddings, vectorstores, llm, COLLECTION_NAMES, qdrant_client
+    return embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client

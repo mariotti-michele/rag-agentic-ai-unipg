@@ -69,7 +69,7 @@ if __name__ == "__main__":
     if args.mode == "keyword":
         hits = search_by_keyword(args.query)
 
-        # se limit = 0 → mostra tutti
+        # se limit = 0 -> mostra tutti
         limit = len(hits) if args.limit == 0 else args.limit
 
         for h in hits[:limit]:

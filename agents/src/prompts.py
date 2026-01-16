@@ -35,8 +35,8 @@ Devi scegliere una sola categoria tra:
 Rispondi SOLO con una di queste due parole.
 
 Regole:
-- Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei") → rispondi: semplice
-- In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche → rispondi: rag
+- Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei") -> rispondi: semplice
+- In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche -> rispondi: rag
 
 Domanda: {question}
 Categoria:""",
