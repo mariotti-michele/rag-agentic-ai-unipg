@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 from langchain_ollama import OllamaEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_core.documents import Document
 from qdrant_client import QdrantClient
@@ -12,13 +13,25 @@ from qdrant_client import QdrantClient
 from crawling import crawl
 from scraping import sha
 
+import argparse
+
+parser = argparse.ArgumentParser(description="Section based chunking indexing script")
+parser.add_argument("--embedding-model", type=str, default="nomic", 
+                    choices=["nomic", "e5", "all-mpnet"],
+                    help="Seleziona il modello di embedding da usare")
+args = parser.parse_args()
+
 load_dotenv()
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
-EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
-#EMBED_MODEL = "intfloat/e5-base-v2"
-#EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
+
+if(args.embedding_model == "nomic"):
+    EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+elif(args.embedding_model == "e5"):
+    EMBED_MODEL = "intfloat/e5-base-v2"
+elif(args.embedding_model == "all-mpnet"):
+    EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
 
 LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
 
@@ -27,8 +40,9 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
     clean_chunks = []
     for i, d in enumerate(docs):
         text = d.page_content.strip()
-        #text = "passage: " + text   #per E5
-        #d.page_content = text   #per E5
+        if(args.embedding_model == "e5"):
+            text = "passage: " + text
+            d.page_content = text
         if not text:
             continue
         base_id = sha(d.metadata["source_url"])
@@ -42,7 +56,19 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
 
 
 def build_vectorstore(collection_name: str):
-    embedding_model = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
+    embedding_model = None
+    if args.embedding_model == "nomic":
+        embedding_model = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
+    elif args.embedding_model == "e5":
+        embedding_model = HuggingFaceEmbeddings(
+            model_name="intfloat/e5-base-v2",
+            encode_kwargs={"normalize_embeddings": True}
+        )
+    elif args.embedding_model == "all-mpnet":
+        embedding_model = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-mpnet-base-v2",
+            encode_kwargs={"normalize_embeddings": True}
+        )
     client = QdrantClient(url=QDRANT_URL)
 
     existing_collections = [c.name for c in client.get_collections().collections]
@@ -63,9 +89,6 @@ def build_vectorstore(collection_name: str):
 
 
 def parse_links_file() -> dict[str, list[tuple[str, dict]]]:
-    """
-    Ritorna un dizionario: { 'Nome blocco' : [(url, opzioni), ...], ... }
-    """
     blocks = {}
     current_block = None
 
@@ -140,9 +163,6 @@ async def main():
 import json
 
 def indexing_json_collection(collection_name: str, json_files: list[str], description_prefix: str):
-    """
-    Indicizza uno o più file JSON in una collezione Qdrant.
-    """
     base_path = Path(__file__).resolve().parent / "json-data"
     docs = []
 
