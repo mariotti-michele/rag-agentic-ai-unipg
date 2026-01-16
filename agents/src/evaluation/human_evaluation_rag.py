@@ -22,7 +22,7 @@ parser.add_argument("--search", type=str, default="hybrid",
 args = parser.parse_args()
 
 
-def run_manual_eval(embedding_model, vectorstores, llm, corpus, bm25, nlp, search_technique):
+def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, corpus, bm25, nlp, search_technique):
     VALIDATION_DIR = Path(__file__).resolve().parent / "validation_set"
     print(f"Caricamento dataset da: {VALIDATION_DIR}")
 
@@ -48,19 +48,19 @@ def run_manual_eval(embedding_model, vectorstores, llm, corpus, bm25, nlp, searc
 
         try:
             if search_technique == "dense":
-                response, retrieved_ctx = answer_query_dense(q, embedding_model, vectorstores, llm)
+                response, retrieved_ctx = answer_query_dense(q, embedding_model_name, embedding_model, vectorstores, llm)
             elif search_technique == "sparse":
                 response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm)
             elif search_technique == "hybrid":
-                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, vectorstores, corpus, bm25, nlp, llm)
+                response, retrieved_ctx = answer_query_hybrid(q, embedding_model_name, embedding_model, vectorstores, corpus, bm25, nlp, llm)
             else:
-                response, retrieved_ctx = answer_query_dense(q, embedding_model, vectorstores, llm)
+                response, retrieved_ctx = answer_query_dense(q, embedding_model_name, embedding_model, vectorstores, llm)
                 print(f"Risposta (dense):\n{response}\n")
 
                 response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm)
                 print(f"Risposta (sparse):\n{response}\n")
 
-                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, vectorstores, corpus, bm25, nlp, llm)
+                response, retrieved_ctx = answer_query_hybrid(q, embedding_model_name, embedding_model, vectorstores, corpus, bm25, nlp, llm)
                 print(f"Risposta (hybrid):\n{response}\n")
 
             if search_technique != "all":
@@ -88,4 +88,4 @@ if __name__ == "__main__":
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
 
-    run_manual_eval(embedding_model, vectorstores, llm, corpus, bm25, spacy_tokenizer, search_technique)
+    run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, corpus, bm25, spacy_tokenizer, search_technique)

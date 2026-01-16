@@ -24,8 +24,8 @@ def process_query(docs: list, query: str, llm) -> tuple[str, list]:
     return answer, [d["text"] for d in docs]
 
 
-def answer_query_dense(query: str, embedding_model, vectorstores, llm):
-    dense_docs = dense_search(query, embedding_model, vectorstores)
+def answer_query_dense(query: str, embedding_model_name: str, embedding_model, vectorstores, llm):
+    dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores)
     return process_query(dense_docs, query, llm)
 
 def answer_query_bm25(query: str, corpus, bm25, nlp, llm):
@@ -33,8 +33,8 @@ def answer_query_bm25(query: str, corpus, bm25, nlp, llm):
     sparse_docs = [{**corpus[i], "score": score} for i, score in sparse_idxs] if sparse_idxs else []
     return process_query(sparse_docs, query, llm)
 
-def answer_query_hybrid(query: str, embedding_model, vectorstores, corpus, bm25, nlp, llm):
-    merged_docs = hybrid_search(query, embedding_model, vectorstores, corpus, bm25, nlp)
+def answer_query_hybrid(query: str, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm):
+    merged_docs = hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp)
     return process_query(merged_docs, query, llm)
 
 

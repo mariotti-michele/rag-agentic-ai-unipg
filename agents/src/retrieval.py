@@ -101,7 +101,10 @@ def bm25_search_idx(query: str, bm25, nlp, k: int = 5):
     return [(i, float(scores[i])) for i in top_idx]
 
 
-def dense_search(query: str, embedding_model, vectorstores, top_k: int = 5):
+def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 5):
+    if embedding_model_name == "e5":
+        query = "query: " + query
+
     vec = embedding_model.embed_query(query)
     hits = []
 
@@ -139,8 +142,8 @@ def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
     return [merged[rid] for rid in ranked_ids if rid in merged]
 
 
-def hybrid_search(query, embedding_model, vectorstores, corpus, bm25, nlp, alpha=60, k=5):
-    dense_docs = dense_search(query, embedding_model, vectorstores, top_k=k*2)
+def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, alpha=60, k=5):
+    dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores, top_k=k*2)
     sparse_idxs = bm25_search_idx(query, bm25, nlp, k=k*2)
     sparse_docs = [{
         **corpus[i],

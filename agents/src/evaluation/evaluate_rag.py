@@ -180,10 +180,9 @@ if __name__ == "__main__":
     corpus, corpus_texts = build_corpus(qdrant_client, COLLECTION_NAMES)
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
-    
-    dense_func = lambda q: answer_query_dense(q, embedding_model, vectorstores, llm)
+    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm)
     sparse_func = lambda q: answer_query_bm25(q, corpus, bm25, spacy_tokenizer, llm)
-    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer, llm)
+    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm)
     if search_technique == "dense":
         evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version)
     elif search_technique == "sparse":
