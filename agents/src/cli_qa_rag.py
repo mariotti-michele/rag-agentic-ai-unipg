@@ -39,7 +39,7 @@ if __name__ == "__main__":
             if q.lower() in ["exit", "quit"]:
                 break
             if q.strip():
-                answer, contexts, mode = generate_answer(llm, q, search_technique, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer)
+                answer, contexts, mode = generate_answer(llm, q, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer)
                 if(mode == "semplice"):
                     print(f"\nRisposta semplice:\n")
                 else:

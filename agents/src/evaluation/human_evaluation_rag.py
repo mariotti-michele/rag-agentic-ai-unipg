@@ -48,19 +48,19 @@ def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, co
 
         try:
             if search_technique == "dense":
-                response, retrieved_ctx = answer_query_dense(q, embedding_model_name, embedding_model, vectorstores, llm)
+                response, retrieved_ctx = answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm)
             elif search_technique == "sparse":
                 response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm)
             elif search_technique == "hybrid":
-                response, retrieved_ctx = answer_query_hybrid(q, embedding_model_name, embedding_model, vectorstores, corpus, bm25, nlp, llm)
+                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm)
             else:
-                response, retrieved_ctx = answer_query_dense(q, embedding_model_name, embedding_model, vectorstores, llm)
+                response, retrieved_ctx = answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm)
                 print(f"Risposta (dense):\n{response}\n")
 
                 response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm)
                 print(f"Risposta (sparse):\n{response}\n")
 
-                response, retrieved_ctx = answer_query_hybrid(q, embedding_model_name, embedding_model, vectorstores, corpus, bm25, nlp, llm)
+                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm)
                 print(f"Risposta (hybrid):\n{response}\n")
 
             if search_technique != "all":
