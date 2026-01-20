@@ -1,4 +1,7 @@
 import os, json
+import requests
+import warnings
+
 from qdrant_client import QdrantClient
 from langchain_qdrant import QdrantVectorStore
 from langchain_ollama import OllamaEmbeddings
@@ -10,6 +13,58 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langchain_google_vertexai import ChatVertexAI
 from google.oauth2 import service_account
+
+from langchain_core.language_models import BaseLLM
+from langchain_core.outputs import LLMResult, Generation
+from typing import Any, List, Optional
+
+# Disabilita warning SSL
+warnings.filterwarnings('ignore', message='Unverified HTTPS request')
+
+class VLLMChat(BaseLLM):
+    api_url: str
+    api_key: str
+    model: str = "RedHatAI/Meta-Llama-3.1-70B-Instruct-FP8"
+    temperature: float = 0.2
+
+    def _endpoint(self) -> str:
+        u = self.api_url.strip()
+
+        if u.rstrip("/").endswith("/v1/chat/completions"):
+            return u.rstrip("/")
+        if u.rstrip("/").endswith("/v1"):
+            return u.rstrip("/") + "/chat/completions"
+        return u.rstrip("/") + "/v1/chat/completions"
+
+    def _generate(self, prompts, stop=None, run_manager=None, **kwargs):
+        generations = []
+        endpoint = self._endpoint()
+
+        for prompt in prompts:
+            response = requests.post(
+                endpoint,
+                headers={
+                    "X-API-Key": self.api_key,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": self.temperature,
+                },
+                verify=False,
+                timeout=60,
+            )
+            response.raise_for_status()
+            content = response.json()["choices"][0]["message"]["content"]
+            generations.append([Generation(text=content)])
+
+        return LLMResult(generations=generations)
+
+    @property
+    def _llm_type(self) -> str:
+        return "vllm-chat"
 
 
 def load_google_creds():
@@ -26,7 +81,9 @@ def load_env_config():
     QDRANT_URL = os.environ["QDRANT_URL"]
     COLLECTION_NAMES = os.getenv("COLLECTION_NAMES", "").split(",")
     COLLECTION_NAMES = [c.strip() for c in COLLECTION_NAMES if c.strip()]
-    return OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES
+    VLLM_API_URL = os.getenv("VLLM_API_URL", "")
+    VLLM_API_KEY = os.getenv("VLLM_API_KEY", "")
+    return OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY
 
 
 def build_embedding_model(ollama_base_url, model_name="nomic"): 
@@ -104,7 +161,7 @@ def test_connection(vectorstores, embedding_model):
     return ok
 
 
-def build_llm(model_name: str, ollama_base_url: str, creds):
+def build_llm(model_name: str, ollama_base_url: str, creds, vllm_api_url, vllm_api_key):
     if model_name == "llama-local":
         llm = OllamaLLM(model="llama3.2:3b", base_url=ollama_base_url)
 
@@ -124,15 +181,21 @@ def build_llm(model_name: str, ollama_base_url: str, creds):
             credentials=creds,
         )
 
+    elif model_name == "vllm":
+        llm = VLLMChat(
+            api_url=vllm_api_url,
+            api_key=vllm_api_key
+        )
+        
     return llm
 
 
 def init_components(embedding_model_name: str, llm_model_name: str):
-    OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES = load_env_config()
+    OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY = load_env_config()
     creds = load_google_creds()
     embedding_model = build_embedding_model(OLLAMA_BASE_URL, model_name=embedding_model_name)
     qdrant_client = build_qdrant_client(QDRANT_URL)
     vectorstores = build_vectorstores(qdrant_client, embedding_model, QDRANT_URL, COLLECTION_NAMES)
-    llm = build_llm(llm_model_name, OLLAMA_BASE_URL, creds)
+    llm = build_llm(llm_model_name, OLLAMA_BASE_URL, creds, VLLM_API_URL, VLLM_API_KEY)
 
     return embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client

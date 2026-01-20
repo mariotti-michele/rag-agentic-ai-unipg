@@ -12,7 +12,7 @@ from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
 def parse_args():
     parser = argparse.ArgumentParser(description="Valutazione manuale RAG")
     parser.add_argument("--llm-model", type=str, default="gemini",
-                        choices=["llama-local", "gemini", "llama-api"],
+                        choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Seleziona il modello da usare")
     parser.add_argument("--embedding-model", type=str, default="nomic",
                         choices=["nomic", "e5", "all-mpnet"],

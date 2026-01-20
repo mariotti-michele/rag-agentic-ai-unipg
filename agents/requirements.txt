@@ -19,3 +19,6 @@ transformers
 torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
 accelerate
 numpy==1.26.4
+fastapi
+uvicorn[standard]
+pydantic

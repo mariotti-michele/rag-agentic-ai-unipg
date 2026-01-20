@@ -28,7 +28,7 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description="Valutazione RAG automatica con RAGAS")
     parser.add_argument("--llm-model", type=str, default="gemini",
-                        choices=["llama-local", "gemini", "llama-api"],
+                        choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Seleziona il modello da usare")
     parser.add_argument("--embedding-model", type=str, default="nomic",
                         choices=["nomic", "e5", "all-mpnet"],

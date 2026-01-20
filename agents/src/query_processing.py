@@ -25,7 +25,7 @@ def process_query(docs: list, query: str, llm, classification_mode) -> tuple[str
         prompt_template = TIMETABLE_PROMPT
     elif classification_mode == "calendario esami":
         prompt_template = EXAM_CALENDAR_PROMPT
-    elif classification_mode == "regolamenti":
+    elif classification_mode == "insegnamenti":
         prompt_template = PROGRAM_REGULATIONS_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template)
     return answer, [d["text"] for d in docs]
@@ -60,9 +60,9 @@ def classify_query(llm, query: str) -> str:
         elif "calendario esami" in classification:
             print("[INFO] Query classificata come calendario esami.")
             return "calendario esami"
-        elif "regolamenti" in classification:
+        elif "insegnamenti" in classification:
             print("[INFO] Query classificata come regolamenti.")
-            return "regolamenti"
+            return "insegnamenti"
         else:
             return "rag"
     except Exception as e:
