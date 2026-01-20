@@ -21,13 +21,13 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from initializer import init_components
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
-from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid
+from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid, classify_query
 
 import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Valutazione RAG automatica con RAGAS")
-    parser.add_argument("--llm-model", type=str, default="gemini",
+    parser.add_argument("--llm-model", type=str, default="vllm",
                         choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Seleziona il modello da usare")
     parser.add_argument("--embedding-model", type=str, default="nomic",
@@ -48,7 +48,7 @@ def parse_args():
 def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, embedding_model_name: str, chunking: str, search: str, version: str):
     print(f"\nValutazione variante: \nllm model: {llm_model_name} \nembedding model: {embedding_model_name} \nchunking: {chunking} \nsearch: {search} \nversion: {version}")
 
-    base_dir = Path("../evaluations_results") / llm_model_name / embedding_model_name / chunking / (search + f"_{version}")
+    base_dir = Path("evaluations_results") / llm_model_name / embedding_model_name / chunking / (search + f"_{version}")
     base_dir.mkdir(parents=True, exist_ok=True)
     name = f"{llm_model_name}-{embedding_model_name}-{chunking}-{search}-{version}"
     csv_path = base_dir / f"eval_results_{name.replace(' ', '_')}.csv"
@@ -182,9 +182,9 @@ if __name__ == "__main__":
     corpus, corpus_texts = build_corpus(qdrant_client, COLLECTION_NAMES)
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
-    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm)
-    sparse_func = lambda q: answer_query_bm25(q, corpus, bm25, spacy_tokenizer, llm)
-    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm)
+    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q))
+    sparse_func = lambda q: answer_query_bm25(q, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q))
+    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q))
     if search_technique == "dense":
         evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version)
     elif search_technique == "sparse":

@@ -5,13 +5,13 @@ import argparse
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid
+from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid, classify_query
 from initializer import init_components
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Valutazione manuale RAG")
-    parser.add_argument("--llm-model", type=str, default="gemini",
+    parser.add_argument("--llm-model", type=str, default="vllm",
                         choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Seleziona il modello da usare")
     parser.add_argument("--embedding-model", type=str, default="nomic",
@@ -50,11 +50,11 @@ def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, co
 
         try:
             if search_technique == "dense":
-                response, retrieved_ctx = answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm)
+                response, retrieved_ctx = answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q))
             elif search_technique == "sparse":
-                response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm)
+                response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm, classify_query(llm, q))
             elif search_technique == "hybrid":
-                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm)
+                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, classify_query(llm, q))
             else:
                 response, retrieved_ctx = answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm)
                 print(f"Risposta (dense):\n{response}\n")

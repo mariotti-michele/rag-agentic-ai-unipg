@@ -1,0 +1,12 @@
+Ricerca sparse
+question,answer,faithfulness,answer_relevancy,context_precision,context_recall,answer_correctness
+A chi bisogna rivolgersi per chiedere l'esonero dal corso sulla sicurezza?,,nan,0.489,0.000,0.000,0.136
+Chi è il referente per informazioni e sessioni di esame aggiuntive sul corso di sicurezza?,,nan,0.433,0.000,0.000,0.140
+Come può ottenere l’attestato lo studente che supera l’esame di sicurezza?,"Una volta superato l’esame, lo studente può scaricare l'attestato dall'area riservata.",1.000,0.711,1.000,nan,0.711
+A cosa serve il corso sulla sicurezza nei luoghi di lavoro?,,nan,0.376,0.000,0.000,0.128
+Posso accedere al laboratorio senza aver seguito il corso sulla sicurezza?,,nan,0.366,0.000,0.000,0.137
+Qual è il link per iscriversi al corso sulla sicurezza nei luoghi di lavoro?,Il link per iscriversi al corso sulla sicurezza nei luoghi di lavoro è https://unistudium.unipg.it/unistudium/course/view.php?id=17249.,1.000,0.675,1.000,1.000,0.709
+Il corso sulla sicurezza è erogato in presenza o a distanza?,,nan,0.354,0.000,0.000,0.138
+Cosa deve fare uno studente che non ha seguito il corso di sicurezza nella scuola superiore?,,nan,0.000,0.000,0.000,0.136
+È possibile organizzare sessioni di esame aggiuntive per il corso sulla sicurezza?,A richiesta possono essere organizzate sessioni di esame aggiuntive; per informazioni e sessioni di esame aggiuntive contattare direttamente il prof. Antonio Moschitta (antonio.moschitta@unipg.it).,1.000,0.874,0.700,1.000,0.594
+2026-01-20 16:02:32,--- MEDIA TOTALE ---,1.000,0.475,0.300,0.250,0.315
