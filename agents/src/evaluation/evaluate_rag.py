@@ -25,28 +25,30 @@ from query_processing import answer_query_dense, answer_query_bm25, answer_query
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Valutazione RAG automatica con RAGAS")
-parser.add_argument("--llm-model", type=str, default="gemini",
-                    choices=["llama-local", "gemini", "llama-api"],
-                    help="Seleziona il modello da usare")
-parser.add_argument("--embedding-model", type=str, default="nomic",
-                    choices=["nomic", "e5", "all-mpnet"],
-                    help="Seleziona il modello di embedding da usare")
-parser.add_argument("--search", type=str, default="all",
-                    choices=["dense", "sparse", "hybrid", "all"],
-                    help="Seleziona tecnica di ricerca da utilizzare (default: all)")
-parser.add_argument("--chunking", type=str, default="section",
-                    choices=["fixed", "document-structure", "section"],
-                    help="Tipo di chunking usato per creare la collezione (default: section)")
-parser.add_argument("--version", type=str, default="v0",
-                    help="Versione del modello valutato (default: v0)")
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser(description="Valutazione RAG automatica con RAGAS")
+    parser.add_argument("--llm-model", type=str, default="gemini",
+                        choices=["llama-local", "gemini", "llama-api"],
+                        help="Seleziona il modello da usare")
+    parser.add_argument("--embedding-model", type=str, default="nomic",
+                        choices=["nomic", "e5", "all-mpnet"],
+                        help="Seleziona il modello di embedding da usare")
+    parser.add_argument("--search", type=str, default="all",
+                        choices=["dense", "sparse", "hybrid", "all"],
+                        help="Seleziona tecnica di ricerca da utilizzare (default: all)")
+    parser.add_argument("--chunking", type=str, default="section",
+                        choices=["fixed", "document-structure", "section"],
+                        help="Tipo di chunking usato per creare la collezione (default: section)")
+    parser.add_argument("--version", type=str, default="v0",
+                        help="Versione del modello valutato (default: v0)")
+    args = parser.parse_args()
+    return args
 
 
 def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, embedding_model_name: str, chunking: str, search: str, version: str):
     print(f"\nValutazione variante: \nllm model: {llm_model_name} \nembedding model: {embedding_model_name} \nchunking: {chunking} \nsearch: {search} \nversion: {version}")
 
-    base_dir = Path("evaluations_results") / llm_model_name / embedding_model_name / chunking / (search + f"_{version}")
+    base_dir = Path("../evaluations_results") / llm_model_name / embedding_model_name / chunking / (search + f"_{version}")
     base_dir.mkdir(parents=True, exist_ok=True)
     name = f"{llm_model_name}-{embedding_model_name}-{chunking}-{search}-{version}"
     csv_path = base_dir / f"eval_results_{name.replace(' ', '_')}.csv"
@@ -173,7 +175,7 @@ def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics, se
 
 
 if __name__ == "__main__":
-    
+    args = parse_args()
     llm_model_name, embedding_model_name, search_technique, chunking, version = args.llm_model, args.embedding_model, args.search, args.chunking, args.version
 
     embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)

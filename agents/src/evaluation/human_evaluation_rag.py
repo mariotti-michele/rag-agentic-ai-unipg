@@ -9,17 +9,19 @@ from query_processing import answer_query_dense, answer_query_bm25, answer_query
 from initializer import init_components
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
 
-parser = argparse.ArgumentParser(description="Valutazione manuale RAG")
-parser.add_argument("--llm-model", type=str, default="gemini",
-                    choices=["llama-local", "gemini", "llama-api"],
-                    help="Seleziona il modello da usare")
-parser.add_argument("--embedding-model", type=str, default="nomic",
-                    choices=["nomic", "e5", "all-mpnet"],
-                    help="Seleziona il modello di embedding da usare")
-parser.add_argument("--search", type=str, default="hybrid",
-                    choices=["all", "dense", "sparse", "hybrid"],
-                    help="Seleziona tecnica di ricerca (default: dense)")
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser(description="Valutazione manuale RAG")
+    parser.add_argument("--llm-model", type=str, default="gemini",
+                        choices=["llama-local", "gemini", "llama-api"],
+                        help="Seleziona il modello da usare")
+    parser.add_argument("--embedding-model", type=str, default="nomic",
+                        choices=["nomic", "e5", "all-mpnet"],
+                        help="Seleziona il modello di embedding da usare")
+    parser.add_argument("--search", type=str, default="hybrid",
+                        choices=["all", "dense", "sparse", "hybrid"],
+                        help="Seleziona tecnica di ricerca (default: dense)")
+    args = parser.parse_args()
+    return args
 
 
 def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, corpus, bm25, nlp, search_technique):
@@ -78,6 +80,7 @@ def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, co
 
 
 if __name__ == "__main__":
+    args = parse_args()
     llm_model_name, embedding_model_name, search_technique = args.llm_model, args.embedding_model, args.search
 
     embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(

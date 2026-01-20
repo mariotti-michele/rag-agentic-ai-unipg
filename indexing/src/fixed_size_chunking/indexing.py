@@ -16,25 +16,13 @@ from scraping import sha
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Fixed size chunking indexing script")
-parser.add_argument("--embedding-model", type=str, default="nomic", 
-                    choices=["nomic", "e5", "all-mpnet"],
-                    help="Seleziona il modello di embedding da usare")
-args = parser.parse_args()
-
-load_dotenv()
-
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
-QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
-
-if(args.embedding_model == "nomic"):
-    EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
-elif(args.embedding_model == "e5"):
-    EMBED_MODEL = "intfloat/e5-base-v2"
-elif(args.embedding_model == "all-mpnet"):
-    EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
-
-LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
+def parse_args():
+    parser = argparse.ArgumentParser(description="Fixed size chunking indexing script")
+    parser.add_argument("--embedding-model", type=str, default="nomic", 
+                        choices=["nomic", "e5", "all-mpnet"],
+                        help="Seleziona il modello di embedding da usare")
+    args = parser.parse_args()
+    return args
 
 
 def chunk_documents(docs: list[Document]) -> list[Document]:
@@ -205,6 +193,22 @@ def indexing_json_collection(collection_name: str, json_files: list[str], descri
 
 
 if __name__ == "__main__":
+    args = parse_args()
+
+    load_dotenv()
+
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+    QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
+
+    if(args.embedding_model == "nomic"):
+        EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+    elif(args.embedding_model == "e5"):
+        EMBED_MODEL = "intfloat/e5-base-v2"
+    elif(args.embedding_model == "all-mpnet"):
+        EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
+
+    LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
+
     asyncio.run(main())
     indexing_json_collection(
         collection_name="ing_info_mag_calendario_esami",
