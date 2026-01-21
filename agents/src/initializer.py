@@ -6,6 +6,7 @@ from qdrant_client import QdrantClient
 from langchain_qdrant import QdrantVectorStore
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_core.embeddings import Embeddings
 
 from langchain_ollama import OllamaLLM
 
@@ -83,10 +84,55 @@ def load_env_config():
     COLLECTION_NAMES = [c.strip() for c in COLLECTION_NAMES if c.strip()]
     VLLM_API_URL = os.getenv("VLLM_API_URL", "")
     VLLM_API_KEY = os.getenv("VLLM_API_KEY", "")
-    return OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY
+    BGE_API_URL = os.getenv("BGE_EMBED_MODEL_API_URL", "")
+    BGE_API_KEY = os.getenv("BGE_EMBED_MODEL_API_KEY", "")
+    return OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY, BGE_API_URL, BGE_API_KEY
 
 
-def build_embedding_model(ollama_base_url, model_name="nomic"): 
+class BGEEmbeddings(Embeddings):
+    api_url: str
+    api_key: str
+    model: str = "BAAI/bge-m3"
+
+    def __init__(self, api_url: str, api_key: str, model: str = "BAAI/bge-m3"):
+        self.api_url = api_url
+        self.api_key = api_key
+        self.model = model
+
+    def _endpoint(self) -> str:
+        u = self.api_url.strip().rstrip("/")
+        if u.endswith("/embeddings/embed"):
+            return u
+        if u.endswith("/embeddings"):
+            return u + "/embed"
+        if u.endswith("/v1"):
+            return u.rstrip("/v1") + "/embeddings/embed"
+        return u + "/embeddings/embed"
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        endpoint = self._endpoint()
+        response = requests.post(
+            endpoint,
+            headers={
+                "X-API-Key": self.api_key,
+                "Content-Type": "application/json",
+            },
+            json={
+                "texts": texts,
+                "normalize": True
+            },
+            verify=False,
+            timeout=60,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data if isinstance(data, list) else data.get("embeddings", [])
+
+    def embed_query(self, text: str) -> List[float]:
+        return self.embed_documents([text])[0]
+
+
+def build_embedding_model(ollama_base_url, model_name="nomic", bge_api_url="", bge_api_key=""): 
     if model_name == "nomic":
         embedding_model = OllamaEmbeddings(
             model="nomic-embed-text",
@@ -101,6 +147,12 @@ def build_embedding_model(ollama_base_url, model_name="nomic"):
         embedding_model = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-mpnet-base-v2",
             encode_kwargs={"normalize_embeddings": True}
+        )
+    elif model_name == "bge":
+        embedding_model = BGEEmbeddings(
+            api_url=bge_api_url,
+            api_key=bge_api_key,
+            model="BAAI/bge-m3"
         )
 
     return embedding_model
@@ -191,9 +243,9 @@ def build_llm(model_name: str, ollama_base_url: str, creds, vllm_api_url, vllm_a
 
 
 def init_components(embedding_model_name: str, llm_model_name: str):
-    OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY = load_env_config()
+    OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY, BGE_API_URL, BGE_API_KEY = load_env_config()
     creds = load_google_creds()
-    embedding_model = build_embedding_model(OLLAMA_BASE_URL, model_name=embedding_model_name)
+    embedding_model = build_embedding_model(OLLAMA_BASE_URL, model_name=embedding_model_name, bge_api_url=BGE_API_URL, bge_api_key=BGE_API_KEY)
     qdrant_client = build_qdrant_client(QDRANT_URL)
     vectorstores = build_vectorstores(qdrant_client, embedding_model, QDRANT_URL, COLLECTION_NAMES)
     llm = build_llm(llm_model_name, OLLAMA_BASE_URL, creds, VLLM_API_URL, VLLM_API_KEY)

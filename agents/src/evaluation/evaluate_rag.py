@@ -31,7 +31,7 @@ def parse_args():
                         choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Seleziona il modello da usare")
     parser.add_argument("--embedding-model", type=str, default="nomic",
-                        choices=["nomic", "e5", "all-mpnet"],
+                        choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
     parser.add_argument("--search", type=str, default="all",
                         choices=["dense", "sparse", "hybrid", "all"],

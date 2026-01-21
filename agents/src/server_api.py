@@ -43,7 +43,7 @@ def parse_args():
                         choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Modello LLM da utilizzare")
     parser.add_argument("--embedding-model", type=str, default="nomic",
-                        choices=["nomic", "e5", "all-mpnet"],
+                        choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Modello di embedding da utilizzare")
     parser.add_argument("--host", type=str, default="0.0.0.0",
                         help="Host per il server")

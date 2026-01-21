@@ -13,13 +13,14 @@ from qdrant_client import QdrantClient
 
 from crawling import crawl
 from scraping import sha
+from bge_embedding_class import BGEEmbeddings
 
 import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Fixed size chunking indexing script")
     parser.add_argument("--embedding-model", type=str, default="nomic", 
-                        choices=["nomic", "e5", "all-mpnet"],
+                        choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
     args = parser.parse_args()
     return args
@@ -53,6 +54,8 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
 
 def build_vectorstore(collection_name: str):
     embedding_model = None
+    vector_size = 768
+
     if args.embedding_model == "nomic":
         embedding_model = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
     elif args.embedding_model == "e5":
@@ -65,6 +68,13 @@ def build_vectorstore(collection_name: str):
             model_name="sentence-transformers/all-mpnet-base-v2",
             encode_kwargs={"normalize_embeddings": True}
         )
+    elif args.embedding_model == "bge":
+        embedding_model = BGEEmbeddings(
+            api_url=BGE_API_URL,
+            api_key=BGE_API_KEY
+        )
+        vector_size = 1024
+            
     client = QdrantClient(url=QDRANT_URL)
 
     existing_collections = [c.name for c in client.get_collections().collections]
@@ -72,7 +82,7 @@ def build_vectorstore(collection_name: str):
         print(f"[INFO] Creazione nuova collezione Qdrant: {collection_name}")
         client.create_collection(
             collection_name=collection_name,
-            vectors_config={"size": 768, "distance": "Cosine"},
+            vectors_config={"size": vector_size, "distance": "Cosine"},
         )
     else:
         print(f"[INFO] Collezione già esistente: {collection_name}")
@@ -199,6 +209,8 @@ if __name__ == "__main__":
 
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
     QDRANT_URL = os.getenv("QDRANT_URL", "http://qdrant:6333")
+    BGE_API_URL = os.getenv("BGE_EMBED_MODEL_API_URL", "")
+    BGE_API_KEY = os.getenv("BGE_EMBED_MODEL_API_KEY", "")
 
     if(args.embedding_model == "nomic"):
         EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
@@ -206,6 +218,8 @@ if __name__ == "__main__":
         EMBED_MODEL = "intfloat/e5-base-v2"
     elif(args.embedding_model == "all-mpnet"):
         EMBED_MODEL = "sentence-transformers/all-mpnet-base-v2"
+    elif(args.embedding_model == "bge"):
+        EMBED_MODEL = "BAAI/bge-m3"
 
     LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
 

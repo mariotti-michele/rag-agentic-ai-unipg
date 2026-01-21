@@ -130,7 +130,7 @@ def collection_filter(classification_mode: str):
 
 
 def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 5, classification_mode="rag"):
-    if embedding_model_name == "e5":
+    if embedding_model_name == "e5" or embedding_model_name == "bge":
         query = "query: " + query
 
     collection_filter_value = None
