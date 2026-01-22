@@ -38,7 +38,7 @@ def parse_args():
                         choices=["dense", "sparse", "hybrid", "all"],
                         help="Seleziona tecnica di ricerca da utilizzare (default: all)")
     parser.add_argument("--chunking", type=str, default="section",
-                        choices=["fixed", "document-structure", "section"],
+                        choices=["fixed", "document-structure", "section", "semantic"],
                         help="Tipo di chunking usato per creare la collezione (default: section)")
     parser.add_argument("--version", type=str, default="v0",
                         help="Versione del modello valutato (default: v0)")
