@@ -1,0 +1,131 @@
+# SECTION BASED CHUNKING - parsing.py
+
+from bs4 import BeautifulSoup
+from datetime import datetime, timezone
+from pathlib import Path
+
+from unstructured.partition.html import partition_html
+from unstructured.partition.pdf import partition_pdf
+from langchain_core.documents import Document
+
+from scraping import sha
+
+import logging
+logging.getLogger("pdfminer").setLevel(logging.ERROR)
+logging.getLogger("unstructured").setLevel(logging.ERROR)
+
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="camelot")
+
+
+def chunk(elements, source_url, page_title, doc_type, file_name=None):
+    from unstructured.documents.elements import Title, Header, NarrativeText, ListItem, Text, Table
+
+    crawl_ts = datetime.now(timezone.utc).isoformat()
+    docs, merged_chunks = [], []
+    current_chunk, current_header = "", None
+
+    for el in elements:
+        text = getattr(el, "text", None)
+        if not text:
+            continue
+
+        if isinstance(el, (Title, Header)):
+            if current_chunk.strip():
+                merged_chunks.append(current_chunk.strip())
+                current_chunk = ""
+            current_header = text.strip()
+            continue
+
+        if isinstance(el, (NarrativeText, ListItem, Text)):
+            if current_header:
+                current_chunk = f"{current_header}\n{text}"
+                current_header = None
+            else:
+                current_chunk += ("\n" if current_chunk else "") + text
+            continue
+
+        if isinstance(el, Table):
+            if current_chunk.strip():
+                merged_chunks.append(current_chunk.strip())
+                current_chunk = ""
+            merged_chunks.append(f"[TABELLA]\n{text}")
+
+    if current_chunk.strip():
+        merged_chunks.append(current_chunk.strip())
+
+    for idx, chunk in enumerate(merged_chunks):
+        docs.append(Document(
+            page_content=chunk,
+            metadata={
+                "source_url": source_url,
+                "doc_type": doc_type,
+                "page_title": page_title,
+                "file_name": file_name,
+                "element_type": "SectionBasedChunk",
+                "lang": ["ita"],
+                "crawl_ts": crawl_ts,
+                "doc_id": sha(f"{source_url}_{idx}"),
+            },
+        ))
+
+    print(f"[INFO] {len(merged_chunks)} chunk creati da {source_url}")
+    return docs
+
+
+def to_documents_from_html(file_path: Path, source_url: str, page_title: str) -> list[Document]:
+    raw_html = file_path.read_text(encoding="utf-8")
+    soup = BeautifulSoup(raw_html, "html.parser")
+
+    main_el = soup.find("main")
+    if not main_el:
+        print(f"[WARN] Nessun <main> trovato in {source_url}, salto")
+        return []
+    
+    for mod in main_el.select("div.module-container.col-xs-12"):
+        mod.decompose()
+
+    main_html = str(main_el)
+    
+    elements = partition_html(
+        text=main_html,
+        include_page_breaks=False,
+        languages=["ita", "eng"]
+    )
+
+    if not elements:
+        text_fallback = main_el.get_text(separator="\n", strip=True)
+        return [Document(
+            page_content=text_fallback,
+            metadata={
+                "source_url": source_url,
+                "doc_type": "html",
+                "page_title": page_title,
+                "element_type": "FallbackText",
+                "lang": "ita",
+                "crawl_ts": datetime.now(timezone.utc).isoformat(),
+                "doc_id": sha(source_url),
+            },
+        )] if text_fallback else []
+
+    return chunk(elements, source_url, page_title, doc_type="html", file_name=file_path.name)
+
+
+def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
+    try:
+        elements = partition_pdf(
+            filename=str(file_path),
+            strategy="hi_res",
+            include_page_breaks=True,
+            infer_table_structure=True,
+            languages=["ita", "eng"]
+        )
+    except Exception as e:
+        print(f"[WARN] partition_pdf fallito su {file_path}: {e}")
+        return []
+    
+    if not elements:
+        print(f"[WARN] Nessun elemento estratto da {file_path}")
+        return []
+
+    return chunk(elements, source_url, page_title=file_path.stem, doc_type="pdf", file_name=file_path.name)
