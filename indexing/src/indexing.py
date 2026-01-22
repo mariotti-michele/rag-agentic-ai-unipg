@@ -3,6 +3,8 @@
 import os, asyncio, uuid
 from dotenv import load_dotenv
 from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).parent.parent))
 
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
