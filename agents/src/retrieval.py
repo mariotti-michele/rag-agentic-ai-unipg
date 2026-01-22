@@ -158,30 +158,11 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
         except Exception as e:
             print(f"[WARN] Errore su {name}: {e}")
 
-    # DEBUG: verifica ordine score PRIMA del sort
-    print(f"\n[DEBUG DENSE] Score PRIMA del sort:")
-    for i, h in enumerate(hits[:10]):
-        print(f"  {i+1}. score={h['score']:.4f} | {h['text'][:80]}")
-
     hits.sort(key=lambda x: x["score"], reverse=True)
-    
-    # DEBUG: verifica ordine score DOPO il sort
-    print(f"\n[DEBUG DENSE] Score DOPO sort reverse=True:")
-    for i, h in enumerate(hits[:10]):
-        print(f"  {i+1}. score={h['score']:.4f} | {h['text'][:80]}")
-    
     return hits[:top_k]
 
 
 def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
-    # DEBUG: stampa gli score in input
-    print(f"\n[DEBUG RRF] Dense docs scores:")
-    for i, d in enumerate(dense_docs[:5]):
-        print(f"  {i+1}. dense_score={d.get('score', 0):.4f}")
-    print(f"\n[DEBUG RRF] Sparse docs scores:")
-    for i, d in enumerate(sparse_docs[:5]):
-        print(f"  {i+1}. sparse_score={d.get('score', 0):.4f}")
-    
     combined = {}
     for rank, d in enumerate(dense_docs):
         docid = d.get("doc_id") if d.get("doc_id") else d["text"]
@@ -192,12 +173,6 @@ def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
 
     ranked_ids = [rid for rid, _ in sorted(combined.items(), key=lambda x: x[1], reverse=True)[:k]]
     merged = {(d.get("doc_id") if d.get("doc_id") else d["text"]): d for d in dense_docs + sparse_docs}
-    
-    # DEBUG: stampa RRF scores finali
-    print(f"\n[DEBUG RRF] Combined RRF scores:")
-    for i, rid in enumerate(ranked_ids):
-        print(f"  {i+1}. rrf_score={combined[rid]:.4f}")
-    
     return [merged[rid] for rid in ranked_ids if rid in merged]
 
 
