@@ -38,7 +38,7 @@ Devi scegliere una sola categoria tra:
 - "insegnamenti"
 - "rag"
 
-Rispondi SOLO con una di queste due parole.
+Rispondi SOLO con una di queste 5 parole.
 
 Regole:
 - Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
