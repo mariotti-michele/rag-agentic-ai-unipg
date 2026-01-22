@@ -31,11 +31,11 @@ class VLLMChat(BaseLLM):
     def _endpoint(self) -> str:
         u = self.api_url.strip()
 
-        if u.rstrip("/").endswith("/v1/chat/completions"):
+        if u.rstrip("/").endswith("/llm/chat/completions"):
             return u.rstrip("/")
-        if u.rstrip("/").endswith("/v1"):
+        if u.rstrip("/").endswith("/llm"):
             return u.rstrip("/") + "/chat/completions"
-        return u.rstrip("/") + "/v1/chat/completions"
+        return u.rstrip("/") + "/llm/chat/completions"
 
     def _generate(self, prompts, stop=None, run_manager=None, **kwargs):
         generations = []
@@ -105,8 +105,8 @@ class BGEEmbeddings(Embeddings):
             return u
         if u.endswith("/embeddings"):
             return u + "/embed"
-        if u.endswith("/v1"):
-            return u.rstrip("/v1") + "/embeddings/embed"
+        if u.endswith("/llm"):
+            return u.rstrip("/llm") + "/embeddings/embed"
         return u + "/embeddings/embed"
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
