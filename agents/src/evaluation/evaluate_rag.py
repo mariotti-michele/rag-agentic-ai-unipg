@@ -14,6 +14,7 @@ from ragas.metrics import (
 )
 from ragas.metrics._answer_relevance import answer_relevancy
 from ragas import evaluate
+from ragas.run_config import RunConfig
 
 from langsmith import Client
 
@@ -96,7 +97,19 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
     print(f"\nValutazione Ragas per {name}...")
     metrics_list = [faithfulness, answer_relevancy, context_precision, context_recall, answer_correctness]
 
-    result = evaluate(dataset=dataset, metrics=metrics_list, llm=llm, embeddings=embedding_model)
+    run_config = RunConfig(
+        timeout=300,  # timeout in secondi
+        max_workers=2,  # workers paralleli
+        max_wait=360  # tempo massimo di attesa
+    )
+
+    result = evaluate(
+        dataset=dataset, 
+        metrics=metrics_list, 
+        llm=llm, 
+        embeddings=embedding_model,
+        run_config=run_config
+    )
     result_df = result.to_pandas()
     results = result_df.mean(numeric_only=True).to_dict()
 
