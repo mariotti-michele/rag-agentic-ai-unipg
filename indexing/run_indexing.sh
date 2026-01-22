@@ -11,5 +11,5 @@ echo ">>> Operazione completata."
 
 echo ""
 echo ">>> Avvio indicizzazione multipla da links.txt ..."
-docker exec "$CONTAINER" python indexing.py --embedding-model nomic
+docker exec "$CONTAINER" python src/indexing.py --embedding-model nomic
 echo ">>> Indicizzazione completata."
