@@ -5,6 +5,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
+# Disabilita LangSmith tracing PRIMA di importare altre librerie
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+os.environ["LANGCHAIN_PROJECT"] = ""
+
 from datasets import Dataset
 from ragas.metrics import (
     faithfulness,
