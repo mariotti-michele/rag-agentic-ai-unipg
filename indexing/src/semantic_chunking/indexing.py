@@ -22,9 +22,9 @@ def parse_args():
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
 
-    parser.add_argument("--sim-threshold", type=float, default=0.78,
+    parser.add_argument("--sim-threshold", type=float, default=0.60,
                         help="Soglia similarità coseno per unire unità consecutive nello stesso chunk")
-    parser.add_argument("--max-chars", type=int, default=1400,
+    parser.add_argument("--max-chars", type=int, default=4000,
                         help="Massimo numero di caratteri per chunk (vincolo pratico)")
     parser.add_argument("--min-chars", type=int, default=350,
                         help="Minimo numero di caratteri target: i chunk troppo piccoli vengono fusi se possibile")
@@ -90,33 +90,27 @@ def _mean_embedding(vectors: list[np.ndarray]) -> np.ndarray:
 def semantic_chunk_documents(
     docs: list[Document],
     embedding_model,
-    sim_threshold: float = 0.78,
-    max_chars: int = 1400,
+    sim_threshold: float = 0.60,
+    max_chars: int = 4000,
     min_chars: int = 350,
     e5_prefix: bool = False
 ) -> list[Document]:
-    """
-    docs deve essere una lista di unità atomiche in ordine (SemanticUnit...).
-    Restituisce chunk semantici (Document) pronti per Qdrant.
 
-    Strategia greedy:
-    - calcolo embedding per ogni unità
-    - scorro le unità in ordine e unisco se sim >= soglia e non supero max_chars
-    - post-process: se chunk < min_chars provo a fonderlo con vicino
-    """
-
-    # 1) prepara testi (eventuale prefisso E5)
     unit_texts = []
     for d in docs:
         t = d.page_content.strip()
         if not t:
             unit_texts.append("")
             continue
+        
+        header = d.metadata.get("header")
+        if header:
+            t = f"{header}\n{t}"
+        
         if e5_prefix:
             t = "passage: " + t
         unit_texts.append(t)
 
-    # filtra unità vuote mantenendo mapping
     keep_idx = [i for i, t in enumerate(unit_texts) if t.strip()]
     if not keep_idx:
         return []
@@ -124,39 +118,62 @@ def semantic_chunk_documents(
     filtered_docs = [docs[i] for i in keep_idx]
     filtered_texts = [unit_texts[i] for i in keep_idx]
 
-    # 2) embeddings batch (se supportato)
     try:
         vectors = embedding_model.embed_documents(filtered_texts)
     except Exception:
-        # fallback: embed_query per ogni unità
         vectors = [embedding_model.embed_query(t) for t in filtered_texts]
 
     vectors = [np.array(v, dtype=np.float32) for v in vectors]
 
-    # 3) grouping greedy
     chunks: list[dict] = []
     cur_texts: list[str] = []
     cur_vecs: list[np.ndarray] = []
     cur_meta_ref: Document | None = None
+    cur_headers: list[str | None] = []
 
     def flush():
-        nonlocal cur_texts, cur_vecs, cur_meta_ref
+        nonlocal cur_texts, cur_vecs, cur_meta_ref, cur_headers
         if not cur_texts:
             return
+        
+        final_parts = []
+        last_header = None
+        
+        for i, (header, text) in enumerate(zip(cur_headers, cur_texts)):
+            clean_text = text
+            
+            if e5_prefix and clean_text.startswith("passage: "):
+                clean_text = clean_text[len("passage: "):]
+            
+            if header:
+                header_with_newline = f"{header}\n"
+                if clean_text.startswith(header_with_newline):
+                    clean_text = clean_text[len(header_with_newline):]
+            
+            if header and header != last_header:
+                final_parts.append(header)
+                last_header = header
+            
+            if clean_text.strip():
+                final_parts.append(clean_text)
+        
         chunks.append({
-            "text": "\n".join(cur_texts).strip(),
+            "text": "\n".join(final_parts).strip(),
             "vecs": cur_vecs[:],
             "meta_ref": cur_meta_ref
         })
-        cur_texts, cur_vecs, cur_meta_ref = [], [], None
+        cur_texts, cur_vecs, cur_meta_ref, cur_headers = [], [], None, []
 
     for d, t, v in zip(filtered_docs, filtered_texts, vectors):
+        header = d.metadata.get("header")
+        
         if cur_meta_ref is None:
             cur_meta_ref = d
 
         if not cur_texts:
             cur_texts = [t]
             cur_vecs = [v]
+            cur_headers = [header]
             continue
 
         cur_emb = _mean_embedding(cur_vecs)
@@ -167,15 +184,16 @@ def semantic_chunk_documents(
         if sim >= sim_threshold and prospective_len <= max_chars:
             cur_texts.append(t)
             cur_vecs.append(v)
+            cur_headers.append(header)
         else:
             flush()
             cur_meta_ref = d
             cur_texts = [t]
             cur_vecs = [v]
+            cur_headers = [header]
 
     flush()
 
-    # 4) post-merge: riduci micro-chunk (min_chars) fondendoli con il vicino più sensato
     if len(chunks) > 1:
         merged = []
         i = 0
@@ -186,31 +204,25 @@ def semantic_chunk_documents(
                 i += 1
                 continue
 
-            # chunk piccolo: prova a fonderlo col successivo se non supera max_chars
             nxt = chunks[i + 1]
-            if len(c["text"]) + 1 + len(nxt["text"]) <= max_chars:
+            combined_text = (c["text"] + "\n" + nxt["text"]).strip()
+            if len(combined_text) <= max_chars:
                 merged.append({
-                    "text": (c["text"] + "\n" + nxt["text"]).strip(),
+                    "text": combined_text,
                     "vecs": c["vecs"] + nxt["vecs"],
                     "meta_ref": c["meta_ref"],
                 })
                 i += 2
             else:
-                # altrimenti lo teniamo (o lo fonderemo "a sinistra" implicitamente se possibile)
                 merged.append(c)
                 i += 1
         chunks = merged
 
-    # 5) converti in Document finali (SemanticChunk)
     final_docs: list[Document] = []
     for idx, c in enumerate(chunks):
         base_doc = c["meta_ref"]
         source_url = base_doc.metadata.get("source_url", "unknown")
 
-        # ricostruisco testo “pulito” per retrieval:
-        # se e5_prefix=True, togliamo "passage: " solo nella content finale, ma
-        # ATTENZIONE: per Qdrant l'embedding verrà rifatto su page_content, quindi
-        # qui conviene mantenere il prefisso se stai usando e5.
         content = c["text"]
 
         final_docs.append(Document(
@@ -220,6 +232,7 @@ def semantic_chunk_documents(
                 "element_type": "SemanticChunk",
                 "chunking": "semantic",
                 "doc_id": sha(f"{source_url}_semantic_{idx}"),
+                "num_units": len(c["vecs"]),
             }
         ))
 
@@ -227,9 +240,8 @@ def semantic_chunk_documents(
     return final_docs
 
 
-# -----------------------
-# Links blocks (uguale al tuo)
-# -----------------------
+
+
 def parse_links_file(LINKS_FILE: Path) -> dict[str, list[tuple[str, dict]]]:
     blocks = {}
     current_block = None
@@ -267,9 +279,6 @@ def parse_links_file(LINKS_FILE: Path) -> dict[str, list[tuple[str, dict]]]:
     return blocks
 
 
-# -----------------------
-# JSON collections (uguale al tuo, ma volendo puoi chunkare anche JSON)
-# -----------------------
 def indexing_json_collection(collection_name: str, json_files: list[str], description_prefix: str,
                             build_vs_fn):
     base_path = Path(__file__).resolve().parent / "json-data"
@@ -305,9 +314,6 @@ def indexing_json_collection(collection_name: str, json_files: list[str], descri
     print(f"[OK] Inseriti {len(docs)} documenti JSON nella collezione '{collection_name}'")
 
 
-# -----------------------
-# Main flow (crawl -> semantic chunk -> upsert)
-# -----------------------
 async def process_block(collection_name: str, urls_with_opts: list[tuple[str, dict]],
                         embedding_model, vector_size, QDRANT_URL,
                         sim_threshold, max_chars, min_chars, e5_prefix):
@@ -317,7 +323,6 @@ async def process_block(collection_name: str, urls_with_opts: list[tuple[str, di
     all_units: list[Document] = []
     for url, opts in urls_with_opts:
         print(f"\n>>> Processando: {url} (depth={opts['depth']}, pdf={opts['pdf']})")
-        # IMPORTANTE: qui crawl() deve già usare IL parsing semantic (parsing.py sopra)
         units = await crawl(url, opts["depth"], opts["pdf"])
         all_units.extend(units)
 
@@ -340,7 +345,6 @@ async def process_block(collection_name: str, urls_with_opts: list[tuple[str, di
 
     vs = build_vectorstore(collection_name, embedding_model, vector_size, QDRANT_URL)
 
-    # id stabili basati su chunk content + url
     ids = []
     for i, c in enumerate(chunks):
         base_id = sha(c.metadata.get("source_url", "unknown"))
@@ -361,7 +365,6 @@ async def main():
 
     print(f"[INFO] Trovati {len(blocks)} blocchi nel file links.txt")
 
-    # embedding model unico per run
     embedding_model, vector_size = build_embedding_model(args, OLLAMA_BASE_URL, BGE_API_URL, BGE_API_KEY)
 
     e5_prefix = (args.embedding_model == "e5")
@@ -402,7 +405,6 @@ if __name__ == "__main__":
 
     asyncio.run(main())
 
-    # JSON indexing (come tuo)
     def _build_vs(name: str):
         embedding_model, vector_size = build_embedding_model(args, OLLAMA_BASE_URL, BGE_API_URL, BGE_API_KEY)
         return build_vectorstore(name, embedding_model, vector_size, QDRANT_URL)

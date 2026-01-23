@@ -38,10 +38,8 @@ def extract_units_from_elements(elements, source_url, page_title, doc_type, file
             continue
 
         if isinstance(el, (NarrativeText, ListItem, Text)):
-            content = f"{current_header}\n{text}" if current_header else text
-
             units.append(Document(
-                page_content=content,
+                page_content=text,
                 metadata={
                     "source_url": source_url,
                     "doc_type": doc_type,
@@ -51,6 +49,7 @@ def extract_units_from_elements(elements, source_url, page_title, doc_type, file
                     "lang": ["ita"],
                     "crawl_ts": crawl_ts,
                     "unit_id": sha(f"{source_url}_unit_{unit_idx}"),
+                    "header": current_header,
                 },
             ))
             unit_idx += 1
@@ -58,8 +57,6 @@ def extract_units_from_elements(elements, source_url, page_title, doc_type, file
 
         if isinstance(el, Table):
             table_txt = f"[TABELLA]\n{text}"
-            if current_header:
-                table_txt = f"{current_header}\n{table_txt}"
 
             units.append(Document(
                 page_content=table_txt,
@@ -72,6 +69,7 @@ def extract_units_from_elements(elements, source_url, page_title, doc_type, file
                     "lang": ["ita"],
                     "crawl_ts": crawl_ts,
                     "unit_id": sha(f"{source_url}_table_{unit_idx}"),
+                    "header": current_header,
                 },
             ))
             unit_idx += 1
