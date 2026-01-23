@@ -121,7 +121,7 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
     print(f"Risultati salvati in {csv_path}")
 
     langsmith_key = os.getenv("LANGCHAIN_API_KEY")
-    if langsmith_key:
+    if langsmith_key and False: # Disabilitato temporaneamente
         try:
             client = Client()
             client.create_run(
