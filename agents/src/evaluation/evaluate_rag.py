@@ -102,9 +102,9 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
     metrics_list = [faithfulness, answer_relevancy, context_precision, context_recall, answer_correctness]
 
     run_config = RunConfig(
-        timeout=300,  # timeout in secondi
+        timeout=2000,  # timeout in secondi, prima era 300
         max_workers=2,  # workers paralleli
-        max_wait=360  # tempo massimo di attesa
+        max_wait=2000  # tempo massimo di attesa, prima 360
     )
 
     result = evaluate(
