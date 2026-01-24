@@ -1,10 +1,8 @@
-# SEMANTIC CHUNKING - parsing.py
+# DOCUMENT-STRUCTURE BASED CHUNKING - parsing.py
 
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from pathlib import Path
-import logging
-import warnings
 
 from unstructured.partition.html import partition_html
 from unstructured.partition.pdf import partition_pdf
@@ -12,71 +10,12 @@ from langchain_core.documents import Document
 
 from scraping import sha
 
+import logging
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 logging.getLogger("unstructured").setLevel(logging.ERROR)
+
+import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="camelot")
-
-
-def extract_units_from_elements(elements, source_url, page_title, doc_type, file_name=None):
-    from unstructured.documents.elements import Title, Header, NarrativeText, ListItem, Text, Table
-
-    crawl_ts = datetime.now(timezone.utc).isoformat()
-    units: list[Document] = []
-    current_header: str | None = None
-    unit_idx = 0
-
-    for el in elements:
-        text = getattr(el, "text", None)
-        if not text:
-            continue
-        text = text.strip()
-        if not text:
-            continue
-
-        if isinstance(el, (Title, Header)):
-            current_header = text
-            continue
-
-        if isinstance(el, (NarrativeText, ListItem, Text)):
-            units.append(Document(
-                page_content=text,
-                metadata={
-                    "source_url": source_url,
-                    "doc_type": doc_type,
-                    "page_title": page_title,
-                    "file_name": file_name,
-                    "element_type": "SemanticUnit",
-                    "lang": ["ita"],
-                    "crawl_ts": crawl_ts,
-                    "unit_id": sha(f"{source_url}_unit_{unit_idx}"),
-                    "header": current_header,
-                },
-            ))
-            unit_idx += 1
-            continue
-
-        if isinstance(el, Table):
-            table_txt = f"[TABELLA]\n{text}"
-
-            units.append(Document(
-                page_content=table_txt,
-                metadata={
-                    "source_url": source_url,
-                    "doc_type": doc_type,
-                    "page_title": page_title,
-                    "file_name": file_name,
-                    "element_type": "SemanticUnitTable",
-                    "lang": ["ita"],
-                    "crawl_ts": crawl_ts,
-                    "unit_id": sha(f"{source_url}_table_{unit_idx}"),
-                    "header": current_header,
-                },
-            ))
-            unit_idx += 1
-            continue
-
-    print(f"[INFO] Estratte {len(units)} unità atomiche da {source_url}")
-    return units
 
 
 def to_documents_from_html(file_path: Path, source_url: str, page_title: str) -> list[Document]:
@@ -87,40 +26,70 @@ def to_documents_from_html(file_path: Path, source_url: str, page_title: str) ->
     if not main_el:
         print(f"[WARN] Nessun <main> trovato in {source_url}, salto")
         return []
-
+    
+    # Rimuove i moduli sopra al main
     for mod in main_el.select("div.module-container.col-xs-12"):
         mod.decompose()
 
     main_html = str(main_el)
-
+   
     elements = partition_html(
         text=main_html,
         include_page_breaks=False,
         languages=["ita", "eng"]
     )
 
+    docs = []
+    crawl_ts = datetime.now(timezone.utc).isoformat()
+
     if not elements:
+        print(f"[WARN] partition_html non ha trovato elementi in {source_url}, uso fallback BeautifulSoup")
         text_fallback = main_el.get_text(separator="\n", strip=True)
-        if not text_fallback:
-            return []
-        return [Document(
-            page_content=text_fallback,
+        if text_fallback:
+            docs.append(Document(
+                page_content=text_fallback,
+                metadata={
+                    "source_url": source_url,
+                    "doc_type": "html",
+                    "page_title": page_title,
+                    "element_type": "FallbackText",
+                    "lang": "ita",
+                    "crawl_ts": crawl_ts,
+                    "doc_id": sha(source_url),
+                },
+            ))
+        return docs
+
+    for el in elements:
+        text = getattr(el, "text", None) or str(el).strip()
+        if not text:
+            continue
+
+        element_type = getattr(el, "category", None) or el.__class__.__name__
+        meta = getattr(el, "metadata", None)
+        meta = meta.to_dict() if meta is not None else {}
+
+        doc = Document(
+            page_content=text,
             metadata={
                 "source_url": source_url,
                 "doc_type": "html",
                 "page_title": page_title,
-                "file_name": file_path.name,
-                "element_type": "FallbackText",
-                "lang": ["ita"],
-                "crawl_ts": datetime.now(timezone.utc).isoformat(),
-                "unit_id": sha(source_url),
+                "element_type": element_type,
+                "lang": meta.get("languages", None),
+                "crawl_ts": crawl_ts,
+                "doc_id": sha(source_url),
             },
-        )]
-
-    return extract_units_from_elements(elements, source_url, page_title, doc_type="html", file_name=file_path.name)
+        )
+        docs.append(doc)
+    return docs
 
 
 def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
+    docs = []
+    crawl_ts = datetime.now(timezone.utc).isoformat()
+
+    elements = []
     try:
         elements = partition_pdf(
             filename=str(file_path),
@@ -130,11 +99,28 @@ def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
             languages=["ita", "eng"]
         )
     except Exception as e:
-        print(f"[WARN] partition_pdf fallito su {file_path}: {e}")
-        return []
+        print(f"[WARN] partition_pdf fallito con strategy hi_res su {file_path}: {e}")
 
-    if not elements:
-        print(f"[WARN] Nessun elemento estratto da {file_path}")
-        return []
+    for el in elements:
+        text = getattr(el, "text", None) or str(el).strip()
+        if not text:
+            continue
+        element_type = getattr(el, "category", None) or el.__class__.__name__
+        meta = getattr(el, "metadata", None)
+        meta = meta.to_dict() if meta is not None else {}
 
-    return extract_units_from_elements(elements, source_url, page_title=file_path.stem, doc_type="pdf", file_name=file_path.name)
+        docs.append(Document(
+            page_content=text,
+            metadata={
+                "source_url": source_url,
+                "doc_type": "pdf",
+                "page_number": meta.get("page_number", None),
+                "file_name": file_path.name,
+                "element_type": element_type,
+                "lang": meta.get("languages", None),
+                "crawl_ts": crawl_ts,
+                "doc_id": sha(source_url),
+            },
+        ))
+
+    return docs
