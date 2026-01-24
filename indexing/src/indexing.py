@@ -91,7 +91,7 @@ def semantic_chunk_documents(
     docs: list[Document],
     embedding_model,
     sim_threshold: float = 0.78,
-    max_chars: int = 3000,
+    max_chars: int = 1400,
     min_chars: int = 350,
     e5_prefix: bool = False
 ) -> list[Document]:
