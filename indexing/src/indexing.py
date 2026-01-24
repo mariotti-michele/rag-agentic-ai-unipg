@@ -90,8 +90,8 @@ def _mean_embedding(vectors: list[np.ndarray]) -> np.ndarray:
 def semantic_chunk_documents(
     docs: list[Document],
     embedding_model,
-    sim_threshold: float = 0.60,
-    max_chars: int = 4000,
+    sim_threshold: float = 0.78,
+    max_chars: int = 3000,
     min_chars: int = 350,
     e5_prefix: bool = False
 ) -> list[Document]:
