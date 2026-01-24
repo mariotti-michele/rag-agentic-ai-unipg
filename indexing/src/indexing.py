@@ -1,9 +1,10 @@
-# DOCUMENT-STRUCTURE BASED CHUNKING INDEXING SCRIPT
+#  FIXED SIZE CHUNKING INDEXING SCRIPT
 
 import os, asyncio, uuid
 from dotenv import load_dotenv
 from pathlib import Path
 
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
@@ -14,11 +15,10 @@ from crawling import crawl
 from scraping import sha
 from bge_embedding_class import BGEEmbeddings
 
-
 import argparse
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Document-structure based chunking indexing script")
+    parser = argparse.ArgumentParser(description="Fixed size chunking indexing script")
     parser.add_argument("--embedding-model", type=str, default="nomic", 
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
@@ -27,23 +27,29 @@ def parse_args():
 
 
 def chunk_documents(docs: list[Document]) -> list[Document]:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=700,
+        chunk_overlap=150,
+    )
+    chunks = []
+    for d in docs:
+        if d.metadata.get("element_type") in ["Table", "pdf-table", "ScheduleJSON"]:
+            chunks.append(d)
+        else:
+            chunks.extend(splitter.split_documents([d]))
+
     clean_chunks = []
-    for i, d in enumerate(docs):
-        text = d.page_content.strip()
+    for i, c in enumerate(chunks):
+        text = c.page_content.strip()
         if(args.embedding_model == "e5"):
             text = "passage: " + text
-            d.page_content = text
-        if not text:
-            continue
-
-        base_id = sha(d.metadata["source_url"])
-        content_id = sha(text)
-
-        d.metadata["chunk_id"] = f"{base_id}_{i}_{content_id[:8]}"
-        clean_chunks.append(d)
+            c.page_content = text
+        base_id = sha(c.metadata["source_url"])
+        content_id = sha(c.page_content)
+        c.metadata["chunk_id"] = f"{base_id}_{i}_{content_id[:8]}"
+        clean_chunks.append(c)
 
     return clean_chunks
-
 
 
 def build_vectorstore(collection_name: str):
@@ -69,7 +75,6 @@ def build_vectorstore(collection_name: str):
         )
         vector_size = 1024
             
-        
     client = QdrantClient(url=QDRANT_URL)
 
     existing_collections = [c.name for c in client.get_collections().collections]
@@ -87,7 +92,6 @@ def build_vectorstore(collection_name: str):
         collection_name=collection_name,
         embedding=embedding_model,
     )
-
 
 
 def parse_links_file() -> dict[str, list[tuple[str, dict]]]:
@@ -161,6 +165,7 @@ async def main():
     for collection_name, urls_with_opts in blocks.items():
         await process_block(collection_name, urls_with_opts)
 
+
 import json
 
 def indexing_json_collection(collection_name: str, json_files: list[str], description_prefix: str):
@@ -195,7 +200,6 @@ def indexing_json_collection(collection_name: str, json_files: list[str], descri
     vs = build_vectorstore(collection_name)
     vs.add_documents(docs)
     print(f"[OK] Inseriti {len(docs)} documenti JSON nella collezione '{collection_name}'")
-
 
 
 if __name__ == "__main__":
@@ -242,4 +246,4 @@ if __name__ == "__main__":
         json_files=["tab-orari-1-anno.json", "tab-orari-2-anno.json"],
         description_prefix="Orari lezioni"
     )
-
+    
