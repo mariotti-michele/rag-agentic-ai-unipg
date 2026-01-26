@@ -1,7 +1,11 @@
 import requests
 import time
+import urllib3
 from langchain_core.embeddings import Embeddings
 from typing import List
+
+# Disabilita i warning SSL
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class BGEEmbeddings(Embeddings):
     api_url: str
