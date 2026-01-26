@@ -43,3 +43,4 @@ class BGEEmbeddings(Embeddings):
 
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]
+    

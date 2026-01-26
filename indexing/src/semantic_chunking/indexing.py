@@ -48,7 +48,7 @@ def build_embedding_model(args, OLLAMA_BASE_URL, BGE_API_URL, BGE_API_KEY):
             encode_kwargs={"normalize_embeddings": True}
         )
     elif args.embedding_model == "bge":
-        embed = BGEEmbeddings(api_url=BGE_API_URL, api_key=BGE_API_KEY)
+        embed = BGEEmbeddings(api_url=BGE_API_URL, api_key=BGE_API_KEY, model="BAAI/bge-m3")
         vector_size = 1024
     else:
         raise ValueError("Unsupported embedding model")

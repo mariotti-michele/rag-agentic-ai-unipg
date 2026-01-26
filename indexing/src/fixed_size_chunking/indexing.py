@@ -71,7 +71,8 @@ def build_vectorstore(collection_name: str):
     elif args.embedding_model == "bge":
         embedding_model = BGEEmbeddings(
             api_url=BGE_API_URL,
-            api_key=BGE_API_KEY
+            api_key=BGE_API_KEY,
+            model="BAAI/bge-m3"
         )
         vector_size = 1024
             
