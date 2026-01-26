@@ -15,6 +15,11 @@ def parse_args():
     parser.add_argument("--search", type=str, default="hybrid",
                         choices=["dense", "sparse", "hybrid"],
                         help="Seleziona tecnica di ricerca da utilizzare (default: hybrid)")
+    parser.add_argument("--reranking", action="store_true",
+                        help="Attiva il re-ranking dei documenti")
+    parser.add_argument("--rerank-method", type=str, default="cross_encoder",
+                        choices=["cross_encoder", "llm"],
+                        help="Metodo di re-ranking: cross_encoder (veloce) o llm (accurato)")
     args = parser.parse_args()
     return args
 
@@ -22,6 +27,8 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     llm_model_name, embedding_model_name, search_technique = args.llm_model, args.embedding_model, args.search
+    use_reranking = args.reranking
+    rerank_method = args.rerank_method
 
     embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)
     corpus, corpus_texts = build_corpus(qdrant_client, COLLECTION_NAMES)
@@ -29,6 +36,8 @@ if __name__ == "__main__":
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
     
     print("Sistema di Q&A avviato.")
+    if use_reranking:
+        print(f"Re-ranking attivo: metodo {rerank_method}")
 
     if not test_connection(vectorstores, embedding_model):
         print("Impossibile connettersi al vector store. Verificare che la collezione esista.")
@@ -42,7 +51,7 @@ if __name__ == "__main__":
             if q.lower() in ["exit", "quit"]:
                 break
             if q.strip():
-                answer, contexts, mode = generate_answer(llm, q, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer)
+                answer, contexts, mode = generate_answer(llm, q, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, use_reranking, rerank_method)
                 if(mode == "semplice"):
                     print(f"\nRisposta semplice:\n")
                 else:

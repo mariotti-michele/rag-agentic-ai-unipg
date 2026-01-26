@@ -46,6 +46,11 @@ def parse_args():
                         help="Tipo di chunking usato per creare la collezione (default: section)")
     parser.add_argument("--version", type=str, default="v0",
                         help="Versione del modello valutato (default: v0)")
+    parser.add_argument("--reranking", action="store_true",
+                        help="Attiva il re-ranking dei documenti")
+    parser.add_argument("--rerank-method", type=str, default="cross_encoder",
+                        choices=["cross_encoder", "llm"],
+                        help="Metodo di re-ranking: cross_encoder (veloce) o llm (accurato)")
     args = parser.parse_args()
     return args
 
@@ -194,14 +199,18 @@ def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics, se
 if __name__ == "__main__":
     args = parse_args()
     llm_model_name, embedding_model_name, search_technique, chunking, version = args.llm_model, args.embedding_model, args.search, args.chunking, args.version
+    use_reranking = args.reranking
+    rerank_method = args.rerank_method
 
     embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)
     corpus, corpus_texts = build_corpus(qdrant_client, COLLECTION_NAMES)
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
-    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q))
+    
+    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q), use_reranking, rerank_method)
     sparse_func = lambda q: answer_query_bm25(q, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q))
-    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q))
+    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q), use_reranking, rerank_method)
+    
     if search_technique == "dense":
         evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version)
     elif search_technique == "sparse":
