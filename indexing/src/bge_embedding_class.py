@@ -23,24 +23,32 @@ class BGEEmbeddings(Embeddings):
         return u + "/embeddings/embed"
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        endpoint = self._endpoint()
-        response = requests.post(
-            endpoint,
-            headers={
-                "X-API-Key": self.api_key,
-                "Content-Type": "application/json",
-            },
-            json={
-                "texts": texts,
-                "normalize": True
-            },
-            verify=False,
-            timeout=60,
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data if isinstance(data, list) else data.get("embeddings", [])
+        # Process in smaller batches to avoid OOM
+        batch_size = 8  # Adjust based on your GPU memory
+        all_embeddings = []
+        
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            endpoint = self._endpoint()
+            response = requests.post(
+                endpoint,
+                headers={
+                    "X-API-Key": self.api_key,
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "texts": batch,
+                    "normalize": True
+                },
+                verify=False,
+                timeout=60,
+            )
+            response.raise_for_status()
+            data = response.json()
+            embeddings = data if isinstance(data, list) else data.get("embeddings", [])
+            all_embeddings.extend(embeddings)
+        
+        return all_embeddings
 
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]
-    
