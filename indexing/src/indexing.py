@@ -1,10 +1,9 @@
-#  FIXED SIZE CHUNKING INDEXING SCRIPT
+# SECTION BASED CHUNKING INDEXING SCRIPT
 
 import os, asyncio, uuid
 from dotenv import load_dotenv
 from pathlib import Path
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
@@ -18,7 +17,7 @@ from bge_embedding_class import BGEEmbeddings
 import argparse
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Fixed size chunking indexing script")
+    parser = argparse.ArgumentParser(description="Section based chunking indexing script")
     parser.add_argument("--embedding-model", type=str, default="nomic", 
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
@@ -27,35 +26,28 @@ def parse_args():
 
 
 def chunk_documents(docs: list[Document]) -> list[Document]:
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=700,
-        chunk_overlap=150,
-    )
-    chunks = []
-    for d in docs:
-        if d.metadata.get("element_type") in ["Table", "pdf-table", "ScheduleJSON"]:
-            chunks.append(d)
-        else:
-            chunks.extend(splitter.split_documents([d]))
-
     clean_chunks = []
-    for i, c in enumerate(chunks):
-        text = c.page_content.strip()
+    for i, d in enumerate(docs):
+        text = d.page_content.strip()
         if(args.embedding_model == "e5"):
             text = "passage: " + text
-            c.page_content = text
-        base_id = sha(c.metadata["source_url"])
-        content_id = sha(c.page_content)
-        c.metadata["chunk_id"] = f"{base_id}_{i}_{content_id[:8]}"
-        clean_chunks.append(c)
+            d.page_content = text
+        if not text:
+            continue
+        base_id = sha(d.metadata["source_url"])
+        content_id = sha(d.page_content)
+        d.metadata["chunk_id"] = f"{base_id}_{i}_{content_id[:8]}"
+        clean_chunks.append(d)
 
+    print(f"[INFO] Mantieni {len(clean_chunks)} chunk (nessun text split)")
     return clean_chunks
+
 
 
 def build_vectorstore(collection_name: str):
     embedding_model = None
     vector_size = 768
-
+    
     if args.embedding_model == "nomic":
         embedding_model = OllamaEmbeddings(model=EMBED_MODEL, base_url=OLLAMA_BASE_URL)
     elif args.embedding_model == "e5":
@@ -74,7 +66,7 @@ def build_vectorstore(collection_name: str):
             api_key=BGE_API_KEY
         )
         vector_size = 1024
-            
+        
     client = QdrantClient(url=QDRANT_URL)
 
     existing_collections = [c.name for c in client.get_collections().collections]
@@ -246,4 +238,3 @@ if __name__ == "__main__":
         json_files=["tab-orari-1-anno.json", "tab-orari-2-anno.json"],
         description_prefix="Orari lezioni"
     )
-    
