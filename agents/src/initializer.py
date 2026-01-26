@@ -1,5 +1,7 @@
 import os, json
 import requests
+import time
+import urllib3
 import warnings
 
 from qdrant_client import QdrantClient
@@ -21,6 +23,7 @@ from typing import Any, List, Optional
 
 # Disabilita warning SSL
 warnings.filterwarnings('ignore', message='Unverified HTTPS request')
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class VLLMChat(BaseLLM):
     api_url: str
@@ -93,6 +96,8 @@ class BGEEmbeddings(Embeddings):
     api_url: str
     api_key: str
     model: str = "BAAI/bge-m3"
+    max_retries: int = 5
+    initial_retry_delay: int = 3
 
     def __init__(self, api_url: str, api_key: str, model: str = "BAAI/bge-m3"):
         self.api_url = api_url
@@ -110,23 +115,58 @@ class BGEEmbeddings(Embeddings):
         return u + "/embeddings/embed"
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        batch_size = 2
+        all_embeddings = []
         endpoint = self._endpoint()
-        response = requests.post(
-            endpoint,
-            headers={
-                "X-API-Key": self.api_key,
-                "Content-Type": "application/json",
-            },
-            json={
-                "texts": texts,
-                "normalize": True
-            },
-            verify=False,
-            timeout=60,
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data if isinstance(data, list) else data.get("embeddings", [])
+        
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            
+            # Retry logic
+            for attempt in range(self.max_retries):
+                try:
+                    response = requests.post(
+                        endpoint,
+                        headers={
+                            "X-API-Key": self.api_key,
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "texts": batch,
+                            "normalize": True
+                        },
+                        verify=False,
+                        timeout=200,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    embeddings = data if isinstance(data, list) else data.get("embeddings", [])
+                    all_embeddings.extend(embeddings)
+                    
+                    time.sleep(0.5)
+                    break  # Success
+                    
+                except requests.exceptions.HTTPError as e:
+                    if attempt < self.max_retries - 1:
+                        wait_time = self.initial_retry_delay * (2 ** attempt)
+                        print(f"[WARN] HTTP {e.response.status_code} - Batch {i//batch_size + 1}, "
+                              f"retry {attempt + 1}/{self.max_retries} in {wait_time}s...")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"[ERROR] Failed after {self.max_retries} attempts")
+                        raise
+                        
+                except requests.exceptions.RequestException as e:
+                    if attempt < self.max_retries - 1:
+                        wait_time = self.initial_retry_delay * (2 ** attempt)
+                        print(f"[WARN] Request error: {type(e).__name__} - "
+                              f"Retry {attempt + 1}/{self.max_retries} in {wait_time}s...")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"[ERROR] Network error after {self.max_retries} attempts")
+                        raise
+        
+        return all_embeddings
 
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]
