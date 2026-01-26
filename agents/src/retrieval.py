@@ -129,7 +129,7 @@ def collection_filter(classification_mode: str):
         return None
 
 
-def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 5, classification_mode="rag"):
+def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
     if embedding_model_name == "e5" or embedding_model_name == "bge":
         query = "query: " + query
 
@@ -140,11 +140,14 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
     vec = embedding_model.embed_query(query)
     hits = []
 
+    # Recupera più documenti se si usa il re-ranking
+    search_k = top_k * 2 if use_reranking else top_k
+
     for name, store in vectorstores.items():
         if collection_filter_value and name != collection_filter_value:
             continue
         try:
-            docs_scores = store.similarity_search_with_score_by_vector(vec, k=top_k)
+            docs_scores = store.similarity_search_with_score_by_vector(vec, k=search_k)
 
             for doc, score in docs_scores:
                 hits.append({
@@ -159,7 +162,21 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
             print(f"[WARN] Errore su {name}: {e}")
 
     hits.sort(key=lambda x: x["score"], reverse=True)
-    return hits[:top_k]
+    
+    # Applica re-ranking se richiesto
+    if use_reranking and len(hits) > top_k:
+        from advanced_techniques import rerank_documents, rerank_with_cross_encoder
+        
+        if rerank_method == "llm" and llm:
+            hits = rerank_documents(query, hits, llm, top_k)
+        elif rerank_method == "cross_encoder":
+            hits = rerank_with_cross_encoder(query, hits, top_k=top_k)
+        else:
+            hits = hits[:top_k]
+    else:
+        hits = hits[:top_k]
+    
+    return hits
 
 
 def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
@@ -176,12 +193,24 @@ def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
     return [merged[rid] for rid in ranked_ids if rid in merged]
 
 
-def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, alpha=60, k=5, classification_mode="rag"):
+def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, alpha=60, k=5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
     dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores, top_k=k*2, classification_mode=classification_mode)
     sparse_docs = bm25_search(corpus, query, bm25, nlp, k=k*2, classification_mode=classification_mode)
 
     if not dense_docs and not sparse_docs:
         return []
 
-    merged_docs = reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=alpha, k=k)
-    return merged_docs
+    merged_docs = reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=alpha, k=k*2 if use_reranking else k)
+    
+    # Applica re-ranking sui documenti fusi
+    if use_reranking and len(merged_docs) > k:
+        from advanced_techniques import rerank_documents, rerank_with_cross_encoder
+        
+        if rerank_method == "llm" and llm:
+            merged_docs = rerank_documents(query, merged_docs, llm, k)
+        elif rerank_method == "cross_encoder":
+            merged_docs = rerank_with_cross_encoder(query, merged_docs, top_k=k)
+        else:
+            merged_docs = merged_docs[:k]
+    
+    return merged_docs[:k]

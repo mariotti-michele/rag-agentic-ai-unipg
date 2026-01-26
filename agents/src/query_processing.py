@@ -31,16 +31,16 @@ def process_query(docs: list, query: str, llm, classification_mode) -> tuple[str
     return answer, [d["text"] for d in docs]
 
 
-def answer_query_dense(query: str, embedding_model, embedding_model_name: str, vectorstores, llm, classification_mode):
-    dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores, classification_mode=classification_mode)
+def answer_query_dense(query: str, embedding_model, embedding_model_name: str, vectorstores, llm, classification_mode, use_reranking=False, rerank_method="cross_encoder"):
+    dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores, classification_mode=classification_mode, use_reranking=use_reranking, llm=llm, rerank_method=rerank_method)
     return process_query(dense_docs, query, llm, classification_mode)
 
 def answer_query_bm25(query: str, corpus, bm25, nlp, llm, classification_mode):
     sparse_docs = bm25_search(corpus, query, bm25, nlp, classification_mode=classification_mode)
     return process_query(sparse_docs, query, llm, classification_mode)
 
-def answer_query_hybrid(query: str, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, classification_mode):
-    merged_docs = hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, classification_mode=classification_mode)
+def answer_query_hybrid(query: str, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, classification_mode, use_reranking=False, rerank_method="cross_encoder"):
+    merged_docs = hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, classification_mode=classification_mode, use_reranking=use_reranking, llm=llm, rerank_method=rerank_method)
     return process_query(merged_docs, query, llm, classification_mode)
 
 
@@ -70,7 +70,7 @@ def classify_query(llm, query: str) -> str:
         return "rag"
 
 
-def generate_answer(llm, query: str, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp):
+def generate_answer(llm, query: str, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, use_reranking=False, rerank_method="cross_encoder"):
     mode = classify_query(llm, query)
     if mode == "semplice":
         prompt = simple_prompt_template.format(question=query)
@@ -81,9 +81,9 @@ def generate_answer(llm, query: str, search_technique, embedding_model, embeddin
     else:
         answer, contexts = None, []
         if search_technique == "dense":
-            answer, contexts = answer_query_dense(query, embedding_model, embedding_model_name, vectorstores, llm, mode)
+            answer, contexts = answer_query_dense(query, embedding_model, embedding_model_name, vectorstores, llm, mode, use_reranking, rerank_method)
         elif search_technique == "sparse":
             answer, contexts = answer_query_bm25(query, corpus, bm25, nlp, llm, mode)
         elif search_technique == "hybrid":
-            answer, contexts = answer_query_hybrid(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode)
+            answer, contexts = answer_query_hybrid(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode, use_reranking, rerank_method)
     return answer, contexts, mode
