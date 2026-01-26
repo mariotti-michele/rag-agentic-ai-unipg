@@ -18,8 +18,8 @@ class BGEEmbeddings(Embeddings):
             return u
         if u.endswith("/embeddings"):
             return u + "/embed"
-        if u.endswith("/v1"):
-            return u.rstrip("/v1") + "/embeddings/embed"
+        if u.endswith("/llm"):
+            return u.rstrip("/llm") + "/embeddings/embed"
         return u + "/embeddings/embed"
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
