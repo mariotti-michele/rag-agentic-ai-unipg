@@ -199,7 +199,8 @@ def indexing_json_collection(collection_name: str, json_files: list[str], descri
         return
 
     vs = build_vectorstore(collection_name)
-    vs.add_documents(docs)
+    ids = [str(uuid.uuid5(uuid.NAMESPACE_DNS, doc.metadata["doc_id"])) for doc in docs]
+    vs.add_documents(docs, ids=ids)
     print(f"[OK] Inseriti {len(docs)} documenti JSON nella collezione '{collection_name}'")
 
 
@@ -247,4 +248,3 @@ if __name__ == "__main__":
         json_files=["tab-orari-1-anno.json", "tab-orari-2-anno.json"],
         description_prefix="Orari lezioni"
     )
-    
