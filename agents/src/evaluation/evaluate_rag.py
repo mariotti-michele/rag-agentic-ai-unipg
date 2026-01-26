@@ -4,6 +4,9 @@ import csv
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
+import time
+from typing import Callable, Tuple, List
+import pandas as pd
 
 # Disabilita LangSmith tracing PRIMA di importare altre librerie
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
@@ -55,6 +58,49 @@ def parse_args():
     return args
 
 
+def retry_with_backoff(func: Callable, max_retries: int = 3, initial_delay: float = 1.0, backoff_factor: float = 2.0):
+    """
+    Esegue una funzione con retry e backoff esponenziale in caso di errore.
+    
+    Args:
+        func: Funzione da eseguire
+        max_retries: Numero massimo di tentativi
+        initial_delay: Ritardo iniziale in secondi
+        backoff_factor: Fattore di moltiplicazione del ritardo ad ogni retry
+    
+    Returns:
+        Il risultato della funzione se ha successo
+    
+    Raises:
+        L'ultima eccezione se tutti i retry falliscono
+    """
+    delay = initial_delay
+    last_exception = None
+    
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except Exception as e:
+            last_exception = e
+            error_msg = str(e)
+            
+            # Log dell'errore
+            print(f"   [Tentativo {attempt + 1}/{max_retries}] Errore: {error_msg}")
+            
+            # Se è l'ultimo tentativo, rilancia l'eccezione
+            if attempt == max_retries - 1:
+                print(f"   Tutti i {max_retries} tentativi falliti.")
+                raise last_exception
+            
+            # Attendi prima del prossimo tentativo
+            print(f"   Attendo {delay:.1f}s prima del prossimo tentativo...")
+            time.sleep(delay)
+            delay *= backoff_factor
+    
+    # Questo punto non dovrebbe mai essere raggiunto, ma per sicurezza
+    raise last_exception
+
+
 def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, embedding_model_name: str, chunking: str, search: str, version: str):
     print(f"\nValutazione variante: \nllm model: {llm_model_name} \nembedding model: {embedding_model_name} \nchunking: {chunking} \nsearch: {search} \nversion: {version}")
 
@@ -82,19 +128,30 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
     questions = [d["question"] for d in validation_data]
     ground_truths = [d.get("ground_truth", "") for d in validation_data]
 
-    answers, retrieved_contexts = [], []
+    answers, retrieved_contexts, errors = [], [], []
 
     print(f"\nGenerazione risposte con variante {name} ({len(questions)} domande)...")
     for i, q in enumerate(questions, start=1):
         print(f" -> [{i}/{len(questions)}] {q}")
         try:
-            response, ctxs = answer_func(q)
+            # Usa retry_with_backoff per la generazione delle risposte
+            def answer_with_retry():
+                return answer_func(q)
+            
+            response, ctxs = retry_with_backoff(
+                answer_with_retry,
+                max_retries=3,
+                initial_delay=2.0,
+                backoff_factor=2.0
+            )
             answers.append(response)
             retrieved_contexts.append(ctxs)
+            errors.append("")  # Nessun errore
         except Exception as e:
-            print(f"Errore durante la domanda '{q}': {e}")
+            print(f"Errore permanente durante la domanda '{q}': {e}")
             answers.append("")
             retrieved_contexts.append([])
+            errors.append(str(e))
 
     dataset = Dataset.from_dict({
         "question": questions,
@@ -107,27 +164,62 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
     metrics_list = [faithfulness, answer_relevancy, context_precision, context_recall, answer_correctness]
 
     run_config = RunConfig(
-        timeout=300,  # timeout in secondi, prima
-        max_workers=2,  # workers paralleli
-        max_wait=360  # tempo massimo di attesa
+        timeout=600,  # Aumentato timeout a 10 minuti
+        max_workers=1,  # Ridotto a 1 worker per evitare overload
+        max_wait=720  # Aumentato tempo massimo di attesa
     )
 
-    result = evaluate(
-        dataset=dataset, 
-        metrics=metrics_list, 
-        llm=llm, 
-        embeddings=embedding_model,
-        run_config=run_config
-    )
-    result_df = result.to_pandas()
-    results = result_df.mean(numeric_only=True).to_dict()
+    # Aggiungi retry anche per la valutazione RAGAS
+    def evaluate_with_retry():
+        return evaluate(
+            dataset=dataset, 
+            metrics=metrics_list, 
+            llm=llm, 
+            embeddings=embedding_model,
+            run_config=run_config
+        )
+    
+    try:
+        result = retry_with_backoff(
+            evaluate_with_retry,
+            max_retries=2,
+            initial_delay=5.0,
+            backoff_factor=2.0
+        )
+        result_df = result.to_pandas()
+        
+        # Calcola le medie in due modi
+        results_with_nan = result_df.mean(numeric_only=True).to_dict()
+        
+        # Seconda media: solo righe senza errori, NaN = 0
+        result_df_no_errors = result_df.copy()
+        # Aggiungi colonna errori per filtrare
+        result_df_no_errors['has_error'] = [bool(err) for err in errors]
+        result_df_clean = result_df_no_errors[~result_df_no_errors['has_error']]
+        result_df_clean = result_df_clean.fillna(0)  # NaN come 0
+        results_clean = result_df_clean.drop(columns=['has_error']).mean(numeric_only=True).to_dict()
 
-    print("\nRISULTATI RAGAS MEDIE GLOBALI:")
-    for k, v in results.items():
-        print(f" - {k}: {v:.3f}")
+        print("\nRISULTATI RAGAS - MEDIE GLOBALI (esclude NaN):")
+        for k, v in results_with_nan.items():
+            print(f" - {k}: {v:.3f}")
+        
+        print("\nRISULTATI RAGAS - MEDIE CLEAN (solo righe senza errori, NaN=0):")
+        for k, v in results_clean.items():
+            print(f" - {k}: {v:.3f}")
 
-    save_results_to_csv(csv_path, dataset, result_df, results, search_technique=search)
-    print(f"Risultati salvati in {csv_path}")
+        save_results_to_csv(csv_path, dataset, result_df, results_with_nan, results_clean, errors, search_technique=search)
+        print(f"Risultati salvati in {csv_path}")
+    except Exception as e:
+        print(f"Errore permanente durante la valutazione RAGAS: {e}")
+        print("Salvataggio risultati parziali...")
+        # Salva comunque quello che hai ottenuto finora
+        partial_csv = base_dir / f"partial_results_{name.replace(' ', '_')}.csv"
+        with open(partial_csv, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["question", "answer", "contexts", "error"])
+            for i in range(len(questions)):
+                writer.writerow([questions[i], answers[i], str(retrieved_contexts[i]), errors[i]])
+        print(f"Risultati parziali salvati in {partial_csv}")
 
     langsmith_key = os.getenv("LANGCHAIN_API_KEY")
     if langsmith_key and False: # Disabilitato temporaneamente
@@ -137,7 +229,7 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
                 name=f"Evaluation RAG UNIPG {name}",
                 run_type="chain",
                 inputs={"questions": questions},
-                outputs={"results": dict(results)},
+                outputs={"results": dict(results_with_nan)},
                  metadata={
                     "component": f"ragas_{name.lower().replace(' ', '_')}_evaluation",
                     "variant": name,
@@ -150,12 +242,12 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
             )
             print(f"Risultati {name} inviati a LangSmith.")
         except Exception as e:
-            print(f"[WARN] Errore durante l’invio a LangSmith: {e}")
+            print(f"[WARN] Errore durante l'invio a LangSmith: {e}")
     else:
         print("Nessuna API key LangSmith trovata — risultati solo in locale.")
 
 
-def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics, search_technique: str):
+def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics_with_nan: dict, metrics_clean: dict, errors: list, search_technique: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     file_exists = csv_path.exists()
 
@@ -166,7 +258,7 @@ def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics, se
             writer.writerow([
                 "question", "answer", "faithfulness",
                 "answer_relevancy", "context_precision", "context_recall",
-                "answer_correctness"
+                "answer_correctness", "error"
             ])
 
         for i in range(len(dataset)):
@@ -174,23 +266,35 @@ def save_results_to_csv(csv_path: Path, dataset: Dataset, result_df, metrics, se
             writer.writerow([
                 dataset[i]["question"],
                 dataset[i]["answer"],
-                f"{row['faithfulness']:.3f}",
-                f"{row['answer_relevancy']:.3f}",
-                f"{row['context_precision']:.3f}",
-                f"{row['context_recall']:.3f}",
-                f"{row['answer_correctness']:.3f}",
+                f"{row['faithfulness']:.3f}" if not pd.isna(row['faithfulness']) else "NaN",
+                f"{row['answer_relevancy']:.3f}" if not pd.isna(row['answer_relevancy']) else "NaN",
+                f"{row['context_precision']:.3f}" if not pd.isna(row['context_precision']) else "NaN",
+                f"{row['context_recall']:.3f}" if not pd.isna(row['context_recall']) else "NaN",
+                f"{row['answer_correctness']:.3f}" if not pd.isna(row['answer_correctness']) else "NaN",
+                errors[i]
             ])
 
     with open(csv_path, "a", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow([
             timestamp,
-            "--- MEDIA TOTALE ---",
-            f"{metrics['faithfulness']:.3f}",
-            f"{metrics['answer_relevancy']:.3f}",
-            f"{metrics['context_precision']:.3f}",
-            f"{metrics['context_recall']:.3f}",
-            f"{metrics['answer_correctness']:.3f}",
+            "--- MEDIA GLOBALE (esclude NaN) ---",
+            f"{metrics_with_nan['faithfulness']:.3f}",
+            f"{metrics_with_nan['answer_relevancy']:.3f}",
+            f"{metrics_with_nan['context_precision']:.3f}",
+            f"{metrics_with_nan['context_recall']:.3f}",
+            f"{metrics_with_nan['answer_correctness']:.3f}",
+            ""
+        ])
+        writer.writerow([
+            timestamp,
+            "--- MEDIA CLEAN (solo no-error, NaN=0) ---",
+            f"{metrics_clean['faithfulness']:.3f}",
+            f"{metrics_clean['answer_relevancy']:.3f}",
+            f"{metrics_clean['context_precision']:.3f}",
+            f"{metrics_clean['context_recall']:.3f}",
+            f"{metrics_clean['answer_correctness']:.3f}",
+            ""
         ])
 
     print(f"Risultati salvati in: {csv_path}")
