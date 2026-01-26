@@ -11,5 +11,5 @@ echo ">>> Operazione completata."
 
 echo ""
 echo ">>> Avvio indicizzazione multipla da links.txt ..."
-docker exec "$CONTAINER" python indexing.py --embedding-model all-mpnet
+docker exec "$CONTAINER" python indexing.py --embedding-model e5
 echo ">>> Indicizzazione completata."
