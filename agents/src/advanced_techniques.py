@@ -2,7 +2,7 @@ from typing import List, Dict
 import numpy as np
 
 
-def rerank_documents(query: str, docs: List[Dict], llm, top_k: int = 3) -> List[Dict]:
+def rerank_documents(query: str, docs: List[Dict], llm, top_k: int = 5) -> List[Dict]:
     """
     Re-ranking dei documenti usando un LLM.
     
@@ -65,7 +65,7 @@ Punteggi (separati da virgole):"""
         return docs[:top_k]
 
 
-def rerank_with_cross_encoder(query: str, docs: List[Dict], model_name: str = "BAAI/bge-reranker-v2-m3", top_k: int = 3) -> List[Dict]:
+def rerank_with_cross_encoder(query: str, docs: List[Dict], model_name: str = "BAAI/bge-reranker-v2-m3", top_k: int = 5) -> List[Dict]:
     """
     Re-ranking usando un Cross-Encoder pre-addestrato.
     Più veloce del metodo LLM-based.
