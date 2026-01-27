@@ -60,6 +60,11 @@ class VLLMChat(BaseLLM):
                 verify=False,
                 timeout=60,
             )
+            
+            if response.status_code >= 400:
+                print(f"[ERROR {response.status_code}] Response text: {response.text}")
+                print(f"[ERROR {response.status_code}] Prompt length: {len(prompt)}")
+            
             response.raise_for_status()
             content = response.json()["choices"][0]["message"]["content"]
             generations.append([Generation(text=content)])
