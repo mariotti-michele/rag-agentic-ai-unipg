@@ -31,7 +31,7 @@ class BGEEmbeddings(Embeddings):
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         # Process in smaller batches to avoid OOM
-        batch_size = 2  # Adjust based on your GPU memory
+        batch_size = 1  # Adjust based on your GPU memory
         all_embeddings = []
         endpoint = self._endpoint()
         

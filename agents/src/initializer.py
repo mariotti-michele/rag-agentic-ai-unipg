@@ -115,7 +115,7 @@ class BGEEmbeddings(Embeddings):
         return u + "/embeddings/embed"
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        batch_size = 2
+        batch_size = 1
         all_embeddings = []
         endpoint = self._endpoint()
         
