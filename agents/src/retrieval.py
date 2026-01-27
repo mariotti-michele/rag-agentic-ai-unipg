@@ -94,13 +94,13 @@ def build_bm25(corpus_texts: list[str], nlp):
     return bm25
 
 
-def bm25_search_idx(query: str, bm25, nlp, k: int = 5):
+def bm25_search_idx(query: str, bm25, nlp, k: int = 3):
     qtoks = spacy_tokenize(query, nlp)
     scores = bm25.get_scores(qtoks)
     top_idx = np.argsort(scores)[::-1][:k]
     return [(i, float(scores[i])) for i in top_idx]
 
-def bm25_search(corpus, query: str, bm25, nlp, k: int = 5, classification_mode="rag"):
+def bm25_search(corpus, query: str, bm25, nlp, k: int = 3, classification_mode="rag"):
     collection_filter_value = collection_filter(classification_mode) if classification_mode != "rag" else None
     sparse_idxs = bm25_search_idx(query, bm25, nlp, k=k*2 if collection_filter_value else k)
     
@@ -129,7 +129,7 @@ def collection_filter(classification_mode: str):
         return None
 
 
-def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
+def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 3, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
     if embedding_model_name == "e5" or embedding_model_name == "bge":
         query = "query: " + query
 
@@ -179,7 +179,7 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
     return hits
 
 
-def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
+def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=3):
     combined = {}
     for rank, d in enumerate(dense_docs):
         docid = d.get("doc_id") if d.get("doc_id") else d["text"]
@@ -193,7 +193,7 @@ def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
     return [merged[rid] for rid in ranked_ids if rid in merged]
 
 
-def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, alpha=60, k=5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
+def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, alpha=60, k=3, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
     dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores, top_k=k*2, classification_mode=classification_mode)
     sparse_docs = bm25_search(corpus, query, bm25, nlp, k=k*2, classification_mode=classification_mode)
 
