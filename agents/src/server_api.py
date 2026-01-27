@@ -33,7 +33,7 @@ class QueryResponse(BaseModel):
 
 config = {
     "llm_model": "vllm",
-    "embedding_model": "nomic"
+    "embedding_model": "bge"
 }
 components = {}
 
