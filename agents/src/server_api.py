@@ -33,7 +33,7 @@ class QueryResponse(BaseModel):
 
 config = {
     "llm_model": "vllm",
-    "embedding_model": "nomic"
+    "embedding_model": "bge"
 }
 components = {}
 
@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument("--llm-model", type=str, default="vllm",
                         choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Modello LLM da utilizzare")
-    parser.add_argument("--embedding-model", type=str, default="nomic",
+    parser.add_argument("--embedding-model", type=str, default="bge",
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Modello di embedding da utilizzare")
     parser.add_argument("--host", type=str, default="0.0.0.0",
