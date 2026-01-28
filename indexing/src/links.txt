@@ -24,7 +24,6 @@ https://ing.unipg.it/files/didattica/tesi/lineeguidavotodilaurea-lm-29-32.pdf
 https://ing.unipg.it/files/didattica/tesi/faq_tesi-area_inf.pdf
 
 # ing_tesi_e_laurea
-https://www.unipg.it/files/pagine/110/foglio-tesi-ingegneria-2019.pdf
 https://www.unipg.it/didattica/procedure-amministrative/procedure/laureandi --no-pdf
 
 # ing_strutture_e_servizi
