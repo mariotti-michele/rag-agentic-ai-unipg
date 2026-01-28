@@ -215,7 +215,7 @@ if __name__ == "__main__":
     BGE_API_KEY = os.getenv("BGE_EMBED_MODEL_API_KEY", "")
 
     if(args.embedding_model == "nomic"):
-        EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+        EMBED_MODEL = "nomic-embed-text"
     elif(args.embedding_model == "e5"):
         EMBED_MODEL = "intfloat/e5-base-v2"
     elif(args.embedding_model == "all-mpnet"):
