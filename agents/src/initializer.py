@@ -177,7 +177,7 @@ class BGEEmbeddings(Embeddings):
         return self.embed_documents([text])[0]
 
 
-def build_embedding_model(ollama_base_url, model_name="nomic", bge_api_url="", bge_api_key=""): 
+def build_embedding_model(ollama_base_url, model_name="bge", bge_api_url="", bge_api_key=""): 
     if model_name == "nomic":
         embedding_model = OllamaEmbeddings(
             model="nomic-embed-text",

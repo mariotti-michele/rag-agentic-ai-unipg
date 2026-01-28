@@ -38,13 +38,13 @@ def parse_args():
     parser.add_argument("--llm-model", type=str, default="vllm",
                         choices=["llama-local", "gemini", "llama-api", "vllm"],
                         help="Seleziona il modello da usare")
-    parser.add_argument("--embedding-model", type=str, default="nomic",
+    parser.add_argument("--embedding-model", type=str, default="bge",
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
     parser.add_argument("--search", type=str, default="all",
                         choices=["dense", "sparse", "hybrid", "all"],
                         help="Seleziona tecnica di ricerca da utilizzare (default: all)")
-    parser.add_argument("--chunking", type=str, default="section",
+    parser.add_argument("--chunking", type=str, default="fixed",
                         choices=["fixed", "document-structure", "section", "semantic"],
                         help="Tipo di chunking usato per creare la collezione (default: section)")
     parser.add_argument("--version", type=str, default="v0",

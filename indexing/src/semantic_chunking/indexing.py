@@ -18,7 +18,7 @@ from bge_embedding_class import BGEEmbeddings
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Semantic chunking indexing script")
-    parser.add_argument("--embedding-model", type=str, default="nomic",
+    parser.add_argument("--embedding-model", type=str, default="bge",
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
 

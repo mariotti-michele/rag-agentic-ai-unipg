@@ -18,7 +18,7 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Section based chunking indexing script")
-    parser.add_argument("--embedding-model", type=str, default="nomic", 
+    parser.add_argument("--embedding-model", type=str, default="bge", 
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
     args = parser.parse_args()
