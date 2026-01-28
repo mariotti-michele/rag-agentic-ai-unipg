@@ -101,12 +101,25 @@ def retry_with_backoff(func: Callable, max_retries: int = 3, initial_delay: floa
     raise last_exception
 
 
-def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, embedding_model_name: str, chunking: str, search: str, version: str):
-    print(f"\nValutazione variante: \nllm model: {llm_model_name} \nembedding model: {embedding_model_name} \nchunking: {chunking} \nsearch: {search} \nversion: {version}")
+def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, embedding_model_name: str, chunking: str, search: str, version: str, use_reranking: bool = False, rerank_method: str = "cross_encoder"):
+    rerank_suffix = f"_rerank_{rerank_method}" if use_reranking else ""
+    
+    print("\n" + "="*70)
+    print("CONFIGURAZIONE VALUTAZIONE")
+    print("="*70)
+    print(f"LLM model: {llm_model_name}")
+    print(f"Embedding model: {embedding_model_name}")
+    print(f"Chunking: {chunking}")
+    print(f"Search: {search}")
+    print(f"Version: {version}")
+    print(f"Re-ranking attivo: {'Sì' if use_reranking else 'No'}")
+    if use_reranking:
+        print(f"Metodo re-ranking: {rerank_method}")
+    print("="*70 + "\n")
 
-    base_dir = Path("evaluations_results") / llm_model_name / embedding_model_name / chunking / (search + f"_{version}")
+    base_dir = Path("evaluations_results") / llm_model_name / embedding_model_name / chunking / (search + f"_{version}" + rerank_suffix)
     base_dir.mkdir(parents=True, exist_ok=True)
-    name = f"{llm_model_name}-{embedding_model_name}-{chunking}-{search}-{version}"
+    name = f"{llm_model_name}-{embedding_model_name}-{chunking}-{search}-{version}{rerank_suffix}"
     csv_path = base_dir / f"eval_results_{name.replace(' ', '_')}.csv"
 
     VALIDATION_DIR = Path(__file__).resolve().parent / "validation_set"
@@ -316,12 +329,12 @@ if __name__ == "__main__":
     hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q), use_reranking, rerank_method)
     
     if search_technique == "dense":
-        evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version)
+        evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version, use_reranking, rerank_method)
     elif search_technique == "sparse":
-        evaluate_variant(sparse_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "sparse", version)
+        evaluate_variant(sparse_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "sparse", version, use_reranking, rerank_method)
     elif search_technique == "hybrid":
-        evaluate_variant(hybrid_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "hybrid", version)
+        evaluate_variant(hybrid_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "hybrid", version, use_reranking, rerank_method)
     else:
-        evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version)
-        evaluate_variant(sparse_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "sparse", version)
-        evaluate_variant(hybrid_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "hybrid", version)
+        evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version, use_reranking, rerank_method)
+        evaluate_variant(sparse_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "sparse", version, use_reranking, rerank_method)
+        evaluate_variant(hybrid_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "hybrid", version, use_reranking, rerank_method)

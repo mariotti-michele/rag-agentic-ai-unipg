@@ -1,0 +1,152 @@
+[
+  {
+    "question": "A chi sono riservati principalmente gli appelli straordinari?",
+    "reference_context": "Gli appelli straordinari devono essere principalmente RISERVATI ai Laureandi e comunque solo a studenti che siano a NON PIU' di 1 ESAME dal completamento del proprio piano di studi.",
+    "ground_truth": "Sono riservati ai laureandi o agli studenti che hanno al massimo un esame rimanente nel piano di studi.",
+    "document": "didattica_studiare-nei-nostri-corsi_vademecum-studenti_f13e4d45da05.main.html"
+  },
+  {
+    "question": "Chi fa parte della commissione di esame per il corso di Internet and Web Programming?",
+    "reference_context": "Internet and Web Programming — Didimo, Liotta, Binucci, Di Giacomo, Grilli, Montecchiani, Tappini",
+    "ground_truth": "La commissione è composta da Didimo, Liotta, Binucci, Di Giacomo, Grilli, Montecchiani e Tappini.",
+    "document": "_files_didattica_calendario_2025-26_lm32-inginforobo_cal_esami.pdf"
+  },
+  {
+    "question": "In che data è previsto l'appello straordinario di esame per il corso di Data Science for Health Systems?",
+    "reference_context": "Data Science for Health Systems — Appello straordinario: 9 Aprile 2026",
+    "ground_truth": "9 Aprile 2026",
+    "document": "_files_didattica_calendario_2025-26_lm32-inginforobo_cal_esami.pdf"
+  },
+  {
+    "question": "Quali sono le date degli appelli di esame per il corso di Data Intensive Applications and Big Data?",
+    "reference_context": "Data Intensive Applications and Big Data — Appelli: 17 Dicembre 2025, 14 Gennaio 2026, 5 Febbraio 2026, 26 Maggio 2026, 11 Giugno 2026, 1 Luglio 2026, 15 Luglio 2026, 2 Settembre 2026",
+    "ground_truth": "17 Dicembre 2025, 14 Gennaio 2026, 5 Febbraio 2026, 26 Maggio 2026, 11 Giugno 2026, 1 Luglio 2026, 15 Luglio 2026, 2 Settembre 2026",
+    "document": "_files_didattica_calendario_2025-26_lm32-inginforobo_cal_esami.pdf"
+  },
+  {
+    "question": "Qual è la scadenza per immatricolarsi ai corsi di laurea triennale e magistrale a ciclo unico ad accesso libero?",
+    "reference_context": "Il termine per le immatricolazioni ai corsi di laurea di primo livello e ai corsi di laurea magistrali a ciclo unico ad accesso libero è previsto nel giorno 20 ottobre 2025.",
+    "ground_truth": "La scadenza è il 20 ottobre 2025.",
+    "document": "didattica_procedure-amministrative_procedure_immatricolazioni_ae3906a1a973.main.html"
+  },
+  {
+    "question": "Qual è il periodo previsto per le vacanze natalizie?",
+    "reference_context": "Vacanze Natalizie: di norma il periodo dal 23 dicembre al 6 gennaio.",
+    "ground_truth": "Il periodo delle vacanze natalizie va, di norma, dal 23 dicembre al 6 gennaio.",
+    "document": "didattica_studiare-nei-nostri-corsi_calendario-generale-attivita-didattiche.html"
+  },
+  {
+    "question": "Quando si svolge la prima sessione di laurea dell'anno accademico 2025-2026?",
+    "reference_context": "Sessione estiva: luglio 2026.",
+    "ground_truth": "La prima sessione di laurea si svolge a luglio 2026.",
+    "document": "_files_didattica_calendario_2025-26_l0816_lm29_lm32-ing_informazione_cal_lauree.pdf"
+  },
+  {
+    "question": "Che cos'è il programma Erasmus+?",
+    "reference_context": "Erasmus+ è il Programma dell'Unione Europea per l'istruzione, la formazione, la gioventù e lo sport. Offre l’opportunità agli studenti di studiare o formarsi all’estero presso un istituto partner o di acquisire esperienza lavorativa tramite un tirocinio.",
+    "ground_truth": "Erasmus+ è il programma dell’Unione Europea che consente a studenti di studiare o svolgere tirocini all’estero presso istituti o imprese partner.",
+    "document": "didattica_studiare-nei-nostri-corsi_mobilita-internazionale_b127c69f6f91.main.html"
+  },
+  {
+    "question": "Qual è la scadenza per immatricolarsi ai corsi di laurea triennale e magistrale a ciclo unico ad accesso libero?",
+    "reference_context": "Il termine per le immatricolazioni ai corsi di laurea di primo livello e ai corsi di laurea magistrali a ciclo unico ad accesso libero è previsto nel giorno 20 ottobre 2025.",
+    "ground_truth": "La scadenza è il 20 ottobre 2025.",
+    "document": "didattica_procedure-amministrative_procedure_immatricolazioni_ae3906a1a973.main.html"
+  },
+  {
+    "question": "Il corso sulla sicurezza è erogato in presenza o a distanza?",
+    "reference_context": "L'esame è erogato a distanza. Il docente organizza una riunione Teams e invita i candidati fornendo il link.",
+    "ground_truth": "È erogato a distanza tramite riunione su Microsoft Teams.",
+    "document": "didattica_studiare-nei-nostri-corsi_vademecum-studenti_8026c7616a5d.main.html"
+  },
+  {
+    "question": "Qual è l'orario delle lezioni di Intelligent and Secure Networks e quali sono le date degli appelli d'esame?",
+    "reference_context": "Le lezioni di Intelligent and Secure Networks si tengono il lunedì dalle 08:30 alle 10:30, il martedì dalle 16:30 alle 18:30 e il giovedì dalle 16:30 alle 18:30. Gli appelli d'esame sono previsti per il 9 e 23 gennaio, il 10 febbraio, il 13 aprile, il 29 maggio, il 16 giugno, il 7 luglio, il 25 agosto e l'11 settembre.",
+    "ground_truth": "Le lezioni di Intelligent and Secure Networks si tengono il lunedì dalle 08:30 alle 10:30, il martedì dalle 16:30 alle 18:30 e il giovedì dalle 16:30 alle 18:30. Gli appelli d'esame sono previsti per il 9 e 23 gennaio, il 10 febbraio, il 13 aprile, il 29 maggio, il 16 giugno, il 7 luglio, il 25 agosto e l'11 settembre.",
+    "document": "_files_didattica_calendario_2025-26_lm32-inginforobo_cal_esami.pdf, _files_didattica_orario_2025-26_lm32-inginforobo_orario_lezioni.pdf"
+  },
+  {
+    "question": "Quali sono i moduli che servono per fare il tirocinio e con che tempistiche vanno consegnati?",
+    "reference_context": "I moduli necessari per fare il tirocinio sono 1) il modulo T3, 2) in caso di tirocinio aziendale: la Convenzione di tirocinio tra l’azienda e il Dipartimento, Nomina Responsabile trattamento dati, Progetto formativo, moduli (studente e azienda) di Valutazione dell’esperienza di Tirocinio, 3) Registro presenze tirocinio. I Moduli devono essere consegnati almeno 30 giorni prima dell'inizio del tirocinio. Si raccomanda un intervallo più ampio se l’azienda non è ancora convenzionata con il Dipartimento di Ingegneria. Al termine delle attività lo studente invia il proprio questionario di valutazione e il registro firme al tutor universitario e alla segreteria didattica (mariastella.migliosi@unipg.it); contestualmente, il tutor aziendale, autonomamente, invia il proprio questionario al tutor universitario e alla segreteria didattica (mariastella.migliosi@unipg.it).",
+    "ground_truth": "I moduli necessari per fare il tirocinio sono 1) il modulo T3, 2) in caso di tirocinio aziendale: la Convenzione di tirocinio tra l’azienda e il Dipartimento, Nomina Responsabile trattamento dati, Progetto formativo, moduli (studente e azienda) di Valutazione dell’esperienza di Tirocinio, 3) Registro presenze tirocinio. I Moduli devono essere consegnati almeno 30 giorni prima dell'inizio del tirocinio. Si raccomanda un intervallo più ampio se l’azienda non è ancora convenzionata con il Dipartimento di Ingegneria. Al termine delle attività lo studente invia il proprio questionario di valutazione e il registro firme al tutor universitario e alla segreteria didattica (mariastella.migliosi@unipg.it); contestualmente, il tutor aziendale, autonomamente, invia il proprio questionario al tutor universitario e alla segreteria didattica (mariastella.migliosi@unipg.it).",
+    "document": "_files_didattica_tirocini_informazione_faq_tirocinio-area_inf.pdf, didattica_studiare-nei-nostri-corsi_tirocini_f660711e95ad.main.html"
+  },
+  {
+    "question": "Quanti CFU totali prevede il corso di laurea magistrale?",
+    "reference_context": "Le attività didattiche si sviluppano in due anni con un carico didattico di 120 CFU.",
+    "ground_truth": "120 CFU complessivi.",
+    "document": "_ws_off_scaricaarticolatocorso.php_codcorso_M0619_anno_2025_tipoDoc_REG_DID_lingua_it.pdf"
+  },
+  {
+    "question": "Quali sono i principali sbocchi occupazionali del curriculum Data Science and Data Engineering?",
+    "reference_context": "Gli sbocchi occupazionali includono aziende nel settore dello sviluppo software, servizi digitali, centri di ricerca, società di consulenza e pubbliche amministrazioni.",
+    "ground_truth": "Aziende software, servizi digitali, centri di ricerca, società di consulenza e pubbliche amministrazioni.",
+    "document": "_ws_off_scaricaarticolatocorso.php_codcorso_M0619_anno_2025_tipoDoc_REG_DID_lingua_it.pdf"
+  },
+  {
+    "question": "Qual è la differenza tra tesi compilativa e tesi sperimentale secondo il regolamento?",
+    "reference_context": "La tesi compilativa approfondisce concetti da fonti bibliografiche; la tesi sperimentale verifica idee o casi concreti, dimostrando autonomia progettuale.",
+    "ground_truth": "La tesi compilativa è un approfondimento teorico, la tesi sperimentale prevede attività originali e progettuali.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_a19d534fdcaf.main.html"
+  },
+  {
+    "question": "Quanti CFU ha il corso Data Intensive Applications and Big Data?",
+    "reference_context": "DATA INTENSIVE APPLICATIONS AND BIG DATA – 6 CFU – Secondo Semestre.",
+    "ground_truth": "6 CFU.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_c663e15eb8a5.main.html"
+  },
+  {
+    "question": "In quale anno e semestre viene erogato il corso DATA INTENSIVE APPLICATIONS AND BIG DATA?",
+    "reference_context": "Anno: 2; Periodo: Secondo Semestre.",
+    "ground_truth": "Secondo anno, secondo semestre.",
+    "document": "didattica_corsi-di-laurea-e-laurea-magistrale_archivio_offerta-formativa-2025-26_435f1273c877.main.html"
+  },
+  {
+    "question": "Qual è il periodo di svolgimento delle lezioni del primo semestre per il primo anno?",
+    "reference_context": "Orario delle lezioni a.a. 2025/2026 - I anno - I semestre (15/09/2025 - 12/12/2025)",
+    "ground_truth": "Dal 15 settembre 2025 al 12 dicembre 2025.",
+    "document": "_files_didattica_lezioni_25-26_lm32-inginforobo_orario.pdf"
+  },
+  {
+    "question": "A che ora iniziano le lezioni di 'Machine Learning and Data Analysis' il martedì?",
+    "reference_context": "Machine Learning and Data Analysis: martedì ore 10.30-13.30, aula 11",
+    "ground_truth": "Iniziano alle 10:30.",
+    "document": "_files_didattica_lezioni_25-26_lm32-inginforobo_orario.pdf"
+  },
+  {
+    "question": "In quali giornate si tengono le lezioni di 'Internet and Web Programming'?",
+    "reference_context": "Internet and Web Programming - W. Didimo - 6 cfu. Giovedì ore 14:30-16:30 aula 11, Venerdì ore 14:30-16:30 aula 8.",
+    "ground_truth": "Le lezioni si tengono il giovedì e venerdì.",
+    "document": "_files_didattica_lezioni_25-26_lm32-inginforobo_orario.pdf"
+  },
+  {
+    "question": "Quali strutture e servizi sono disponibili per gli studenti di Ingegneria a Perugia?",
+    "reference_context": "Gli studenti di Ingegneria hanno a disposizione laboratori di supporto alla didattica e alla ricerca, una Biblioteca Centrale con sale di lettura, spazi attrezzati per lo studio, servizio mensa, ampi spazi verdi e servizio bar.",
+    "ground_truth": "Sono disponibili laboratori didattici e di ricerca, una biblioteca centrale, spazi studio, mensa, aree verdi e bar.",
+    "document": "didattica_strutture-e-servizi_27a9c6e29cde.main.html"
+  },
+  {
+    "question": "Dove si compila la domanda di laurea online?",
+    "reference_context": "Entrando nel SOL con le proprie credenziali dal menù scegliere il link ‘Laurea’ e cliccare su ‘Conseguimento titolo’.",
+    "ground_truth": "La domanda di laurea si compila accedendo al portale SOL, sezione 'Laurea' -> 'Conseguimento titolo'.",
+    "document": "didattica_procedure-amministrative_procedure_laureandi_7a068270d5dc.main.html"
+  },
+  {
+    "question": "Un docente universitario può essere tutor di quanti tirocinanti interni?",
+    "reference_context": "Per i tirocini interni, un docente può essere tutor al massimo di 3 tirocinanti contemporaneamente.",
+    "ground_truth": "Massimo 3 tirocinanti contemporaneamente.",
+    "document": "_files_didattica_tirocini_informazione_faq_tirocinio-area_inf.pdf"
+  },
+  {
+    "question": "Qual è il numero massimo di CFU di tirocinio che uno studente può ottenere nella stessa azienda?",
+    "reference_context": "Sono consentiti al massimo 9 CFU (225 ore) di tirocinio in una stessa azienda, ente o laboratorio.",
+    "ground_truth": "Un massimo di 9 CFU di tirocinio per la stessa azienda o ente.",
+    "document": "_files_didattica_tirocini_informazione_faq_tirocinio-area_inf.pdf"
+  },
+  {
+    "question": "Che cosa si intende per tutorato di sostegno nei corsi di primo livello?",
+    "reference_context": "Tutorato di sostegno per i corsi di studio di primo livello, costituito da attività formative indirizzate a migliorare l'apprendimento di alcuni insegnamenti di base il cui superamento è ritenuto fondamentale per gli insegnamenti successivi.",
+    "ground_truth": "Il tutorato di sostegno per i corsi di primo livello consiste in attività formative volte a migliorare l’apprendimento di insegnamenti di base considerati fondamentali per quelli successivi.",
+    "document": "didattica_studiare-nei-nostri-corsi_tutorato_ce37c9c6e182.main.html"
+  }
+]
