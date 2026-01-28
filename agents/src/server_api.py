@@ -33,7 +33,9 @@ class QueryResponse(BaseModel):
 
 config = {
     "llm_model": "vllm",
-    "embedding_model": "bge"
+    "embedding_model": "bge",
+    "use_reranking": False,
+    "rerank_method": "cross_encoder"
 }
 components = {}
 
@@ -45,6 +47,11 @@ def parse_args():
     parser.add_argument("--embedding-model", type=str, default="bge",
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Modello di embedding da utilizzare")
+    parser.add_argument("--reranking", action="store_true",
+                        help="Attiva il re-ranking dei documenti")
+    parser.add_argument("--rerank-method", type=str, default="cross_encoder",
+                        choices=["cross_encoder", "llm"],
+                        help="Metodo di re-ranking: cross_encoder (veloce) o llm (accurato)")
     parser.add_argument("--host", type=str, default="0.0.0.0",
                         help="Host per il server")
     parser.add_argument("--port", type=int, default=8000,
@@ -57,6 +64,7 @@ async def startup_event():
         print("Inizializzazione componenti RAG...")
         print(f"LLM Model: {config['llm_model']}")
         print(f"Embedding Model: {config['embedding_model']}")
+        print(f"Reranking: {config['use_reranking']} (metodo: {config['rerank_method']})")
         
         embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(
             embedding_model_name=config["embedding_model"],
@@ -110,6 +118,9 @@ async def health_check():
 
 @app.post("/query", response_model=QueryResponse)
 async def process_query(request: QueryRequest):
+    print(f"[DEBUG] Query ricevuta: {request.question[:50]}...")
+    print(f"[DEBUG] Search: {request.search_technique}, Reranking: {config['use_reranking']} ({config['rerank_method']})")
+    
     if not components:
         raise HTTPException(status_code=503, detail="Sistema non inizializzato")
     
@@ -126,17 +137,24 @@ async def process_query(request: QueryRequest):
             vectorstores=components["vectorstores"],
             corpus=components["corpus"],
             bm25=components["bm25"],
-            nlp=components["spacy_tokenizer"]
+            nlp=components["spacy_tokenizer"],
+            use_reranking=config["use_reranking"],
+            rerank_method=config["rerank_method"]
         )
         
         return QueryResponse(
             answer=answer,
             contexts=contexts,
             mode=mode,
-            search_technique=request.search_technique
+            search_technique=request.search_technique,
+            use_reranking=config["use_reranking"],
+            rerank_method=config["rerank_method"]
         )
         
     except Exception as e:
+        print(f"[ERROR] Errore elaborazione query: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Errore durante l'elaborazione: {str(e)}")
 
 @app.get("/config")
@@ -144,6 +162,8 @@ async def get_config():
     return {
         "llm_model": config["llm_model"],
         "embedding_model": config["embedding_model"],
+        "use_reranking": config["use_reranking"],
+        "rerank_method": config["rerank_method"],
         "available_search_techniques": ["dense", "sparse", "hybrid"]
     }
 
@@ -156,6 +176,8 @@ if __name__ == "__main__":
     
     config["llm_model"] = args.llm_model
     config["embedding_model"] = args.embedding_model
+    config["use_reranking"] = args.reranking
+    config["rerank_method"] = args.rerank_method
     
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
