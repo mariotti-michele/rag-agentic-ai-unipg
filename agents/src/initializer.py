@@ -28,7 +28,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 class VLLMChat(BaseLLM):
     api_url: str
     api_key: str
-    model: str = "RedHatAI/Meta-Llama-3.3-70B-Instruct-FP8-dynamic"
+    model: str = "RedHatAI/Llama-3.3-70B-Instruct-FP8-dynamic"
     temperature: float = 0.2
 
     def _endpoint(self) -> str:
