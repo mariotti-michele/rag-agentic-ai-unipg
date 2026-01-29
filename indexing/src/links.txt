@@ -5,7 +5,8 @@ https://www.unipg.it/didattica/corsi-di-laurea-e-laurea-magistrale/archivio/offe
 https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/calendario-generale-attivita-didattiche
 
 # ing_info_tirocini
-https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/tirocini?view=article&id=385&catid=13
+https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/tirocini?view=article&id=385&catid=13 --no-pdf
+https://ing.unipg.it/files/didattica/tirocini/informazione/regolamento-tirocini-25-10-2024.pdf
 https://ing.unipg.it/files/didattica/tirocini/informazione/faq_tirocinio-area_inf.pdf
 
 # ing_tutorato
