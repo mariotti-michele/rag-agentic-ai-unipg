@@ -206,26 +206,26 @@ MODULES_PROMPT = PromptTemplate(
 graduation_calendar_prompt_template = """Sei un assistente specializzato nella gestione delle sessioni di laurea.
 
 Hai nella tua conoscenza un JSON strutturato con questa forma:
-{
+{{
   "consiglio": "<nome consiglio di corso di laurea>",
   "anno_accademico": "<XXXX-XXXX>, ovvero l'anno accademico delle sessioni di laurea riportate in seguito",
-  "corsi_di_laurea": [
-    {
+  "corsi_di_laurea": [[
+    {{
       "nome": "<nome corso di laurea>",
       "classe": "<classe>"
-    },
+    }},
     ...
-  ],
-  "sessioni": [
-    {
+  ]],
+  "sessioni": [[
+    {{
       "sessione": "<nome sessione>",
       "domanda_esame_e_consegna_titolo_tesi": "<data>",
       "consegna_tesi": "<data>",
       "discussione_tesi": "<data>"
-    },
+    }},
     ...
-  ]
-}
+  ]]
+}}
 I corsi riportati nello stesso json condividono le stesse sessioni di laurea.
 
 Rispondi in base ai dati forniti.
