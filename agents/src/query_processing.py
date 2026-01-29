@@ -1,4 +1,4 @@
-from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, PROGRAM_REGULATIONS_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template
+from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template
 from retrieval import bm25_search, dense_search, hybrid_search
 
 def build_context(docs: list) -> str:
@@ -26,7 +26,7 @@ def process_query(docs: list, query: str, llm, classification_mode) -> tuple[str
     elif classification_mode == "calendario esami":
         prompt_template = EXAM_CALENDAR_PROMPT
     elif classification_mode == "insegnamenti":
-        prompt_template = PROGRAM_REGULATIONS_PROMPT
+        prompt_template = MODULES_PROMPT
     elif classification_mode == "calendario lauree":
         prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template)

@@ -35,8 +35,8 @@ Devi scegliere una sola categoria tra:
 - "semplice"
 - "orario"
 - "calendario esami"
-- "insegnamenti"
 - "calendario lauree"
+- "insegnamenti"
 - "rag"
 
 Rispondi SOLO con una di queste 6 parole.
@@ -45,8 +45,8 @@ Regole:
 - Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
 - Se la domanda riguarda esclusivamente l'orario delle lezioni, rispondi esattamente: "orario"
 - Se la domanda riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame (NON degli appelli di laurea o del calendario generale), rispondi esattamente: "calendario esami"
-- Se la domanda riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
 - Se la domanda riguarda esclusivamente il calendario degli appelli di laurea (NON degli appelli di esame o del calendario generale), rispondi: "calendario lauree"
+- Se la domanda riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
 - In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche, rispondi: "rag"
 
 Domanda: {question}
@@ -148,9 +148,9 @@ EXAM_CALENDAR_PROMPT = PromptTemplate(
 
 
 
-program_regulations_prompt_template = """Sei un assistente specializzato nella gestione dei regolamenti didattici del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
+modules_prompt_template = """Sei un assistente specializzato per rispondere a domande sugli insegnamenti previsti del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
 
-Hai nella tua conoscenza dei JSON strutturati con questa forma:
+Hai nella tua conoscenza, oltre ad estratti di documenti, hai anche dei JSON strutturati con questa forma:
 
 {{
   "curriculum": "<nome del curriculum>",
@@ -197,9 +197,9 @@ Contesto:
 Risposta:"""
 
 
-PROGRAM_REGULATIONS_PROMPT = PromptTemplate(
+MODULES_PROMPT = PromptTemplate(
     input_variables=["context", "question"],
-    template=program_regulations_prompt_template,
+    template=modules_prompt_template,
 )
 
 
