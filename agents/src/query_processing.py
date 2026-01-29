@@ -1,4 +1,4 @@
-from prompts import EXAM_CALENDAR_PROMPT, PROGRAM_REGULATIONS_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template
+from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, PROGRAM_REGULATIONS_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template
 from retrieval import bm25_search, dense_search, hybrid_search
 
 def build_context(docs: list) -> str:
@@ -27,6 +27,8 @@ def process_query(docs: list, query: str, llm, classification_mode) -> tuple[str
         prompt_template = EXAM_CALENDAR_PROMPT
     elif classification_mode == "insegnamenti":
         prompt_template = PROGRAM_REGULATIONS_PROMPT
+    elif classification_mode == "calendario lauree":
+        prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template)
     return answer, [d["text"] for d in docs]
 
@@ -63,6 +65,9 @@ def classify_query(llm, query: str) -> str:
         elif "insegnamenti" in classification:
             print("[INFO] Query classificata come regolamenti.")
             return "insegnamenti"
+        elif "calendario lauree" in classification:
+            print("[INFO] Query classificata come calendario lauree.")
+            return "calendario lauree"
         else:
             return "rag"
     except Exception as e:

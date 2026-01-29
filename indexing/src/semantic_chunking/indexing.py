@@ -435,3 +435,9 @@ if __name__ == "__main__":
         description_prefix="Orari lezioni",
         build_vs_fn=_build_vs
     )
+
+    indexing_json_collection(
+        collection_name="ing_info_calendario_lauree",
+        json_files=["tab-calendario-lauree.json"],
+        description_prefix="Calendario lauree"
+    )

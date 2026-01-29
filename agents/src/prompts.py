@@ -36,15 +36,17 @@ Devi scegliere una sola categoria tra:
 - "orario"
 - "calendario esami"
 - "insegnamenti"
+- "calendario lauree"
 - "rag"
 
-Rispondi SOLO con una di queste 5 parole.
+Rispondi SOLO con una di queste 6 parole.
 
 Regole:
 - Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
 - Se la domanda riguarda esclusivamente l'orario delle lezioni, rispondi esattamente: "orario"
 - Se la domanda riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame (NON degli appelli di laurea o del calendario generale), rispondi esattamente: "calendario esami"
 - Se la domanda riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
+- Se la domanda riguarda esclusivamente il calendario degli appelli di laurea (NON degli appelli di esame o del calendario generale), rispondi: "calendario lauree"
 - In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche, rispondi: "rag"
 
 Domanda: {question}
@@ -198,4 +200,30 @@ Risposta:"""
 PROGRAM_REGULATIONS_PROMPT = PromptTemplate(
     input_variables=["context", "question"],
     template=program_regulations_prompt_template,
+)
+
+
+graduation_calendar_prompt_template = """Sei un assistente specializzato nella gestione degli appelli di laurea dei Corsi di:
+- Laurea Magistrale in Ingegneria Informatica e Robotica
+- Laurea Magistrale in Ingegneria Elettronica
+- Laurea Triennale in Ingegneria Informatica ed Elettronica
+Tutti e tre i corsi hanno le stesse date di laurea.
+
+Hai nella tua conoscenza un JSON strutturato con riportate le date degli appelli di laurea.
+
+Rispondi in base ai dati forniti.
+
+Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
+Se non trovi riferimenti, come ad esempio il nome del corso di cui si vogliono ottenere le date degli appelli di laurea, rispondi esattamente: "Non presente nei documenti".
+
+Domanda: {question}
+
+Contesto:
+{context}
+
+Risposta:"""
+
+GRADUATION_CALENDAR_PROMPT = PromptTemplate(
+    input_variables=["context", "question"],
+    template=graduation_calendar_prompt_template,
 )

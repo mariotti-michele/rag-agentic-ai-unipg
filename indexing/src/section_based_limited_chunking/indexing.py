@@ -240,3 +240,9 @@ if __name__ == "__main__":
         json_files=["tab-orari-1-anno.json", "tab-orari-2-anno.json"],
         description_prefix="Orari lezioni"
     )
+
+    indexing_json_collection(
+        collection_name="ing_info_calendario_lauree",
+        json_files=["tab-calendario-lauree.json"],
+        description_prefix="Calendario lauree"
+    )

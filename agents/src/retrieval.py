@@ -125,6 +125,8 @@ def collection_filter(classification_mode: str):
         return "ing_info_mag_calendario_esami"
     elif classification_mode == "insegnamenti":
         return ["ing_info_mag_regolamenti_didattici_tabelle", "ing_info_mag_regolamenti_didattici"]
+    elif classification_mode == "calendario lauree":
+        return "ing_info_calendario_lauree"
     else:
         return None
 

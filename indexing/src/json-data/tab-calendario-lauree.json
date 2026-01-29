@@ -1,0 +1,50 @@
+{
+  "consiglio": "Consiglio Intercorso in Ingegneria dell’Informazione",
+  "anno_accademico": "2025/2026",
+  "corsi_di_laurea": [
+    {
+      "nome": "Ingegneria Informatica ed Elettronica",
+      "classe": "L-8"
+    },
+    {
+      "nome": "Ingegneria Elettronica",
+      "classe": "LM-29"
+    },
+    {
+      "nome": "Ingegneria Informatica e Robotica",
+      "classe": "LM-32"
+    }
+  ],
+  "sessioni": [
+    {
+      "sessione": "Estiva",
+      "domanda_esame_e_consegna_titolo_tesi": "29 maggio",
+      "consegna_tesi": "18 giugno",
+      "discussione_tesi": "9 luglio 2026"
+    },
+    {
+      "sessione": "Estiva",
+      "domanda_esame_e_consegna_titolo_tesi": "28 agosto",
+      "consegna_tesi": "17 settembre",
+      "discussione_tesi": "8 ottobre 2026"
+    },
+    {
+      "sessione": "Autunnale",
+      "domanda_esame_e_consegna_titolo_tesi": "23 ottobre",
+      "consegna_tesi": "12 novembre",
+      "discussione_tesi": "3 dicembre 2026"
+    },
+    {
+      "sessione": "Invernale",
+      "domanda_esame_e_consegna_titolo_tesi": "1 gennaio",
+      "consegna_tesi": "21 gennaio",
+      "discussione_tesi": "11 febbraio 2027"
+    },
+    {
+      "sessione": "Primaverile",
+      "domanda_esame_e_consegna_titolo_tesi": "12 marzo",
+      "consegna_tesi": "1 aprile",
+      "discussione_tesi": "22 aprile 2027"
+    }
+  ]
+}
