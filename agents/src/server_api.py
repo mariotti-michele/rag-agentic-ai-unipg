@@ -146,11 +146,9 @@ async def process_query(request: QueryRequest):
             answer=answer,
             contexts=contexts,
             mode=mode,
-            search_technique=request.search_technique,
-            use_reranking=config["use_reranking"],
-            rerank_method=config["rerank_method"]
+            search_technique=request.search_technique
         )
-        
+
     except Exception as e:
         print(f"[ERROR] Errore elaborazione query: {str(e)}")
         import traceback
