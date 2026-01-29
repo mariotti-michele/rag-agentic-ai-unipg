@@ -208,7 +208,7 @@ graduation_calendar_prompt_template = """Sei un assistente specializzato nella g
 Hai nella tua conoscenza un JSON strutturato con questa forma:
 {
   "consiglio": "<nome consiglio di corso di laurea>",
-  "anno_accademico": "XXXX-XXXX",
+  "anno_accademico": "<XXXX-XXXX>, ovvero l'anno accademico delle sessioni di laurea riportate in seguito",
   "corsi_di_laurea": [
     {
       "nome": "<nome corso di laurea>",
