@@ -63,7 +63,7 @@ def classify_query(llm, query: str) -> str:
             print("[INFO] Query classificata come calendario esami.")
             return "calendario esami"
         elif "insegnamenti" in classification:
-            print("[INFO] Query classificata come regolamenti.")
+            print("[INFO] Query classificata come insegnamenti.")
             return "insegnamenti"
         elif "calendario lauree" in classification:
             print("[INFO] Query classificata come calendario lauree.")

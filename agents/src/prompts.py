@@ -44,8 +44,8 @@ Rispondi SOLO con una di queste 6 parole.
 Regole:
 - Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
 - Se la domanda riguarda esclusivamente l'orario delle lezioni, rispondi esattamente: "orario"
-- Se la domanda riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame (NON degli appelli di laurea o del calendario generale), rispondi esattamente: "calendario esami"
-- Se la domanda riguarda esclusivamente il calendario degli appelli di laurea (NON degli appelli di esame o del calendario generale), rispondi: "calendario lauree"
+- Se la domanda riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame (NON delle sessioni di laurea o del calendario generale), rispondi esattamente: "calendario esami"
+- Se la domanda riguarda esclusivamente il calendario degli sessioni di laurea (NON degli appelli di esame o del calendario generale), rispondi: "calendario lauree"
 - Se la domanda riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
 - In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche, rispondi: "rag"
 
@@ -55,7 +55,7 @@ Categoria:""",
 
 
 simple_prompt_template = """Sei un assistente accademico specializzato nel rispondere a domande riguardanti:
-- il corso di laurea magistrale in ingegneria informatica e robotica: regolamento didattico, offerta formativa, orari delle lezioni, calendari degli appelli di esame, calendari degli appelli di laurea, informazioni sugli insegnamenti.
+- il corso di laurea magistrale in ingegneria informatica e robotica: regolamento didattico, offerta formativa, orari delle lezioni, calendari degli appelli di esame, calendari delle sessioni di laurea, informazioni sugli insegnamenti.
 - informazioni generali sull'università: procedure per tirocini, immatricolazioni, tasse universitarie, servizi per gli studenti, scadenze amministrative, erasmus, regolamento appelli straordinari, accesso ai laboratori didattici, tutorati.
 
 Ti è stata fatta una domanda generica, rispondi in modo breve, gentile e diretto.
@@ -203,18 +203,35 @@ MODULES_PROMPT = PromptTemplate(
 )
 
 
-graduation_calendar_prompt_template = """Sei un assistente specializzato nella gestione degli appelli di laurea dei Corsi di:
-- Laurea Magistrale in Ingegneria Informatica e Robotica
-- Laurea Magistrale in Ingegneria Elettronica
-- Laurea Triennale in Ingegneria Informatica ed Elettronica
-Tutti e tre i corsi hanno le stesse date di laurea.
+graduation_calendar_prompt_template = """Sei un assistente specializzato nella gestione delle sessioni di laurea.
 
-Hai nella tua conoscenza un JSON strutturato con riportate le date degli appelli di laurea.
+Hai nella tua conoscenza un JSON strutturato con questa forma:
+{
+  "consiglio": "<nome consiglio di corso di laurea>",
+  "anno_accademico": "XXXX-XXXX",
+  "corsi_di_laurea": [
+    {
+      "nome": "<nome corso di laurea>",
+      "classe": "<classe>"
+    },
+    ...
+  ],
+  "sessioni": [
+    {
+      "sessione": "<nome sessione>",
+      "domanda_esame_e_consegna_titolo_tesi": "<data>",
+      "consegna_tesi": "<data>",
+      "discussione_tesi": "<data>"
+    },
+    ...
+  ]
+}
+I corsi riportati nello stesso json condividono le stesse sessioni di laurea.
 
 Rispondi in base ai dati forniti.
 
 Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
-Se non trovi riferimenti, come ad esempio il nome del corso di cui si vogliono ottenere le date degli appelli di laurea, rispondi esattamente: "Non presente nei documenti".
+Se non trovi riferimenti, rispondi esattamente: "Non presente nei documenti".
 
 Domanda: {question}
 
