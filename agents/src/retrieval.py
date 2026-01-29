@@ -124,7 +124,7 @@ def collection_filter(classification_mode: str):
     elif classification_mode == "calendario esami":
         return "ing_info_mag_calendario_esami"
     elif classification_mode == "insegnamenti":
-        return "ing_info_mag_regolamenti_didattici_tabelle"
+        return ["ing_info_mag_regolamenti_didattici_tabelle", "ing_info_mag_regolamenti_didattici"]
     else:
         return None
 
@@ -144,8 +144,12 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
     search_k = top_k * 2 if use_reranking else top_k
 
     for name, store in vectorstores.items():
-        if collection_filter_value and name != collection_filter_value:
-            continue
+        if collection_filter_value:
+            if isinstance(collection_filter_value, list):
+                if name not in collection_filter_value:
+                    continue
+            elif name != collection_filter_value:
+                continue
         try:
             docs_scores = store.similarity_search_with_score_by_vector(vec, k=search_k)
 

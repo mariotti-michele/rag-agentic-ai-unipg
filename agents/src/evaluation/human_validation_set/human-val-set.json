@@ -25,8 +25,8 @@
   },
   {
     "question": "Qual è la scadenza per immatricolarsi ai corsi di laurea triennale e magistrale a ciclo unico ad accesso libero?",
-    "reference_context": "Il termine per le immatricolazioni ai corsi di laurea di primo livello e ai corsi di laurea magistrali a ciclo unico ad accesso libero è previsto nel giorno 20 ottobre 2025.",
-    "ground_truth": "La scadenza è il 20 ottobre 2025.",
+    "reference_context": "Il termine per le immatricolazioni ai corsi di laurea di primo livello e ai corsi di laurea magistrali a ciclo unico ad accesso libero è previsto nel giorno 27 gennaio 2026.",
+    "ground_truth": "La scadenza è il 27 gennaio 2026.",
     "document": "didattica_procedure-amministrative_procedure_immatricolazioni_ae3906a1a973.main.html"
   },
   {

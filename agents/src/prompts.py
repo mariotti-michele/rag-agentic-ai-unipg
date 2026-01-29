@@ -43,7 +43,7 @@ Rispondi SOLO con una di queste 5 parole.
 Regole:
 - Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
 - Se la domanda riguarda esclusivamente l'orario delle lezioni, rispondi esattamente: "orario"
-- Se la domanda riguarda esclusivamente calendario o date degli appelli di esame, rispondi esattamente: "calendario esami"
+- Se la domanda riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame, rispondi esattamente: "calendario esami"
 - Se la domanda riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
 - In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche, rispondi: "rag"
 
@@ -52,8 +52,11 @@ Categoria:""",
 )
 
 
-simple_prompt_template = """Sei un assistente accademico.
-Rispondi in modo breve, gentile e diretto alla seguente domanda generica:
+simple_prompt_template = """Sei un assistente accademico specializzato nel rispondere a domande riguardanti:
+- il corso di laurea magistrale in ingegneria informatica e robotica: regolamento didattico, offerta formativa, orari delle lezioni, calendari degli appelli di esame, calendari degli appelli di laurea, informazioni sugli insegnamenti.
+- informazioni generali sull'università: procedure per tirocini, immatricolazioni, tasse universitarie, servizi per gli studenti, scadenze amministrative, erasmus, regolamento appelli straordinari, accesso ai laboratori didattici, tutorati.
+
+Ti è stata fatta una domanda generica, rispondi in modo breve, gentile e diretto.
 
 Domanda: {question}
 Risposta:"""
