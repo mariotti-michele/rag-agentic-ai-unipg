@@ -1,4 +1,4 @@
-# SECTION BASED LIMITED CHUNKING - parsing.py
+# SECTION BASED CHUNKING - parsing.py
 
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
@@ -18,65 +18,7 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="camelot")
 
 
-def split_long_chunk(chunk_text: str, max_chars: int = 2000, overlap: int = 150) -> list[str]:
-    """Divide un chunk troppo lungo in sotto-chunk con overlap"""
-    if len(chunk_text) <= max_chars:
-        return [chunk_text]
-    
-    # Estrai il titolo se presente (prima riga)
-    lines = chunk_text.split('\n', 1)
-    title = lines[0] if len(lines) > 1 and len(lines[0]) < 200 else ""
-    content = lines[1] if len(lines) > 1 and title else chunk_text
-    
-    sub_chunks = []
-    start = 0
-    
-    while start < len(content):
-        # Calcola la fine del chunk corrente
-        end = start + max_chars - len(title) - 1  # -1 per il newline
-        
-        if end >= len(content):
-            # Ultimo chunk
-            if title:
-                sub_chunks.append(f"{title}\n{content[start:]}")
-            else:
-                sub_chunks.append(content[start:])
-            break
-        
-        # Cerca di spezzare su un separatore naturale (newline, punto, virgola)
-        search_start = max(start, end - 100)
-        search_end = min(len(content), end + 100)
-        
-        best_split = end
-        for separator in ['\n\n', '\n', '. ', ', ', ' ']:
-            pos = content.rfind(separator, search_start, search_end)
-            if pos != -1 and pos > start:  # Garantisci pos > start
-                best_split = pos + len(separator)
-                break
-        
-        # Se best_split non avanza rispetto a start, forza uno split minimo
-        if best_split <= start:
-            best_split = min(len(content), start + max(1, max_chars - len(title) - 1))
-        
-        # Aggiungi il chunk con il titolo
-        if title:
-            sub_chunks.append(f"{title}\n{content[start:best_split]}")
-        else:
-            sub_chunks.append(content[start:best_split])
-        
-        # Calcola prossimo start con overlap
-        start_next = best_split - overlap
-        
-        # Se l'overlap non fa avanzare, disabilita overlap E garantisci avanzamento
-        if start_next <= start:
-            start_next = best_split
-        
-        start = start_next
-    
-    return sub_chunks
-
-
-def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=2000, overlap=150):
+def chunk(elements, source_url, page_title, doc_type, file_name=None):
     from unstructured.documents.elements import Title, Header, NarrativeText, ListItem, Text, Table
 
     crawl_ts = datetime.now(timezone.utc).isoformat()
@@ -112,16 +54,9 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=
     if current_chunk.strip():
         merged_chunks.append(current_chunk.strip())
 
-    # Dividi i chunk troppo lunghi
-    final_chunks = []
-    for chunk_text in merged_chunks:
-        sub_chunks = split_long_chunk(chunk_text, max_chars, overlap)
-        final_chunks.extend(sub_chunks)
-
-    # Crea i documenti
-    for idx, chunk_text in enumerate(final_chunks):
+    for idx, chunk in enumerate(merged_chunks):
         docs.append(Document(
-            page_content=chunk_text,
+            page_content=chunk,
             metadata={
                 "source_url": source_url,
                 "doc_type": doc_type,
@@ -131,11 +66,10 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=
                 "lang": ["ita"],
                 "crawl_ts": crawl_ts,
                 "doc_id": sha(f"{source_url}_{idx}"),
-                "chunk_length": len(chunk_text),
             },
         ))
 
-    print(f"[INFO] {len(merged_chunks)} chunk iniziali -> {len(final_chunks)} chunk finali da {source_url}")
+    print(f"[INFO] {len(merged_chunks)} chunk creati da {source_url}")
     return docs
 
 

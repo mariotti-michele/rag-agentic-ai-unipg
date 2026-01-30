@@ -1,4 +1,4 @@
-# SECTION BASED LIMITED CHUNKING INDEXING SCRIPT
+# SECTION BASED CHUNKING INDEXING SCRIPT
 
 import os, asyncio, uuid
 from dotenv import load_dotenv
