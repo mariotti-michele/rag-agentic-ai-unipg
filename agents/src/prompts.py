@@ -42,12 +42,14 @@ Devi scegliere una sola categoria tra:
 Rispondi SOLO con una di queste 6 parole.
 
 Regole:
-- Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
-- Se la domanda riguarda esclusivamente l'orario delle lezioni, rispondi esattamente: "orario"
-- Se la domanda riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame (NON delle sessioni di laurea o del calendario generale), rispondi esattamente: "calendario esami"
-- Se la domanda riguarda esclusivamente il calendario degli sessioni di laurea (NON degli appelli di esame o del calendario generale), rispondi: "calendario lauree"
-- Se la domanda riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
+- Se la domanda attuale contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
+- Se la domanda attuale riguarda esclusivamente l'orario delle lezioni, rispondi esattamente: "orario"
+- Se la domanda attuale riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame (NON delle sessioni di laurea o del calendario generale), rispondi esattamente: "calendario esami"
+- Se la domanda attuale riguarda esclusivamente il calendario degli sessioni di laurea (NON degli appelli di esame o del calendario generale), rispondi: "calendario lauree"
+- Se la domanda attuale riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
 - In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche, rispondi: "rag"
+
+Ignora la parte compresa tra [Conversazione precedente] e [Fine conversazione precedente], se presente.
 
 Domanda: {question}
 Categoria:""",
