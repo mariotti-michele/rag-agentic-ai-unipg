@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Literal, List
+from typing import Dict, Literal, List, Optional
 import uvicorn
 import argparse
 import signal
@@ -10,6 +10,7 @@ import sys
 from initializer import init_components, test_connection
 from query_processing import generate_answer
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
+from conversation_memory import ConversationMemory
 
 app = FastAPI(title="RAG Q&A API", version="1.0.0")
 
@@ -23,7 +24,8 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     question: str
-    search_technique: Literal["dense", "sparse", "hybrid"] = "hybrid"
+    search_technique: Literal["dense", "sparse", "hybrid"] = "dense"
+    session_id: Optional[str] = None
 
 class QueryResponse(BaseModel):
     answer: str
@@ -38,6 +40,8 @@ config = {
     "rerank_method": "cross_encoder"
 }
 components = {}
+
+SESSION_MEMORIES: Dict[str, ConversationMemory] = {}
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Server API per sistema Q&A RAG")
@@ -128,6 +132,15 @@ async def process_query(request: QueryRequest):
         raise HTTPException(status_code=400, detail="La domanda non può essere vuota")
     
     try:
+        sid = request.session_id or "default"
+
+        mem = SESSION_MEMORIES.get(sid)
+        if mem is None:
+            mem = ConversationMemory(max_turns=4)
+            SESSION_MEMORIES[sid] = mem
+
+        memory_context = mem.get_context()
+
         answer, contexts, mode = generate_answer(
             llm=components["llm"],
             query=request.question,
@@ -139,8 +152,11 @@ async def process_query(request: QueryRequest):
             bm25=components["bm25"],
             nlp=components["spacy_tokenizer"],
             use_reranking=config["use_reranking"],
-            rerank_method=config["rerank_method"]
+            rerank_method=config["rerank_method"],
+            memory_context=memory_context
         )
+
+        mem.add_turn(request.question, answer)
         
         return QueryResponse(
             answer=answer,
