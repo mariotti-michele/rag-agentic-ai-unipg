@@ -67,7 +67,7 @@ def split_long_chunk(chunk_text: str, max_chars: int = 4000) -> list[str]:
     return sub_chunks
 
 
-def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=4000, overlap=150):
+def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=4000):
 
     crawl_ts = datetime.now(timezone.utc).isoformat()
     docs, merged_chunks = [], []
@@ -105,7 +105,7 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=
     # Dividi i chunk troppo lunghi
     final_chunks = []
     for chunk_text in merged_chunks:
-        sub_chunks = split_long_chunk(chunk_text, max_chars, overlap)
+        sub_chunks = split_long_chunk(chunk_text, max_chars)
         final_chunks.extend(sub_chunks)
 
     # Crea i documenti
