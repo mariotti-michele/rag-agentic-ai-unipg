@@ -49,7 +49,7 @@ Regole:
 - Se la domanda attuale riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
 - In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche, rispondi: "rag"
 
-Ignora la parte compresa tra [Conversazione precedente] e [Fine conversazione precedente], se presente.
+La parte compresa tra [Conversazione precedente] e [Fine conversazione precedente], se presente, usala solo come contesto, ad esempio per capire il soggetto della domanda, ma non per la classificazione.
 
 Domanda: {question}
 Categoria:""",
