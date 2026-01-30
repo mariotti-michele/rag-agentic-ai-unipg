@@ -10,7 +10,9 @@ class ConversationMemory:
     def get_context(self) -> str:
         if not self.history:
             return ""
-        out = "Conversazione precedente:\n"
+        out = "[Conversazione precedente]:\n"
         for t in self.history:
             out += f"Utente: {t['user']}\nAssistente: {t['assistant']}\n"
+        out += "[Fine conversazione precedente]\n"
         return out
+        
