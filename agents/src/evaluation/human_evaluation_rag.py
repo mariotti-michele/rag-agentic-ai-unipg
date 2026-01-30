@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument("--embedding-model", type=str, default="bge",
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
-    parser.add_argument("--search", type=str, default="hybrid",
+    parser.add_argument("--search", type=str, default="dense",
                         choices=["all", "dense", "sparse", "hybrid"],
                         help="Seleziona tecnica di ricerca (default: dense)")
     parser.add_argument("--reranking", action="store_true",

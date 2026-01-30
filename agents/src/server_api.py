@@ -23,7 +23,7 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     question: str
-    search_technique: Literal["dense", "sparse", "hybrid"] = "hybrid"
+    search_technique: Literal["dense", "sparse", "hybrid"] = "dense"
 
 class QueryResponse(BaseModel):
     answer: str

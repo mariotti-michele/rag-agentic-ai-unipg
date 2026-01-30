@@ -39,7 +39,6 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
         d.metadata["chunk_id"] = f"{base_id}_{i}_{content_id[:8]}"
         clean_chunks.append(d)
 
-    print(f"[INFO] Mantieni {len(clean_chunks)} chunk (nessun text split)")
     return clean_chunks
 
 

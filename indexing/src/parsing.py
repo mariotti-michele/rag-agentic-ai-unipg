@@ -7,6 +7,7 @@ from pathlib import Path
 from unstructured.partition.html import partition_html
 from unstructured.partition.pdf import partition_pdf
 from langchain_core.documents import Document
+from unstructured.documents.elements import Title, Header, NarrativeText, ListItem, Text, Table
 
 from scraping import sha
 
@@ -18,12 +19,10 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="camelot")
 
 
-def split_long_chunk(chunk_text: str, max_chars: int = 2000, overlap: int = 150) -> list[str]:
-    """Divide un chunk troppo lungo in sotto-chunk con overlap"""
+def split_long_chunk(chunk_text: str, max_chars: int = 4000) -> list[str]:
     if len(chunk_text) <= max_chars:
         return [chunk_text]
     
-    # Estrai il titolo se presente (prima riga)
     lines = chunk_text.split('\n', 1)
     title = lines[0] if len(lines) > 1 and len(lines[0]) < 200 else ""
     content = lines[1] if len(lines) > 1 and title else chunk_text
@@ -32,7 +31,6 @@ def split_long_chunk(chunk_text: str, max_chars: int = 2000, overlap: int = 150)
     start = 0
     
     while start < len(content):
-        # Calcola la fine del chunk corrente
         end = start + max_chars - len(title) - 1  # -1 per il newline
         
         if end >= len(content):
@@ -43,20 +41,20 @@ def split_long_chunk(chunk_text: str, max_chars: int = 2000, overlap: int = 150)
                 sub_chunks.append(content[start:])
             break
         
-        # Cerca di spezzare su un separatore naturale (newline, punto, virgola)
-        search_start = max(start, end - 100)
-        search_end = min(len(content), end + 100)
+        # Cerca di spezzare SOLO su punto o punto di domanda
+        search_start = max(start, end - 500)
+        search_end = min(len(content), end + 500)
         
-        best_split = end
-        for separator in ['\n\n', '\n', '. ', ', ', ' ']:
+        best_split = -1
+        for separator in ['.\n', '!\n', '. ', '! ' '!']:
             pos = content.rfind(separator, search_start, search_end)
-            if pos != -1 and pos > start:  # Garantisci pos > start
+            if pos != -1 and pos > start:
                 best_split = pos + len(separator)
                 break
         
-        # Se best_split non avanza rispetto a start, forza uno split minimo
-        if best_split <= start:
-            best_split = min(len(content), start + max(1, max_chars - len(title) - 1))
+        # Se non trovi punto/domanda, forza split esatto
+        if best_split == -1 or best_split <= start:
+            best_split = min(len(content), end)
         
         # Aggiungi il chunk con il titolo
         if title:
@@ -64,20 +62,12 @@ def split_long_chunk(chunk_text: str, max_chars: int = 2000, overlap: int = 150)
         else:
             sub_chunks.append(content[start:best_split])
         
-        # Calcola prossimo start con overlap
-        start_next = best_split - overlap
-        
-        # Se l'overlap non fa avanzare, disabilita overlap E garantisci avanzamento
-        if start_next <= start:
-            start_next = best_split
-        
-        start = start_next
+        start = best_split
     
     return sub_chunks
 
 
-def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=2000, overlap=150):
-    from unstructured.documents.elements import Title, Header, NarrativeText, ListItem, Text, Table
+def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=4000, overlap=150):
 
     crawl_ts = datetime.now(timezone.utc).isoformat()
     docs, merged_chunks = [], []

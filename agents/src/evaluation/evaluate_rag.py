@@ -41,12 +41,12 @@ def parse_args():
     parser.add_argument("--embedding-model", type=str, default="bge",
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Seleziona il modello di embedding da usare")
-    parser.add_argument("--search", type=str, default="all",
+    parser.add_argument("--search", type=str, default="dense",
                         choices=["dense", "sparse", "hybrid", "all"],
-                        help="Seleziona tecnica di ricerca da utilizzare (default: all)")
-    parser.add_argument("--chunking", type=str, default="fixed",
-                        choices=["fixed", "document-structure", "section", "semantic"],
-                        help="Tipo di chunking usato per creare la collezione (default: section)")
+                        help="Seleziona tecnica di ricerca da utilizzare (default: dense)")
+    parser.add_argument("--chunking", type=str, default="section-limited",
+                        choices=["fixed", "document-structure", "section", "semantic", "section-limited"],
+                        help="Tipo di chunking usato per creare la collezione (default: section-limited)")
     parser.add_argument("--version", type=str, default="v0",
                         help="Versione del modello valutato (default: v0)")
     parser.add_argument("--reranking", action="store_true",
