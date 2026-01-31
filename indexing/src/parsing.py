@@ -18,6 +18,9 @@ logging.getLogger("unstructured").setLevel(logging.ERROR)
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="camelot")
 
+import re
+URL_RE = re.compile(r"(https?://|www\.)\S+", re.IGNORECASE)
+
 
 def split_long_chunk(chunk_text: str, max_chars: int = 4000) -> list[str]:
     if len(chunk_text) <= max_chars:
@@ -46,7 +49,7 @@ def split_long_chunk(chunk_text: str, max_chars: int = 4000) -> list[str]:
         search_end = min(len(content), end + 500)
         
         best_split = -1
-        for separator in ['.\n', '!\n', '. ', '! ' '!']:
+        for separator in ['.\n', '!\n', '. ', '! ', '!']:
             pos = content.rfind(separator, search_start, search_end)
             if pos != -1 and pos > start:
                 best_split = pos + len(separator)
@@ -78,14 +81,26 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=
         if not text:
             continue
 
+        text = text.strip()
+        if is_noise_text(text):
+            continue
+
         if isinstance(el, (Title, Header)):
+            # se per caso un footer-url viene classificato come Title/Header, lo blocchi qui
+            if is_footer_url(text):
+                continue
+
             if current_chunk.strip():
                 merged_chunks.append(current_chunk.strip())
                 current_chunk = ""
-            current_header = text.strip()
+            current_header = text
             continue
 
         if isinstance(el, (NarrativeText, ListItem, Text)):
+            # evita che un numero pagina entri in chunk
+            if is_page_number(text):
+                continue
+
             if current_header:
                 current_chunk = f"{current_header}\n{text}"
                 current_header = None
@@ -98,6 +113,7 @@ def chunk(elements, source_url, page_title, doc_type, file_name=None, max_chars=
                 merged_chunks.append(current_chunk.strip())
                 current_chunk = ""
             merged_chunks.append(f"[TABELLA]\n{text}")
+
 
     if current_chunk.strip():
         merged_chunks.append(current_chunk.strip())
@@ -185,3 +201,28 @@ def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
         return []
 
     return chunk(elements, source_url, page_title=file_path.stem, doc_type="pdf", file_name=file_path.name)
+
+
+def is_page_number(t: str) -> bool:
+    s = t.strip()
+    # "4" oppure "04" ecc. (1-3 cifre)
+    return bool(re.fullmatch(r"\d{1,3}", s))
+
+def is_footer_url(t: str) -> bool:
+    s = t.strip()
+    # se è praticamente solo un link (o link + poco testo)
+    if URL_RE.search(s):
+        # caso tipico: la riga è solo URL oppure quasi
+        if len(s) <= 80:   # soglia pratica per footer
+            return True
+    return False
+
+def is_noise_text(t: str) -> bool:
+    s = t.strip()
+    if not s:
+        return True
+    if is_page_number(s):
+        return True
+    if is_footer_url(s):
+        return True
+    return False
