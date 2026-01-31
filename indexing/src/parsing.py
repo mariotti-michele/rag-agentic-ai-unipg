@@ -172,7 +172,7 @@ def to_documents_from_pdf(file_path: Path, source_url: str) -> list[Document]:
         elements = partition_pdf(
             filename=str(file_path),
             strategy="hi_res",
-            include_page_breaks=True,
+            include_page_breaks=False,
             infer_table_structure=True,
             languages=["ita", "eng"]
         )
