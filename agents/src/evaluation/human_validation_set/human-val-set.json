@@ -48,9 +48,9 @@
     "document": "didattica_studiare-nei-nostri-corsi_mobilita-internazionale_b127c69f6f91.main.html"
   },
   {
-    "question": "Qual è la scadenza per immatricolarsi ai corsi di laurea triennale e magistrale a ciclo unico ad accesso libero?",
-    "reference_context": "Il termine per le immatricolazioni ai corsi di laurea di primo livello e ai corsi di laurea magistrali a ciclo unico ad accesso libero è previsto nel giorno 20 ottobre 2025.",
-    "ground_truth": "La scadenza è il 20 ottobre 2025.",
+    "question": "Quali sono gli sbocchi occupazionali per il curricula data science?",
+    "reference_context": "Gli sbocchi occupazionali per il curricula data science includono: piccole, medie e grandi aziende, società di ingegneria e di consulenza, strutture e centri di ricerca, enti di certificazione, istituti di analisi economico-sociale, libera professione.",
+    "ground_truth": "Gli sbocchi occupazionali per il curricula data science includono: piccole, medie e grandi aziende, società di ingegneria e di consulenza, strutture e centri di ricerca, enti di certificazione, istituti di analisi economico-sociale, libera professione.",
     "document": "didattica_procedure-amministrative_procedure_immatricolazioni_ae3906a1a973.main.html"
   },
   {
