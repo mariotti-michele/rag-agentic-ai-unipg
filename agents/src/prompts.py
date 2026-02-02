@@ -244,3 +244,16 @@ GRADUATION_CALENDAR_PROMPT = PromptTemplate(
     input_variables=["context", "question"],
     template=graduation_calendar_prompt_template,
 )
+
+
+QUERY_REWRITE_PROMPT = """Riscrivi la domanda dell'utente rendendola auto-consistente usando la conversazione precedente SOLO per aggiungere il contesto mancante (es. nome insegnamento).
+Non inventare informazioni.
+Rispondi SOLO con la domanda riscritta, senza spiegazioni.
+
+Conversazione precedente:
+{memory}
+
+Domanda utente:
+{question}
+
+Domanda riscritta:"""

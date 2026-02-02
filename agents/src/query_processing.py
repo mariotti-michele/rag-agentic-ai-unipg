@@ -1,17 +1,5 @@
-from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template
+from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template, QUERY_REWRITE_PROMPT
 from retrieval import bm25_search, dense_search, hybrid_search
-
-QUERY_REWRITE_PROMPT = """Riscrivi la domanda dell'utente rendendola auto-consistente usando la conversazione precedente SOLO per aggiungere il contesto mancante (es. nome insegnamento).
-Non inventare informazioni.
-Rispondi SOLO con la domanda riscritta, senza spiegazioni.
-
-Conversazione precedente:
-{memory}
-
-Domanda utente:
-{question}
-
-Domanda riscritta:"""
 
 
 def build_context(docs: list) -> str:
@@ -22,10 +10,6 @@ def build_context(docs: list) -> str:
     return context
 
 def rewrite_query(llm, question: str, memory_context: str) -> str:
-    """
-    Riscrive la domanda usando la conversazione precedente per renderla specifica.
-    Se non c'è memoria o la domanda non è ambigua, ritorna la domanda originale.
-    """
     if not memory_context or not memory_context.strip():
         return question
 
