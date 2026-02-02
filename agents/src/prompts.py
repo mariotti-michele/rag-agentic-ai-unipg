@@ -257,3 +257,14 @@ Domanda utente:
 {question}
 
 Domanda riscritta:"""
+
+
+RERANK_PROMPT = """Dato questo contesto e la domanda dell'utente, assegna un punteggio di rilevanza da 0 a 10 a ciascun documento.
+Rispondi SOLO con i numeri separati da virgole, nello stesso ordine dei documenti.
+
+Domanda: {query}
+
+Documenti:
+{documents}
+
+Punteggi (separati da virgole):"""
