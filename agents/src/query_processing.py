@@ -1,12 +1,64 @@
 from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template
 from retrieval import bm25_search, dense_search, hybrid_search
 
+QUERY_REWRITE_PROMPT = """Riscrivi la domanda dell'utente rendendola auto-consistente usando la conversazione precedente SOLO per aggiungere il contesto mancante (es. nome insegnamento).
+Non inventare informazioni.
+Rispondi SOLO con la domanda riscritta, senza spiegazioni.
+
+Conversazione precedente:
+{memory}
+
+Domanda utente:
+{question}
+
+Domanda riscritta:"""
+
+
 def build_context(docs: list) -> str:
     context = ""
     for i, d in enumerate(docs, 1):
         section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
     return context
+
+def rewrite_query(llm, question: str, memory_context: str) -> str:
+    """
+    Riscrive la domanda usando la conversazione precedente per renderla specifica.
+    Se non c'è memoria o la domanda non è ambigua, ritorna la domanda originale.
+    """
+    if not memory_context or not memory_context.strip():
+        return question
+
+    q = question.strip().lower()
+
+    # euristica semplice: riscrivi solo se sembra un follow-up / domanda corta o generica
+    ambiguous = (
+        len(q) <= 45 or
+        any(x in q for x in [
+            "quanti cfu", "cfu", "date", "appelli", "esame", "quando", "che aula", "chi è il prof", "prof", "e quello", "e invece", "quello", "questo"
+        ])
+    )
+
+    if not ambiguous:
+        return question
+
+    prompt = QUERY_REWRITE_PROMPT.format(memory=memory_context, question=question)
+    out = llm.invoke(prompt)
+    if hasattr(out, "content"):
+        out = out.content
+
+    rewritten = str(out).strip().strip('"').strip("'")
+
+    # fallback di sicurezza
+    if not rewritten or len(rewritten) < 3:
+        return question
+
+    # evita query troppo lunghe (non vogliamo "tutta la chat" nel retrieval)
+    if len(rewritten) > 250:
+        rewritten = rewritten[:250]
+
+    return rewritten
+
 
 
 def get_llm_answer(context: str, query: str, llm, prompt_template, memory_context: str = "") -> str:
@@ -82,6 +134,11 @@ def classify_query(llm, query: str) -> str:
 
 def generate_answer(llm, query: str, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, use_reranking=False, rerank_method="cross_encoder", memory_context: str = ""):
     mode = classify_query(llm, query)
+
+    rewritten_query = rewrite_query(llm, query, memory_context)
+    print(f"[DEBUG] raw: {query}")
+    print(f"[DEBUG] rewritten: {rewritten_query}")
+
     if mode == "semplice":
         prompt = simple_prompt_template.format(question=query)
         answer = llm.invoke(prompt)
@@ -91,9 +148,9 @@ def generate_answer(llm, query: str, search_technique, embedding_model, embeddin
     else:
         answer, contexts = None, []
         if search_technique == "dense":
-            answer, contexts = answer_query_dense(query, embedding_model, embedding_model_name, vectorstores, llm, mode, use_reranking, rerank_method, memory_context)
+            answer, contexts = answer_query_dense(rewritten_query, embedding_model, embedding_model_name, vectorstores, llm, mode, use_reranking, rerank_method, memory_context)
         elif search_technique == "sparse":
-            answer, contexts = answer_query_bm25(query, corpus, bm25, nlp, llm, mode, memory_context)
+            answer, contexts = answer_query_bm25(rewritten_query, corpus, bm25, nlp, llm, mode, memory_context)
         elif search_technique == "hybrid":
-            answer, contexts = answer_query_hybrid(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode, use_reranking, rerank_method, memory_context)
+            answer, contexts = answer_query_hybrid(rewritten_query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode, use_reranking, rerank_method, memory_context)
     return answer, contexts, mode
