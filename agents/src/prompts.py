@@ -246,9 +246,39 @@ GRADUATION_CALENDAR_PROMPT = PromptTemplate(
 )
 
 
-QUERY_REWRITE_PROMPT = """Riscrivi la domanda dell'utente rendendola auto-consistente usando la conversazione precedente SOLO per aggiungere il contesto mancante (es. nome insegnamento).
-Non inventare informazioni.
-Rispondi SOLO con la domanda riscritta, senza spiegazioni.
+QUERY_REWRITE_PROMPT = """Sei un assistente che RISCRIVE la domanda dell'utente per renderla autonoma.
+Usa la conversazione precedente SOLO per aggiungere il riferimento mancante
+(corso / insegnamento / argomento / entità) quando la domanda è un follow-up ambiguo.
+
+Esempi:
+
+Conversazione precedente:
+Utente: Chi è il docente del corso Data Intensive Applications and Big Data?
+Assistente: Il docente del corso Data Intensive Applications and Big Data è ...
+
+Domanda utente:
+Quanti CFU?
+
+Domanda riscritta:
+Quanti CFU ha il corso Data Intensive Applications and Big Data?
+
+
+Conversazione precedente:
+Utente: Quali sono le date degli esami di Data Intensive Applications and Big Data?
+Assistente: Gli esami di Data Intensive Applications and Big Data sono previsti ...
+
+Domanda utente:
+E le prossime date?
+
+Domanda riscritta:
+Quali sono le prossime date degli esami di Data Intensive Applications and Big Data?
+
+
+Regole:
+- Non inventare informazioni che non compaiono nella conversazione precedente.
+- Usa SOLO il contesto necessario per disambiguare la domanda.
+- Se non è possibile capire a cosa si riferisce la domanda, restituisci la domanda originale.
+- Rispondi SOLO con la domanda riscritta, in una singola riga, senza spiegazioni.
 
 Conversazione precedente:
 {memory}
@@ -257,6 +287,7 @@ Domanda utente:
 {question}
 
 Domanda riscritta:"""
+
 
 
 RERANK_PROMPT = """Dato questo contesto e la domanda dell'utente, assegna un punteggio di rilevanza da 0 a 10 a ciascun documento.
