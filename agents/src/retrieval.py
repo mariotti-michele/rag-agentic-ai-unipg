@@ -3,6 +3,7 @@ import numpy as np
 # from sklearn.feature_extraction.text import TfidfVectorizer
 from rank_bm25 import BM25Okapi
 import spacy
+from advanced_techniques import rerank_documents, rerank_with_cross_encoder
 
 
 def build_corpus(qdrant_client, collection_names) -> tuple[list[dict], list[str]]:
@@ -171,12 +172,12 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
     
     # Applica re-ranking se richiesto
     if use_reranking and len(hits) > top_k:
-        from advanced_techniques import rerank_documents, rerank_with_cross_encoder
+        hits_to_rerank = hits[:search_k]
         
         if rerank_method == "llm" and llm:
-            hits = rerank_documents(query, hits, llm, top_k)
+            hits = rerank_documents(query, hits_to_rerank, llm, top_k)
         elif rerank_method == "cross_encoder":
-            hits = rerank_with_cross_encoder(query, hits, top_k=top_k)
+            hits = rerank_with_cross_encoder(query, hits_to_rerank, top_k=top_k)
         else:
             hits = hits[:top_k]
     else:
@@ -206,7 +207,8 @@ def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, co
     if not dense_docs and not sparse_docs:
         return []
 
-    merged_docs = reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=alpha, k=k*2 if use_reranking else k)
+    target_merge_size = k*2 if use_reranking else k
+    merged_docs = reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=alpha, k=target_merge_size)
     
     # Applica re-ranking sui documenti fusi
     if use_reranking and len(merged_docs) > k:
