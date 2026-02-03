@@ -13,7 +13,9 @@ https://ing.unipg.it/files/didattica/tirocini/informazione/faq_tirocinio-area_in
 https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/tutorato
 
 # ing_erasmus
-https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/mobilita-internazionale --depth 1
+https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/mobilita-internazionale
+https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/mobilita-internazionale?view=article&id=818&catid=13
+https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/mobilita-internazionale?view=article&id=819&catid=13
 
 # ing_info_mag_tesi_e_laurea
 https://ing.unipg.it/files/didattica/tesi/lineeguidavotodilaurea-lm-29-32.pdf
