@@ -36,7 +36,7 @@ class QueryResponse(BaseModel):
 config = {
     "llm_model": "vllm",
     "embedding_model": "bge",
-    "use_reranking": False,
+    "use_reranking": True,
     "rerank_method": "cross_encoder"
 }
 components = {}
@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument("--embedding-model", type=str, default="bge",
                         choices=["nomic", "e5", "all-mpnet", "bge"],
                         help="Modello di embedding da utilizzare")
-    parser.add_argument("--reranking", action="store_true", default=False,
+    parser.add_argument("--reranking", action="store_true", default=True,
                         help="Attiva il re-ranking dei documenti")
     parser.add_argument("--rerank-method", type=str, default="cross_encoder",
                         choices=["cross_encoder", "llm"],
