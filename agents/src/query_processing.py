@@ -9,40 +9,55 @@ def build_context(docs: list) -> str:
         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
     return context
 
+def should_rewrite(question: str) -> bool:
+    q = question.strip().lower()
+
+    followup_markers = [
+        "questo", "questa", "quello", "quella", "questi", "queste", "quelli", "quelle",
+        "lui", "lei", "esso", "essa",
+        "e invece", "e quello", "e questa", "ok e", "allora e", "per quello", "riguardo a"
+    ]
+
+    domain_markers = [
+        "cfu", "crediti",
+        "date", "appelli", "esame", "esami", "quando",
+        "orario", "lezione", "aula",
+        "prof", "docente",
+        "calendario lauree", "laurea", "sessione"
+    ]
+
+    is_followup = any(m in q for m in followup_markers) or len(q) <= 45
+
+    in_domain = any(m in q for m in domain_markers)
+
+    return is_followup and in_domain
+
+
 def rewrite_query(llm, question: str, memory_context: str) -> str:
     if not memory_context or not memory_context.strip():
         return question
 
-    q = question.strip().lower()
-
-    # euristica semplice: riscrivi solo se sembra un follow-up / domanda corta o generica
-    ambiguous = (
-        len(q) <= 45 or
-        any(x in q for x in [
-            "quanti cfu", "cfu", "date", "appelli", "esame", "quando", "che aula", "chi è il prof", "prof", "e quello", "e invece", "quello", "questo"
-        ])
-    )
-
-    if not ambiguous:
+    if not should_rewrite(question):
         return question
 
-    prompt = QUERY_REWRITE_PROMPT.format(memory=memory_context, question=question)
+    prompt = QUERY_REWRITE_PROMPT.format(
+        memory=memory_context,
+        question=question
+    )
+
     out = llm.invoke(prompt)
     if hasattr(out, "content"):
         out = out.content
 
     rewritten = str(out).strip().strip('"').strip("'")
 
-    # fallback di sicurezza
     if not rewritten or len(rewritten) < 3:
         return question
 
-    # evita query troppo lunghe (non vogliamo "tutta la chat" nel retrieval)
-    if len(rewritten) > 250:
-        rewritten = rewritten[:250]
+    if rewritten.lower() == question.strip().lower():
+        return question
 
     return rewritten
-
 
 
 def get_llm_answer(context: str, query: str, llm, prompt_template, memory_context: str = "") -> str:
