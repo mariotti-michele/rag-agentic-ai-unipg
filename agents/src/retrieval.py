@@ -132,7 +132,7 @@ def collection_filter(classification_mode: str):
         return None
 
 
-def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
+def dense_search(query: str, embedding_model, embedding_model_name: str, vectorstores, top_k: int = 5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder", reranker=None):
     if embedding_model_name == "e5" or embedding_model_name == "bge":
         query = "query: " + query
 
@@ -177,7 +177,7 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
         if rerank_method == "llm" and llm:
             hits = rerank_documents(query, hits_to_rerank, llm, top_k)
         elif rerank_method == "cross_encoder":
-            hits = rerank_with_cross_encoder(query, hits_to_rerank, top_k=top_k)
+            hits = rerank_with_cross_encoder(query, hits_to_rerank, reranker=reranker, top_k=top_k)
         else:
             hits = hits[:top_k]
     else:
@@ -200,7 +200,7 @@ def reciprocal_rank_fusion_docs(dense_docs, sparse_docs, alpha=60, k=5):
     return [merged[rid] for rid in ranked_ids if rid in merged]
 
 
-def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, alpha=60, k=5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder"):
+def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, alpha=60, k=5, classification_mode="rag", use_reranking=False, llm=None, rerank_method="cross_encoder", reranker=None):
     dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores, top_k=k*2, classification_mode=classification_mode)
     sparse_docs = bm25_search(corpus, query, bm25, nlp, k=k*2, classification_mode=classification_mode)
 
@@ -217,7 +217,7 @@ def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, co
         if rerank_method == "llm" and llm:
             merged_docs = rerank_documents(query, merged_docs, llm, k)
         elif rerank_method == "cross_encoder":
-            merged_docs = rerank_with_cross_encoder(query, merged_docs, top_k=k)
+            merged_docs = rerank_with_cross_encoder(query, merged_docs, reranker=reranker, top_k=k)
         else:
             merged_docs = merged_docs[:k]
     

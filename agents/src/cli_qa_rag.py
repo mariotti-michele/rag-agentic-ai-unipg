@@ -30,7 +30,7 @@ if __name__ == "__main__":
     use_reranking = args.reranking
     rerank_method = args.rerank_method
 
-    embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)
+    embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client, reranker = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)
     corpus, corpus_texts = build_corpus(qdrant_client, COLLECTION_NAMES)
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
@@ -38,6 +38,10 @@ if __name__ == "__main__":
     print("Sistema di Q&A avviato.")
     if use_reranking:
         print(f"Re-ranking attivo: metodo {rerank_method}")
+        if rerank_method == "cross_encoder" and reranker:
+            print("[INFO] Reranker BGE API disponibile")
+        elif rerank_method == "cross_encoder" and not reranker:
+            print("[WARN] Reranker BGE API non disponibile, verranno usati scores originali")
 
     if not test_connection(vectorstores, embedding_model):
         print("Impossibile connettersi al vector store. Verificare che la collezione esista.")
@@ -51,7 +55,7 @@ if __name__ == "__main__":
             if q.lower() in ["exit", "quit"]:
                 break
             if q.strip():
-                answer, contexts, mode = generate_answer(llm, q, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, use_reranking, rerank_method)
+                answer, contexts, mode = generate_answer(llm, q, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, use_reranking, rerank_method, reranker)
                 if(mode == "semplice"):
                     print(f"\nRisposta semplice:\n")
                 else:

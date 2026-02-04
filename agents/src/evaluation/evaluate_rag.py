@@ -319,14 +319,14 @@ if __name__ == "__main__":
     use_reranking = args.reranking
     rerank_method = args.rerank_method
 
-    embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)
+    embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client, reranker = init_components(embedding_model_name=embedding_model_name, llm_model_name=llm_model_name)
     corpus, corpus_texts = build_corpus(qdrant_client, COLLECTION_NAMES)
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
     
-    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q), use_reranking, rerank_method)
+    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q), use_reranking, rerank_method, reranker)
     sparse_func = lambda q: answer_query_bm25(q, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q))
-    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q), use_reranking, rerank_method)
+    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q), use_reranking, rerank_method, reranker)
     
     if search_technique == "dense":
         evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version, use_reranking, rerank_method)

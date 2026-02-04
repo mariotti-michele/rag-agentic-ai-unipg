@@ -70,7 +70,7 @@ async def startup_event():
         print(f"Embedding Model: {config['embedding_model']}")
         print(f"Reranking: {config['use_reranking']} (metodo: {config['rerank_method']})")
         
-        embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(
+        embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client, reranker = init_components(
             embedding_model_name=config["embedding_model"],
             llm_model_name=config["llm_model"]
         )
@@ -90,6 +90,13 @@ async def startup_event():
         components["corpus"] = corpus
         components["bm25"] = bm25
         components["spacy_tokenizer"] = spacy_tokenizer
+        components["reranker"] = reranker
+        
+        if config["use_reranking"] and config["rerank_method"] == "cross_encoder":
+            if reranker:
+                print("[INFO] Reranker BGE API disponibile")
+            else:
+                print("[WARN] Reranker BGE API non disponibile")
         
         print("Sistema RAG inizializzato con successo")
         
@@ -153,6 +160,7 @@ async def process_query(request: QueryRequest):
             nlp=components["spacy_tokenizer"],
             use_reranking=config["use_reranking"],
             rerank_method=config["rerank_method"],
+            reranker=components.get("reranker"),
             memory_context=memory_context
         )
 

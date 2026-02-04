@@ -94,7 +94,9 @@ def load_env_config():
     VLLM_API_KEY = os.getenv("VLLM_API_KEY", "")
     BGE_API_URL = os.getenv("BGE_EMBED_MODEL_API_URL", "")
     BGE_API_KEY = os.getenv("BGE_EMBED_MODEL_API_KEY", "")
-    return OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY, BGE_API_URL, BGE_API_KEY
+    RERANKER_API_URL = os.getenv("RERANKER_API_URL", "")
+    RERANKER_API_KEY = os.getenv("RERANKER_API_KEY", "")
+    return OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY, BGE_API_URL, BGE_API_KEY, RERANKER_API_URL, RERANKER_API_KEY
 
 
 class BGEEmbeddings(Embeddings):
@@ -175,6 +177,76 @@ class BGEEmbeddings(Embeddings):
 
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]
+
+
+class BGEReranker:
+    api_url: str
+    api_key: str
+    batch_size: int = 16
+    max_retries: int = 5
+    initial_retry_delay: int = 3
+
+    def __init__(self, api_url: str, api_key: str, batch_size: int = 16):
+        self.api_url = api_url
+        self.api_key = api_key
+        self.batch_size = batch_size
+
+    def _endpoint(self) -> str:
+        u = self.api_url.strip().rstrip("/")
+        if u.endswith("/reranker/score"):
+            return u
+        if u.endswith("/reranker"):
+            return u + "/score"
+        if u.endswith("/llm"):
+            return u.rstrip("/llm") + "/reranker/score"
+        return u + "/reranker/score"
+
+    def rerank(self, query: str, docs: List[str]) -> List[float]:
+        endpoint = self._endpoint()
+        
+        # Retry logic
+        for attempt in range(self.max_retries):
+            try:
+                response = requests.post(
+                    endpoint,
+                    headers={
+                        "X-API-Key": self.api_key,
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "query": query,
+                        "docs": docs,
+                        "batch_size": self.batch_size
+                    },
+                    verify=False,
+                    timeout=200,
+                )
+                response.raise_for_status()
+                data = response.json()
+                
+                # L'API restituisce {"scores": [...]}
+                if "scores" in data:
+                    return data["scores"]
+                else:
+                    raise ValueError(f"Risposta API inattesa: {data}")
+                    
+            except requests.exceptions.HTTPError as e:
+                if attempt < self.max_retries - 1:
+                    delay = self.initial_retry_delay * (2 ** attempt)
+                    print(f"[WARN] Errore HTTP {e.response.status_code}, retry {attempt+1}/{self.max_retries} dopo {delay}s")
+                    time.sleep(delay)
+                else:
+                    raise
+                        
+            except requests.exceptions.RequestException as e:
+                if attempt < self.max_retries - 1:
+                    delay = self.initial_retry_delay * (2 ** attempt)
+                    print(f"[WARN] Errore richiesta reranker: {e}, retry {attempt+1}/{self.max_retries} dopo {delay}s")
+                    time.sleep(delay)
+                else:
+                    raise
+        
+        raise RuntimeError("Reranking fallito dopo tutti i tentativi")
 
 
 def build_embedding_model(ollama_base_url, model_name="bge", bge_api_url="", bge_api_key=""): 
@@ -288,11 +360,16 @@ def build_llm(model_name: str, ollama_base_url: str, creds, vllm_api_url, vllm_a
 
 
 def init_components(embedding_model_name: str, llm_model_name: str):
-    OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY, BGE_API_URL, BGE_API_KEY = load_env_config()
+    OLLAMA_BASE_URL, QDRANT_URL, COLLECTION_NAMES, VLLM_API_URL, VLLM_API_KEY, BGE_API_URL, BGE_API_KEY, RERANKER_API_URL, RERANKER_API_KEY = load_env_config()
     creds = load_google_creds()
     embedding_model = build_embedding_model(OLLAMA_BASE_URL, model_name=embedding_model_name, bge_api_url=BGE_API_URL, bge_api_key=BGE_API_KEY)
     qdrant_client = build_qdrant_client(QDRANT_URL)
     vectorstores = build_vectorstores(qdrant_client, embedding_model, QDRANT_URL, COLLECTION_NAMES)
     llm = build_llm(llm_model_name, OLLAMA_BASE_URL, creds, VLLM_API_URL, VLLM_API_KEY)
+    
+    # Inizializza il reranker se le credenziali sono disponibili
+    reranker = None
+    if RERANKER_API_URL and RERANKER_API_KEY:
+        reranker = BGEReranker(api_url=RERANKER_API_URL, api_key=RERANKER_API_KEY)
 
-    return embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client
+    return embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client, reranker

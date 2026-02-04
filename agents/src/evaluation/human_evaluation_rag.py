@@ -100,7 +100,7 @@ if __name__ == "__main__":
     use_reranking = args.reranking
     rerank_method = args.rerank_method
 
-    embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client = init_components(
+    embedding_model, vectorstores, llm, COLLECTION_NAMES, qdrant_client, reranker = init_components(
         embedding_model_name=embedding_model_name,
         llm_model_name=llm_model_name
     )

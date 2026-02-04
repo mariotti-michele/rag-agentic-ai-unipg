@@ -1,7 +1,6 @@
 from typing import List, Dict
 import numpy as np
 from prompts import RERANK_PROMPT
-from sentence_transformers import CrossEncoder
 
 
 def rerank_documents(query: str, docs: List[Dict], llm, top_k: int = 5) -> List[Dict]:
@@ -44,14 +43,17 @@ def rerank_documents(query: str, docs: List[Dict], llm, top_k: int = 5) -> List[
         return docs[:top_k]
 
 
-def rerank_with_cross_encoder(query: str, docs: List[Dict], model_name: str = "BAAI/bge-reranker-v2-m3", top_k: int = 5) -> List[Dict]:
+def rerank_with_cross_encoder(query: str, docs: List[Dict], reranker=None, top_k: int = 5) -> List[Dict]:
     try:
         if not docs:
             return []
         
-        model = CrossEncoder(model_name)
-        pairs = [[query, doc["text"]] for doc in docs]
-        scores = model.predict(pairs)
+        if reranker is None:
+            print("[WARN] Reranker non disponibile, uso ordine originale")
+            return docs[:top_k]
+        
+        doc_texts = [doc["text"] for doc in docs]
+        scores = reranker.rerank(query, doc_texts)
         
         reranked_docs = []
         for i, doc in enumerate(docs):
@@ -64,9 +66,6 @@ def rerank_with_cross_encoder(query: str, docs: List[Dict], model_name: str = "B
         print(f"[INFO] Cross-encoder re-ranking completato: {len(reranked_docs)} documenti")
         return reranked_docs[:top_k]
         
-    except ImportError:
-        print("[WARN] sentence-transformers non installato, uso ordine originale")
-        return docs[:top_k]
     except Exception as e:
-        print(f"[WARN] Errore nel cross-encoder re-ranking: {e}")
+        print(f"[WARN] Errore nel re-ranking API, uso ordine originale: {e}")
         return docs[:top_k]
