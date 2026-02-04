@@ -129,7 +129,7 @@ async def health_check():
 
 @app.post("/query", response_model=QueryResponse)
 async def process_query(request: QueryRequest):
-    print(f"[DEBUG] Query ricevuta: {request.question[:50]}...")
+    print(f"[DEBUG] Query ricevuta: {request.question[:50]}")
     print(f"[DEBUG] Search: {request.search_technique}, Reranking: {config['use_reranking']} ({config['rerank_method']})")
     
     if not components:
