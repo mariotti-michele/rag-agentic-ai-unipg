@@ -23,6 +23,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class Reference(BaseModel):
+    url: str
+    title: Optional[str] = None
+    section: Optional[str] = None
+
 class QueryRequest(BaseModel):
     question: str
     search_technique: Literal["dense", "sparse", "hybrid"] = "dense"
@@ -30,9 +35,11 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
-    contexts: List[str]
+    references: List[Reference] = []
     mode: str
     search_technique: str
+
+
 
 config = {
     "llm_model": "vllm",
