@@ -5,9 +5,9 @@ import argparse
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid, classify_query
 from initializer import init_components
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
+from rag_graph import build_rag_graph
 
 
 def parse_args():
@@ -30,7 +30,7 @@ def parse_args():
     return args
 
 
-def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, corpus, bm25, nlp, search_technique, use_reranking=False, rerank_method="cross_encoder"):
+def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, corpus, bm25, nlp, reranker, search_technique, use_reranking=False, rerank_method="cross_encoder"):
     print("="*60)
     print("CONFIGURAZIONE VALUTAZIONE MANUALE")
     print("="*60)
@@ -39,6 +39,9 @@ def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, co
     if use_reranking:
         print(f"Metodo re-ranking: {rerank_method}")
     print("="*60 + "\n")
+    
+    # Crea il grafo RAG
+    rag_graph = build_rag_graph()
     
     VALIDATION_DIR = Path(__file__).resolve().parent / "human_validation_set"
     print(f"Caricamento dataset da: {VALIDATION_DIR}")
@@ -64,23 +67,46 @@ def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, co
         print(f"[{i}] Domanda: {q}\n")
 
         try:
-            if search_technique == "dense":
-                response, retrieved_ctx = answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q), use_reranking, rerank_method)
-            elif search_technique == "sparse":
-                response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm, classify_query(llm, q))
-            elif search_technique == "hybrid":
-                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, classify_query(llm, q), use_reranking, rerank_method)
+            if search_technique == "all":
+                # Esegui tutte e tre le tecniche
+                for technique in ["dense", "sparse", "hybrid"]:
+                    result = rag_graph.invoke({
+                        "question": q,
+                        "memory_context": "",
+                        "search_technique": technique,
+                        "llm": llm,
+                        "embedding_model": embedding_model,
+                        "embedding_model_name": embedding_model_name,
+                        "vectorstores": vectorstores,
+                        "corpus": corpus,
+                        "bm25": bm25,
+                        "nlp": nlp,
+                        "use_reranking": use_reranking,
+                        "rerank_method": rerank_method,
+                        "reranker": reranker,
+                    })
+                    response = result["answer"]
+                    retrieved_ctx = result.get("contexts", [])
+                    print(f"Risposta ({technique}):\n{response}\n")
             else:
-                response, retrieved_ctx = answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q), use_reranking, rerank_method)
-                print(f"Risposta (dense):\n{response}\n")
-
-                response, retrieved_ctx = answer_query_bm25(q, corpus, bm25, nlp, llm, classify_query(llm, q))
-                print(f"Risposta (sparse):\n{response}\n")
-
-                response, retrieved_ctx = answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, classify_query(llm, q), use_reranking, rerank_method)
-                print(f"Risposta (hybrid):\n{response}\n")
-
-            if search_technique != "all":
+                # Esegui solo la tecnica specificata
+                result = rag_graph.invoke({
+                    "question": q,
+                    "memory_context": "",
+                    "search_technique": search_technique,
+                    "llm": llm,
+                    "embedding_model": embedding_model,
+                    "embedding_model_name": embedding_model_name,
+                    "vectorstores": vectorstores,
+                    "corpus": corpus,
+                    "bm25": bm25,
+                    "nlp": nlp,
+                    "use_reranking": use_reranking,
+                    "rerank_method": rerank_method,
+                    "reranker": reranker,
+                })
+                response = result["answer"]
+                retrieved_ctx = result.get("contexts", [])
                 print(f"Risposta ({search_technique}):\n{response}\n")
 
             print("Contesti recuperati:")
@@ -88,6 +114,8 @@ def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, co
                 print("-", c[:200], "...")
         except Exception as e:
             print(f"Errore durante la domanda '{q}': {e}")
+            import traceback
+            traceback.print_exc()
             print("Risposta generata: [ERRORE]\n")
 
     print("-"*50)
@@ -108,4 +136,4 @@ if __name__ == "__main__":
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
 
-    run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, corpus, bm25, spacy_tokenizer, search_technique, use_reranking, rerank_method)
+    run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, corpus, bm25, spacy_tokenizer, reranker, search_technique, use_reranking, rerank_method)

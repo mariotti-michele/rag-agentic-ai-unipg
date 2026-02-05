@@ -63,19 +63,6 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     return answer, [d["text"] for d in docs]
 
 
-def answer_query_dense(query: str, embedding_model, embedding_model_name: str, vectorstores, llm, classification_mode, use_reranking=False, rerank_method="cross_encoder", reranker=None, memory_context: str = ""):
-    dense_docs = dense_search(query, embedding_model, embedding_model_name, vectorstores, classification_mode=classification_mode, use_reranking=use_reranking, llm=llm, rerank_method=rerank_method, reranker=reranker)
-    return process_query(dense_docs, query, llm, classification_mode, memory_context)
-
-def answer_query_bm25(query: str, corpus, bm25, nlp, llm, classification_mode, memory_context: str = ""):
-    sparse_docs = bm25_search(corpus, query, bm25, nlp, classification_mode=classification_mode)
-    return process_query(sparse_docs, query, llm, classification_mode, memory_context)
-
-def answer_query_hybrid(query: str, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, classification_mode, use_reranking=False, rerank_method="cross_encoder", reranker=None, memory_context: str = ""):
-    merged_docs = hybrid_search(query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, classification_mode=classification_mode, use_reranking=use_reranking, llm=llm, rerank_method=rerank_method, reranker=reranker)
-    return process_query(merged_docs, query, llm, classification_mode, memory_context)
-
-
 def classify_query(llm, query: str) -> str:
     try:
         classification = llm.invoke(CLASSIFIER_PROMPT.format(question=query))
@@ -103,28 +90,3 @@ def classify_query(llm, query: str) -> str:
     except Exception as e:
         print(f"[WARN] Errore classificazione query: {e}")
         return "rag"
-
-
-def generate_answer(llm, query: str, search_technique, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, use_reranking=False, rerank_method="cross_encoder", reranker=None, memory_context: str = ""):
-    mode = classify_query(llm, query)
-
-    rewritten_query = rewrite_query(llm, query, memory_context)
-    print(f"[DEBUG] raw: {query}")
-    print(f"[DEBUG] rewritten: {rewritten_query}")
-
-    if mode == "semplice":
-        prompt = simple_prompt_template.format(question=query)
-        answer = llm.invoke(prompt)
-        if hasattr(answer, "content"):
-            answer = answer.content
-        return answer, [], mode
-    else:
-        answer, contexts = None, []
-        if search_technique == "dense":
-            answer, contexts = answer_query_dense(rewritten_query, embedding_model, embedding_model_name, vectorstores, llm, mode, use_reranking, rerank_method, reranker, memory_context)
-        elif search_technique == "sparse":
-            answer, contexts = answer_query_bm25(rewritten_query, corpus, bm25, nlp, llm, mode, memory_context)
-        elif search_technique == "hybrid":
-            answer, contexts = answer_query_hybrid(rewritten_query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode, use_reranking, rerank_method, reranker, memory_context)
-    return answer, contexts, mode
-

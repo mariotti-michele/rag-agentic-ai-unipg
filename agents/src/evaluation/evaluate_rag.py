@@ -29,7 +29,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from initializer import init_components
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
-from query_processing import answer_query_dense, answer_query_bm25, answer_query_hybrid, classify_query
+from rag_graph import build_rag_graph
 
 import argparse
 
@@ -101,7 +101,7 @@ def retry_with_backoff(func: Callable, max_retries: int = 3, initial_delay: floa
     raise last_exception
 
 
-def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, embedding_model_name: str, chunking: str, search: str, version: str, use_reranking: bool = False, rerank_method: str = "cross_encoder"):
+def evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, nlp, reranker, llm, embedding_model_name: str, llm_model_name: str, chunking: str, search: str, version: str, use_reranking: bool = False, rerank_method: str = "cross_encoder"):
     rerank_suffix = f"_rerank_{rerank_method}" if use_reranking else ""
     
     print("\n" + "="*70)
@@ -147,12 +147,27 @@ def evaluate_variant(answer_func, llm, embedding_model, llm_model_name: str, emb
     for i, q in enumerate(questions, start=1):
         print(f" -> [{i}/{len(questions)}] {q}")
         try:
-            # Usa retry_with_backoff per la generazione delle risposte
-            def answer_with_retry():
-                return answer_func(q)
+            # Usa il grafo per generare la risposta
+            def generate_with_graph():
+                result = rag_graph.invoke({
+                    "question": q,
+                    "memory_context": "",
+                    "search_technique": search,
+                    "llm": llm,
+                    "embedding_model": embedding_model,
+                    "embedding_model_name": embedding_model_name,
+                    "vectorstores": vectorstores,
+                    "corpus": corpus,
+                    "bm25": bm25,
+                    "nlp": nlp,
+                    "use_reranking": use_reranking,
+                    "rerank_method": rerank_method,
+                    "reranker": reranker,
+                })
+                return result["answer"], result.get("contexts", [])
             
             response, ctxs = retry_with_backoff(
-                answer_with_retry,
+                generate_with_graph,
                 max_retries=3,
                 initial_delay=2.0,
                 backoff_factor=2.0
@@ -324,17 +339,16 @@ if __name__ == "__main__":
     spacy_tokenizer = build_spacy_tokenizer()
     bm25 = build_bm25(corpus_texts, spacy_tokenizer)
     
-    dense_func = lambda q: answer_query_dense(q, embedding_model, embedding_model_name, vectorstores, llm, classify_query(llm, q), use_reranking, rerank_method, reranker)
-    sparse_func = lambda q: answer_query_bm25(q, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q))
-    hybrid_func = lambda q: answer_query_hybrid(q, embedding_model, embedding_model_name, vectorstores, corpus, bm25, spacy_tokenizer, llm, classify_query(llm, q), use_reranking, rerank_method, reranker)
+    # Crea il grafo RAG
+    rag_graph = build_rag_graph()
     
     if search_technique == "dense":
-        evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version, use_reranking, rerank_method)
+        evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer, reranker, llm, embedding_model_name, llm_model_name, chunking, "dense", version, use_reranking, rerank_method)
     elif search_technique == "sparse":
-        evaluate_variant(sparse_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "sparse", version, use_reranking, rerank_method)
+        evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer, reranker, llm, embedding_model_name, llm_model_name, chunking, "sparse", version, use_reranking, rerank_method)
     elif search_technique == "hybrid":
-        evaluate_variant(hybrid_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "hybrid", version, use_reranking, rerank_method)
+        evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer, reranker, llm, embedding_model_name, llm_model_name, chunking, "hybrid", version, use_reranking, rerank_method)
     else:
-        evaluate_variant(dense_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "dense", version, use_reranking, rerank_method)
-        evaluate_variant(sparse_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "sparse", version, use_reranking, rerank_method)
-        evaluate_variant(hybrid_func, llm, embedding_model, llm_model_name, embedding_model_name, chunking, "hybrid", version, use_reranking, rerank_method)
+        evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer, reranker, llm, embedding_model_name, llm_model_name, chunking, "dense", version, use_reranking, rerank_method)
+        evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer, reranker, llm, embedding_model_name, llm_model_name, chunking, "sparse", version, use_reranking, rerank_method)
+        evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, spacy_tokenizer, reranker, llm, embedding_model_name, llm_model_name, chunking, "hybrid", version, use_reranking, rerank_method)
