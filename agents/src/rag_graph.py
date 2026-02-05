@@ -67,6 +67,7 @@ def retrieve_dense_node(state: RAGState) -> RAGState:
         use_reranking=state.get("use_reranking", False),
         llm=state["llm"],
         rerank_method=state.get("rerank_method", "cross_encoder"),
+        reranker=state.get("reranker", None),
     )
     return state
 
@@ -93,6 +94,7 @@ def retrieve_hybrid_node(state: RAGState) -> RAGState:
         use_reranking=state.get("use_reranking", False),
         llm=state["llm"],
         rerank_method=state.get("rerank_method", "cross_encoder"),
+        reranker=state.get("reranker", None),
     )
     return state
 
