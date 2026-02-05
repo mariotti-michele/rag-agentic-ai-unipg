@@ -163,14 +163,14 @@ async def process_query(request: QueryRequest):
 
 
         answer = result["answer"]
-        contexts = result.get("contexts", [])
+        references = result.get("references", [])
         mode = result.get("mode", "rag")
 
         mem.add_turn(request.question, answer)
         
         return QueryResponse(
             answer=answer,
-            contexts=contexts,
+            references=references,
             mode=mode,
             search_technique=request.search_technique
         )

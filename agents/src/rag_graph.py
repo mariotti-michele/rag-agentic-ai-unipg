@@ -27,7 +27,7 @@ class RAGState(TypedDict, total=False):
     rewritten_query: str
     docs: List[Dict[str, Any]]
     answer: str
-    contexts: List[str]
+    references: List[Dict[str, Any]]
 
 def classify_and_rewrite_node(state: RAGState) -> RAGState:
     q = state["question"]
@@ -54,7 +54,7 @@ def simple_answer_node(state: RAGState) -> RAGState:
     if hasattr(ans, "content"):
         ans = ans.content
     state["answer"] = ans
-    state["contexts"] = []
+    state["references"] = []
     return state
 
 def retrieve_dense_node(state: RAGState) -> RAGState:
@@ -97,7 +97,7 @@ def retrieve_hybrid_node(state: RAGState) -> RAGState:
     return state
 
 def answer_node(state: RAGState) -> RAGState:
-    answer, contexts = process_query(
+    answer, references = process_query(
         docs=state.get("docs", []),
         query=state["rewritten_query"],
         llm=state["llm"],
@@ -105,7 +105,7 @@ def answer_node(state: RAGState) -> RAGState:
         memory_context=state.get("memory_context", ""),
     )
     state["answer"] = answer
-    state["contexts"] = contexts
+    state["references"] = references
     return state
 
 def build_rag_graph():

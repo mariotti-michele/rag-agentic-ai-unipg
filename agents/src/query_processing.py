@@ -9,6 +9,28 @@ def build_context(docs: list) -> str:
         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
     return context
 
+def build_references(docs: list) -> list[dict]:
+    refs = {}
+    for d in docs:
+        url = d.get("source_url")
+        if not url:
+            continue
+
+        refs[url] = {
+            "title": d.get("title", "Documento"),
+            "section": d.get("section_path", "")
+        }
+
+    return [
+        {
+            "url": url,
+            "title": meta["title"],
+            "section": meta["section"]
+        }
+        for url, meta in refs.items()
+    ]
+
+
 def should_rewrite(question: str) -> bool:
     q = question.strip().lower()
 
@@ -86,7 +108,7 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     elif classification_mode == "calendario lauree":
         prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template, memory_context)
-    return answer, [d["text"] for d in docs]
+    return answer, build_references(docs)
 
 
 def answer_query_dense(query: str, embedding_model, embedding_model_name: str, vectorstores, llm, classification_mode, use_reranking=False, rerank_method="cross_encoder", memory_context: str = ""):
@@ -145,14 +167,14 @@ def generate_answer(llm, query: str, search_technique, embedding_model, embeddin
             answer = answer.content
         return answer, [], mode
     else:
-        answer, contexts = None, []
+        answer, references = None, []
         if search_technique == "dense":
-            answer, contexts = answer_query_dense(rewritten_query, embedding_model, embedding_model_name, vectorstores, llm, mode, use_reranking, rerank_method, memory_context)
+            answer, references = answer_query_dense(rewritten_query, embedding_model, embedding_model_name, vectorstores, llm, mode, use_reranking, rerank_method, memory_context)
         elif search_technique == "sparse":
-            answer, contexts = answer_query_bm25(rewritten_query, corpus, bm25, nlp, llm, mode, memory_context)
+            answer, references = answer_query_bm25(rewritten_query, corpus, bm25, nlp, llm, mode, memory_context)
         elif search_technique == "hybrid":
-            answer, contexts = answer_query_hybrid(rewritten_query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode, use_reranking, rerank_method, memory_context)
-    return answer, contexts, mode
+            answer, references = answer_query_hybrid(rewritten_query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode, use_reranking, rerank_method, memory_context)
+    return answer, references, mode
 
 
 _rag_graph = None
@@ -167,4 +189,4 @@ def _get_rag_graph():
 def generate_answer_via_graph(state: dict):
     graph = _get_rag_graph()
     result = graph.invoke(state)
-    return result["answer"], result.get("contexts", []), result.get("mode", "rag")
+    return result["answer"], result.get("references", []), result.get("mode", "rag")
