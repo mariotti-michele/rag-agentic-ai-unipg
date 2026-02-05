@@ -246,7 +246,7 @@ GRADUATION_CALENDAR_PROMPT = PromptTemplate(
 )
 
 
-QUERY_REWRITE_PROMPT = """Sei un assistente che RISCRIVE la domanda dell'utente per renderla autonoma.
+query_rewrite_prompt_template = """Sei un assistente che RISCRIVE la domanda dell'utente per renderla autonoma.
 Usa la conversazione precedente SOLO per aggiungere il riferimento mancante
 (corso / insegnamento / argomento / entità) quando la domanda è un follow-up ambiguo.
 
@@ -288,6 +288,10 @@ Domanda utente:
 
 Domanda riscritta:"""
 
+QUERY_REWRITE_PROMPT = PromptTemplate(
+    input_variables=["memory", "question"],
+    template=query_rewrite_prompt_template,
+)
 
 
 RERANK_PROMPT = """Dato questo contesto e la domanda dell'utente, assegna un punteggio di rilevanza da 0 a 10 a ciascun documento.

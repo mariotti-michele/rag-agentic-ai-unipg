@@ -212,7 +212,6 @@ def hybrid_search(query, embedding_model, embedding_model_name, vectorstores, co
     
     # Applica re-ranking sui documenti fusi
     if use_reranking and len(merged_docs) > k:
-        from advanced_techniques import rerank_documents, rerank_with_cross_encoder
         
         if rerank_method == "llm" and llm:
             merged_docs = rerank_documents(query, merged_docs, llm, k)

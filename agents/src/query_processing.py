@@ -1,4 +1,4 @@
-from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template, QUERY_REWRITE_PROMPT
+from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, simple_prompt_template, QUERY_REWRITE_PROMPT
 from retrieval import bm25_search, dense_search, hybrid_search
 
 
@@ -128,17 +128,3 @@ def generate_answer(llm, query: str, search_technique, embedding_model, embeddin
             answer, contexts = answer_query_hybrid(rewritten_query, embedding_model, embedding_model_name, vectorstores, corpus, bm25, nlp, llm, mode, use_reranking, rerank_method, reranker, memory_context)
     return answer, contexts, mode
 
-
-_rag_graph = None
-
-def _get_rag_graph():
-    global _rag_graph
-    if _rag_graph is None:
-        from rag_graph import build_rag_graph
-        _rag_graph = build_rag_graph()
-    return _rag_graph
-
-def generate_answer_via_graph(state: dict):
-    graph = _get_rag_graph()
-    result = graph.invoke(state)
-    return result["answer"], result.get("contexts", []), result.get("mode", "rag")

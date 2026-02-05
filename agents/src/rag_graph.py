@@ -10,7 +10,16 @@ class RAGState(TypedDict, total=False):
     question: str
     session_id: Optional[str]
     memory_context: str
+    rewritten_query: str
+    mode: str
+
     search_technique: str
+    use_reranking: bool
+    rerank_method: str
+    docs: List[Dict[str, Any]]
+    contexts: List[str]
+    
+    answer: str
 
     llm: Any
     embedding_model: Any
@@ -19,15 +28,8 @@ class RAGState(TypedDict, total=False):
     corpus: Any
     bm25: Any
     nlp: Any
+    reranker: Any
 
-    use_reranking: bool
-    rerank_method: str
-
-    mode: str
-    rewritten_query: str
-    docs: List[Dict[str, Any]]
-    answer: str
-    contexts: List[str]
 
 def classify_and_rewrite_node(state: RAGState) -> RAGState:
     q = state["question"]
