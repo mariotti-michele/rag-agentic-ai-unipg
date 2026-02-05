@@ -1,6 +1,4 @@
-from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, simple_prompt_template, QUERY_REWRITE_PROMPT
-from retrieval import bm25_search, dense_search, hybrid_search
-
+from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, QUERY_REWRITE_PROMPT
 
 def build_context(docs: list) -> str:
     context = ""

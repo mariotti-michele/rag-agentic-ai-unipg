@@ -8,7 +8,6 @@ import signal
 import sys
 
 from initializer import init_components, test_connection
-from query_processing import generate_answer
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
 from conversation_memory import ConversationMemory
 from rag_graph import build_rag_graph
