@@ -11,6 +11,7 @@ from initializer import init_components, test_connection
 from query_processing import generate_answer
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
 from conversation_memory import ConversationMemory
+from rag_graph import build_rag_graph
 
 app = FastAPI(title="RAG Q&A API", version="1.0.0")
 
@@ -40,6 +41,8 @@ config = {
     "rerank_method": "cross_encoder"
 }
 components = {}
+
+rag_graph = build_rag_graph()
 
 SESSION_MEMORIES: Dict[str, ConversationMemory] = {}
 
@@ -148,21 +151,28 @@ async def process_query(request: QueryRequest):
 
         memory_context = mem.get_context()
 
-        answer, contexts, mode = generate_answer(
-            llm=components["llm"],
-            query=request.question,
-            search_technique=request.search_technique,
-            embedding_model=components["embedding_model"],
-            embedding_model_name=config["embedding_model"],
-            vectorstores=components["vectorstores"],
-            corpus=components["corpus"],
-            bm25=components["bm25"],
-            nlp=components["spacy_tokenizer"],
-            use_reranking=config["use_reranking"],
-            rerank_method=config["rerank_method"],
-            reranker=components.get("reranker"),
-            memory_context=memory_context
-        )
+
+        result = rag_graph.invoke({
+            "question": request.question,
+            "session_id": sid,
+            "memory_context": memory_context,
+            "search_technique": request.search_technique,
+            "llm": components["llm"],
+            "embedding_model": components["embedding_model"],
+            "embedding_model_name": config["embedding_model"],
+            "vectorstores": components["vectorstores"],
+            "corpus": components["corpus"],
+            "bm25": components["bm25"],
+            "nlp": components["spacy_tokenizer"],
+            "use_reranking": config["use_reranking"],
+            "rerank_method": config["rerank_method"],
+            "reranker": components.get("reranker"),
+        })
+
+
+        answer = result["answer"]
+        contexts = result.get("contexts", [])
+        mode = result.get("mode", "rag")
 
         mem.add_turn(request.question, answer)
         
