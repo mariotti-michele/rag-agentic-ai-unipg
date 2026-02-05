@@ -1,6 +1,9 @@
 from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, TIMETABLE_PROMPT, simple_prompt_template, QUERY_REWRITE_PROMPT
 from retrieval import bm25_search, dense_search, hybrid_search
 
+import os
+from urllib.parse import urlparse, unquote
+
 
 def build_context(docs: list) -> str:
     context = ""
@@ -9,6 +12,14 @@ def build_context(docs: list) -> str:
         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
     return context
 
+def _title_from_url(url: str) -> str:
+    try:
+        path = unquote(urlparse(url).path)
+        name = os.path.basename(path)
+        return name or url
+    except Exception:
+        return url
+    
 def build_references(docs: list) -> list[dict]:
     refs = {}
     for d in docs:
@@ -16,19 +27,12 @@ def build_references(docs: list) -> list[dict]:
         if not url:
             continue
 
-        refs[url] = {
-            "title": d.get("title", "Documento"),
-            "section": d.get("section_path", "")
-        }
+        title = d.get("title") or _title_from_url(url)
+        section = d.get("section_path", "")
+        refs[url] = {"title": title, "section": section}
 
-    return [
-        {
-            "url": url,
-            "title": meta["title"],
-            "section": meta["section"]
-        }
-        for url, meta in refs.items()
-    ]
+    return [{"url": url, "title": meta["title"], "section": meta["section"]} for url, meta in refs.items()]
+
 
 
 def should_rewrite(question: str) -> bool:
