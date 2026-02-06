@@ -3,8 +3,8 @@ from typing import TypedDict, List, Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 
 from query_processing import classify_query, rewrite_query, process_query
-from retrieval import dense_search, bm25_search, hybrid_search
-from prompts import simple_prompt_template
+from retrieval import dense_search, bm25_search, hybrid_search, fallback_retrieve_with_expansion
+from prompts import simple_prompt_template, EVAL_ANSWER_PROMPT
 
 class RAGState(TypedDict, total=False):
     question: str
@@ -29,6 +29,13 @@ class RAGState(TypedDict, total=False):
     bm25: Any
     nlp: Any
     reranker: Any
+
+    # fallback/eval
+    needs_fallback: bool
+    fallback_used: bool
+    fallback_reason: str
+    ui_message: str
+
 
 
 def classify_and_rewrite_node(state: RAGState) -> RAGState:
@@ -112,6 +119,98 @@ def answer_node(state: RAGState) -> RAGState:
     state["contexts"] = contexts
     return state
 
+
+def evaluate_node(state: RAGState) -> RAGState:
+    q = state.get("question", "")
+    ans = state.get("answer", "") or ""
+    n_sources = len(state.get("contexts", []) or [])
+
+    # Heuristics veloci (prima dell’LLM)
+    low_quality = (
+        n_sources == 0 or
+        "non presente nei documenti" in ans.lower() or
+        "non sono in grado di rispondere" in ans.lower() or
+        "parziale e poco affidabile" in ans.lower()
+    )
+
+    if low_quality:
+        state["needs_fallback"] = True
+        state["fallback_reason"] = "heuristic_low_quality"
+        state["ui_message"] = "Sto cercando più a fondo..."
+        return state
+    
+    print(
+        f"[FALLBACK_TRIGGER] "
+        f"sid={state.get('session_id')} | "
+        f"reason={state.get('fallback_reason')} | "
+        f"sources={len(state.get('contexts', []) or [])}"
+    )
+
+
+    # Valutazione LLM (agente “critic”)
+    llm = state.get("llm")
+    if llm:
+        out = llm.invoke(EVAL_ANSWER_PROMPT.format(question=q, answer=ans, n_sources=n_sources))
+        if hasattr(out, "content"):
+            out = out.content
+        verdict = str(out).strip()
+
+        if verdict.startswith("FALLBACK"):
+            state["needs_fallback"] = True
+            state["fallback_reason"] = verdict[:200]
+            state["ui_message"] = "Sto cercando più a fondo..."
+        else:
+            state["needs_fallback"] = False
+            state["fallback_reason"] = ""
+            state["ui_message"] = ""
+    else:
+        state["needs_fallback"] = False
+        state["fallback_reason"] = ""
+        state["ui_message"] = ""
+
+    return state
+
+
+def fallback_retrieve_node(state: RAGState) -> RAGState:
+    # segna fallback
+    state["fallback_used"] = True
+
+    docs = fallback_retrieve_with_expansion(
+        query=state["rewritten_query"],
+        search_technique=state.get("search_technique", "dense"),
+        embedding_model=state["embedding_model"],
+        embedding_model_name=state["embedding_model_name"],
+        vectorstores=state["vectorstores"],
+        corpus=state["corpus"],
+        bm25=state["bm25"],
+        nlp=state["nlp"],
+        llm=state.get("llm"),
+        reranker=state.get("reranker"),
+        final_top_k=5,
+        candidate_k=25,  # <<< QUI controlli “più di 10 chunk”
+    )
+    state["docs"] = docs
+    return state
+
+
+def fallback_answer_node(state: RAGState) -> RAGState:
+    # riusa la stessa process_query che già usi :contentReference[oaicite:8]{index=8}
+    answer, contexts = process_query(
+        docs=state.get("docs", []),
+        query=state["rewritten_query"],
+        llm=state["llm"],
+        classification_mode=state["mode"],
+        memory_context=state.get("memory_context", ""),
+    )
+    state["answer"] = answer
+    state["contexts"] = contexts
+    return state
+
+
+def route_after_evaluate(state: RAGState) -> str:
+    return "fallback" if state.get("needs_fallback") else "end"
+
+
 def build_rag_graph():
     g = StateGraph(RAGState)
 
@@ -123,6 +222,10 @@ def build_rag_graph():
     g.add_node("retrieve_hybrid", retrieve_hybrid_node)
 
     g.add_node("answer", answer_node)
+
+    g.add_node("evaluate", evaluate_node)
+    g.add_node("fallback_retrieve", fallback_retrieve_node)
+    g.add_node("fallback_answer", fallback_answer_node)
 
     g.set_entry_point("classify")
 
@@ -138,9 +241,24 @@ def build_rag_graph():
     )
 
     g.add_edge("simple_answer", END)
+
     g.add_edge("retrieve_dense", "answer")
     g.add_edge("retrieve_sparse", "answer")
     g.add_edge("retrieve_hybrid", "answer")
-    g.add_edge("answer", END)
+
+    # answer -> evaluate -> (end | fallback path)
+    g.add_edge("answer", "evaluate")
+
+    g.add_conditional_edges(
+        "evaluate",
+        route_after_evaluate,
+        {
+            "end": END,
+            "fallback": "fallback_retrieve",
+        },
+    )
+
+    g.add_edge("fallback_retrieve", "fallback_answer")
+    g.add_edge("fallback_answer", END)
 
     return g.compile()

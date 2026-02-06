@@ -1,3 +1,4 @@
+from unittest import result
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -32,6 +33,10 @@ class QueryResponse(BaseModel):
     contexts: List[str]
     mode: str
     search_technique: str
+
+    fallback_used: bool = False
+    fallback_reason: str = ""
+    ui_message: str = ""
 
 config = {
     "llm_model": "vllm",
@@ -174,12 +179,19 @@ async def process_query(request: QueryRequest):
         mode = result.get("mode", "rag")
 
         mem.add_turn(request.question, answer)
+
+        fallback_used = bool(result.get("fallback_used", False))
+        fallback_reason = str(result.get("fallback_reason", "") or "")
+        ui_message = str(result.get("ui_message", "") or "")
         
         return QueryResponse(
             answer=answer,
             contexts=contexts,
             mode=mode,
-            search_technique=request.search_technique
+            search_technique=request.search_technique,
+            fallback_used=fallback_used,
+            fallback_reason=fallback_reason,
+            ui_message=ui_message
         )
 
     except Exception as e:
