@@ -303,17 +303,18 @@ def fallback_retrieve_with_expansion(
     q_sem = semantic_query_expansion(llm, query)
     q_multi = multi_query_expansion(llm, query, n=3)
     queries = [query]
-    print(
-        f"[FALLBACK_EXPANSION] "
-        f"queries={len(queries)} | "
-        f"{' || '.join(q[:60] for q in queries)}"
-    )
 
     if q_sem and q_sem.lower() != query.lower():
         queries.append(q_sem)
     for mq in q_multi:
         if mq.lower() not in [x.lower() for x in queries]:
             queries.append(mq)
+    
+    print(
+        f"[FALLBACK_EXPANSION] "
+        f"queries={len(queries)} | "
+        f"{' || '.join(q[:60] for q in queries)}"
+    )
 
     # 2) retrieval ampio su più query e merge "grezzo" (dedup)
     all_hits = []
@@ -359,7 +360,8 @@ def fallback_retrieve_with_expansion(
 
     # 3) deep rerank sui candidati complessivi
     # Nota: se sono troppi, taglio prima
-    all_hits = all_hits[:max(candidate_k, final_top_k)]
+    #all_hits = all_hits[:max(candidate_k, final_top_k)]
+    all_hits = all_hits[:max(candidate_k * 3, final_top_k)]
     print(
         f"[DEEP_RERANK] "
         f"candidates_total={len(all_hits)} | "
