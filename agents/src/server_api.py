@@ -31,6 +31,7 @@ class QueryRequest(BaseModel):
     force_fallback: bool = False
 
 class QueryResponse(BaseModel):
+    status: str = "ok"
     answer: str
     contexts: List[str]
     mode: str
@@ -183,16 +184,18 @@ async def process_query(request: QueryRequest):
             and not request.force_fallback
         ):
             return QueryResponse(
+                status="fallback_required",
                 answer="",
                 contexts=[],
                 mode=result.get("mode", "rag"),
                 search_technique=request.search_technique,
                 fallback_used=False,
                 fallback_reason=result.get("fallback_reason", ""),
-                ui_message=result.get("ui_message", "Sto cercando più a fondo...")
+                ui_message="Sto cercando più a fondo..."
             )
 
-        answer = result["answer"]
+        #answer = result["answer"]
+        answer = result.get("answer", "")
         contexts = result.get("contexts", [])
         mode = result.get("mode", "rag")
 
@@ -203,6 +206,7 @@ async def process_query(request: QueryRequest):
         ui_message = str(result.get("ui_message", "") or "")
         
         return QueryResponse(
+            status="ok",
             answer=answer,
             contexts=contexts,
             mode=mode,
