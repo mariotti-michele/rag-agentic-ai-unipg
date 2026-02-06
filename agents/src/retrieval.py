@@ -3,7 +3,7 @@ import numpy as np
 # from sklearn.feature_extraction.text import TfidfVectorizer
 from rank_bm25 import BM25Okapi
 import spacy
-from advanced_techniques import rerank_documents, rerank_with_cross_encoder
+from reranking import rerank_documents, rerank_with_cross_encoder
 
 
 def build_corpus(qdrant_client, collection_names) -> tuple[list[dict], list[str]]:

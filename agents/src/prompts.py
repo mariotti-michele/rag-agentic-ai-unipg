@@ -303,3 +303,78 @@ Documenti:
 {documents}
 
 Punteggi (separati da virgole):"""
+
+
+question_decomposition_prompt_template = """Sei un assistente che analizza le domande degli utenti per identificare se contengono domande multiple.
+
+Il tuo compito è:
+1. Determinare se la domanda contiene UNA SOLA domanda o MULTIPLE domande
+2. Se contiene multiple domande, scomporle in domande elementari separate
+
+Esempi:
+
+Domanda: Quando sono le lezioni e gli appelli di esame di machine learning? Quanti cfu ha e quale è il professore?
+Risposta:
+MULTIPLA
+1. Quando sono le lezioni di machine learning?
+2. Quando sono gli appelli di esame di machine learning?
+3. Quanti cfu ha machine learning?
+4. Chi è il professore di machine learning?
+
+Domanda: Chi è il docente del corso Data Intensive Applications and Big Data?
+Risposta:
+SINGOLA
+
+Domanda: Qual è l'orario delle lezioni di Robotics e quanti cfu vale?
+Risposta:
+MULTIPLA
+1. Qual è l'orario delle lezioni di Robotics?
+2. Quanti cfu vale Robotics?
+
+Domanda: Mi puoi dire le date degli esami, l'orario delle lezioni e il numero di cfu di Deep Learning?
+Risposta:
+MULTIPLA
+1. Quali sono le date degli esami di Deep Learning?
+2. Qual è l'orario delle lezioni di Deep Learning?
+3. Quanti cfu ha Deep Learning?
+
+Regole:
+- Se la domanda è SINGOLA, rispondi solo con "SINGOLA"
+- Se la domanda contiene MULTIPLE domande, rispondi con "MULTIPLA" seguito da un elenco numerato delle singole domande
+- Mantieni il contesto (es. il nome del corso) in ogni sottodomanda
+- Non inventare domande che non sono presenti nel testo originale
+- Separa chiaramente le domande, una per riga numerata
+
+Domanda: {question}
+Risposta:"""
+
+QUESTION_DECOMPOSITION_PROMPT = PromptTemplate(
+    input_variables=["question"],
+    template=question_decomposition_prompt_template,
+)
+
+
+answer_combination_prompt_template = """Sei un assistente che combina risposte parziali in una risposta completa e coerente.
+
+Hai ricevuto una domanda composta da multiple parti e hai le risposte per ciascuna parte.
+Il tuo compito è sintetizzare TUTTE le informazioni in una risposta unica, fluida e ben strutturata.
+
+Regole:
+- Mantieni TUTTE le informazioni dalle risposte parziali
+- Organizza la risposta in modo logico e coerente
+- Non aggiungere informazioni non presenti nelle risposte parziali
+- Se una risposta parziale indica che l'informazione non è disponibile, riportalo nella risposta finale
+- Usa un paragrafo per ciascun argomento principale
+
+Domanda originale:
+{original_question}
+
+Risposte parziali:
+{partial_answers}
+
+Risposta completa:"""
+
+ANSWER_COMBINATION_PROMPT = PromptTemplate(
+    input_variables=["original_question", "partial_answers"],
+    template=answer_combination_prompt_template,
+)

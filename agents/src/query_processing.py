@@ -1,4 +1,4 @@
-from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, QUERY_REWRITE_PROMPT
+from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, QUERY_REWRITE_PROMPT, QUESTION_DECOMPOSITION_PROMPT, ANSWER_COMBINATION_PROMPT
 
 def build_context(docs: list) -> str:
     context = ""
@@ -88,3 +88,74 @@ def classify_query(llm, query: str) -> str:
     except Exception as e:
         print(f"[WARN] Errore classificazione query: {e}")
         return "rag"
+
+
+def decompose_question(llm, question: str) -> tuple[bool, list[str]]:
+    try:
+        prompt = QUESTION_DECOMPOSITION_PROMPT.format(question=question)
+        response = llm.invoke(prompt)
+        if hasattr(response, "content"):
+            response = response.content
+        
+        response_text = str(response).strip()
+        
+        if "SINGOLA" in response_text.upper():
+            print("[INFO] Domanda identificata come SINGOLA")
+            return False, []
+        
+        if "MULTIPLA" in response_text.upper():
+            print("[INFO] Domanda identificata come MULTIPLA")
+            lines = response_text.split("\n")
+            sub_questions = []
+            for line in lines:
+                line = line.strip()
+                if line and (line[0].isdigit() or line.startswith("- ")):
+                    question_text = line
+                    for prefix in [".", ")", "-"]:
+                        if prefix in question_text[:5]:
+                            parts = question_text.split(prefix, 1)
+                            if len(parts) > 1:
+                                question_text = parts[1].strip()
+                                break
+                    if question_text and len(question_text) > 3:
+                        sub_questions.append(question_text)
+            
+            if sub_questions:
+                print(f"[INFO] Identificate {len(sub_questions)} sottodomande")
+                print(f"[DEBUG] Sottodomande: {sub_questions}")
+                return True, sub_questions
+        
+        print("[WARN] Impossibile determinare se la domanda è composta, trattata come singola")
+        return False, []
+    
+    except Exception as e:
+        print(f"[WARN] Errore nella decomposizione della domanda: {e}")
+        return False, []
+
+
+def combine_answers(llm, original_question: str, sub_answers: list) -> str:
+    try:
+        partial_answers_text = ""
+        for i, item in enumerate(sub_answers, 1):
+            partial_answers_text += f"\nDomanda {i}: {item['question']}\n"
+            partial_answers_text += f"Risposta {i}: {item['answer']}\n"
+        
+        prompt = ANSWER_COMBINATION_PROMPT.format(
+            original_question=original_question,
+            partial_answers=partial_answers_text
+        )
+        
+        response = llm.invoke(prompt)
+        if hasattr(response, "content"):
+            response = response.content
+        
+        combined_answer = str(response).strip()
+        print("[INFO] Risposte combinate con successo")
+        return combined_answer
+    
+    except Exception as e:
+        print(f"[WARN] Errore nella combinazione delle risposte: {e}")
+        fallback = ""
+        for i, item in enumerate(sub_answers, 1):
+            fallback += f"{item['answer']}\n\n"
+        return fallback.strip()
