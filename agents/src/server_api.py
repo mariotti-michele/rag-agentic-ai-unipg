@@ -141,7 +141,8 @@ async def health_check():
 async def process_query(request: QueryRequest):
     print(f"[DEBUG] Query ricevuta: {request.question[:50]}")
     print(f"[DEBUG] Search: {request.search_technique}, Reranking: {config['use_reranking']} ({config['rerank_method']})")
-    
+    print(f"[DEBUG] allow_fallback={request.allow_fallback} force_fallback={request.force_fallback}")
+
     if not components:
         raise HTTPException(status_code=503, detail="Sistema non inizializzato")
     
