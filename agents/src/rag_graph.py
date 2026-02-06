@@ -208,7 +208,16 @@ def fallback_answer_node(state: RAGState) -> RAGState:
 
 
 def route_after_evaluate(state: RAGState) -> str:
-    return "fallback" if state.get("needs_fallback") else "end"
+    if not state.get("needs_fallback", False):
+        return "end"
+
+    # fallback necessario, ma NON forzato → fermati qui
+    if not state.get("force_fallback", False):
+        return "end"
+
+    # fallback necessario E forzato → esegui fallback
+    return "fallback"
+
 
 
 def build_rag_graph():

@@ -27,6 +27,8 @@ class QueryRequest(BaseModel):
     question: str
     search_technique: Literal["dense", "sparse", "hybrid"] = "dense"
     session_id: Optional[str] = None
+    allow_fallback: bool = True
+    force_fallback: bool = False
 
 class QueryResponse(BaseModel):
     answer: str
@@ -161,6 +163,8 @@ async def process_query(request: QueryRequest):
             "session_id": sid,
             "memory_context": memory_context,
             "search_technique": request.search_technique,
+            "allow_fallback": request.allow_fallback,
+            "force_fallback": request.force_fallback,
             "llm": components["llm"],
             "embedding_model": components["embedding_model"],
             "embedding_model_name": config["embedding_model"],
@@ -173,6 +177,20 @@ async def process_query(request: QueryRequest):
             "reranker": components.get("reranker"),
         })
 
+        if (
+            result.get("needs_fallback")
+            and request.allow_fallback
+            and not request.force_fallback
+        ):
+            return QueryResponse(
+                answer="",
+                contexts=[],
+                mode=result.get("mode", "rag"),
+                search_technique=request.search_technique,
+                fallback_used=False,
+                fallback_reason=result.get("fallback_reason", ""),
+                ui_message=result.get("ui_message", "Sto cercando più a fondo...")
+            )
 
         answer = result["answer"]
         contexts = result.get("contexts", [])
