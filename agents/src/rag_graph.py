@@ -32,6 +32,7 @@ class RAGState(TypedDict, total=False):
 
     # fallback/eval
     needs_fallback: bool
+    force_fallback: bool
     fallback_used: bool
     fallback_reason: str
     ui_message: str
@@ -137,13 +138,16 @@ def evaluate_node(state: RAGState) -> RAGState:
         state["needs_fallback"] = True
         state["fallback_reason"] = "heuristic_low_quality"
         state["ui_message"] = "Sto cercando più a fondo..."
+
+        print(
+            f"[EVAL] low_quality=True | sid={state.get('session_id')} | "
+            f"sources={n_sources} | reason={state['fallback_reason']}"
+        )
         return state
-    
+
     print(
-        f"[FALLBACK_TRIGGER] "
-        f"sid={state.get('session_id')} | "
-        f"reason={state.get('fallback_reason')} | "
-        f"sources={len(state.get('contexts', []) or [])}"
+        f"[EVAL] low_quality=False | sid={state.get('session_id')} | "
+        f"sources={n_sources}"
     )
 
 
@@ -168,12 +172,16 @@ def evaluate_node(state: RAGState) -> RAGState:
         state["fallback_reason"] = ""
         state["ui_message"] = ""
 
+    if not state.get("needs_fallback", False):
+        state["fallback_used"] = False
+
     return state
 
 
 def fallback_retrieve_node(state: RAGState) -> RAGState:
     # segna fallback
     state["fallback_used"] = True
+    print(f"[FALLBACK] entered | sid={state.get('session_id')} | technique={state.get('search_technique')}")
 
     docs = fallback_retrieve_with_expansion(
         query=state["rewritten_query"],
