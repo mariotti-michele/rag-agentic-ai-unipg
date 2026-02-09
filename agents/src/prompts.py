@@ -394,6 +394,7 @@ Regole:
 - Non aggiungere informazioni non presenti nelle risposte parziali
 - Non aggiungere frasi di collegamento o spiegazioni che non siano strettamente necessarie per la coesione del testo
 - Se una risposta parziale indica che l'informazione non è disponibile, riportalo nella risposta finale
+- Se una risposta contiene un elenco puntato, l'eventuale testo descrittivo che segue deve essere collocato in un nuovo paragrafo separato, NON come parte dell’ultimo punto dell'elenco.
 - Usa un paragrafo per ciascun argomento principale
 
 Domanda originale:
