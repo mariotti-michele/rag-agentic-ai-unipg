@@ -345,6 +345,35 @@ Regole:
 - Non inventare domande che non sono presenti nel testo originale
 - Separa chiaramente le domande, una per riga numerata
 
+Regola aggiuntiva:
+
+Non identificare come domanda MULTIPLA una domanda che chiede più aspetti dello STESSO attributo informativo.
+
+Una domanda è da considerarsi SINGOLA se:
+- tutte le informazioni richieste fanno parte di un unico concetto logico
+  (es. un periodo temporale, una data, un intervallo, un evento, una definizione)
+- le parti della frase non sono domande indipendenti, ma specificazioni
+  dello stesso fatto
+
+Considera MULTIPLA una domanda solo se le sotto-domande:
+- possono esistere e avere risposta anche separatamente
+- riguardano attributi diversi (es. orario, CFU, docente, appelli, calendario)
+
+Esempi di domande SINGOLE:
+
+Domanda: Quando iniziano e terminano le vacanze pasquali?
+Risposta:
+SINGOLA
+
+Domanda: Quando inizia e quando termina l'anno accademico 2025/2026?
+Risposta:
+SINGOLA
+
+Domanda: Qual è la data di inizio e fine delle lezioni?
+Risposta:
+SINGOLA
+
+
 Domanda: {question}
 Risposta:"""
 

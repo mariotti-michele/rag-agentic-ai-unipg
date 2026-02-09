@@ -66,7 +66,7 @@
     "document": "didattica_studiare-nei-nostri-corsi_mobilita-internazionale_6103afe39800.main.html"
   },
   {
-    "question": "Quali documenti sono richiesti per un tirocinio autonomo?",
+    "question": "Quali documenti sono richiesti per un tirocinio autonomo Erasmus?",
     "reference_context": "In caso di Tirocinio Autonomo alla domanda deve essere allegato il Learning Agreement firmato dall’ente/azienda ospitante.",
     "ground_truth": "Serve allegare alla domanda il Learning Agreement firmato dall’ente ospitante.",
     "document": "didattica_studiare-nei-nostri-corsi_mobilita-internazionale_6103afe39800.main.html"
