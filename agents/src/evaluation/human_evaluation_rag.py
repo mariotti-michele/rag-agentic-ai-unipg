@@ -43,7 +43,7 @@ def run_manual_eval(embedding_model, embedding_model_name, vectorstores, llm, co
     # Crea il grafo RAG
     rag_graph = build_rag_graph()
     
-    VALIDATION_DIR = Path(__file__).resolve().parent / "human_validation_set"
+    VALIDATION_DIR = Path(__file__).resolve().parent / "validation_set"   # human_validation_set / validation_set
     print(f"Caricamento dataset da: {VALIDATION_DIR}")
 
     validation_data = []
