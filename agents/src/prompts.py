@@ -392,6 +392,7 @@ Regole:
 - Mantieni TUTTE le informazioni dalle risposte parziali
 - Organizza la risposta in modo logico e coerente
 - Non aggiungere informazioni non presenti nelle risposte parziali
+- Non aggiungere frasi di collegamento o spiegazioni che non siano strettamente necessarie per la coesione del testo
 - Se una risposta parziale indica che l'informazione non è disponibile, riportalo nella risposta finale
 - Usa un paragrafo per ciascun argomento principale
 
