@@ -29,6 +29,7 @@ def rewrite_query(llm, question: str, memory_context: str) -> str:
     if rewritten.lower() == question.strip().lower():
         return question
 
+    print(f"[INFO] Query riscritta: {rewritten}\n")
     return rewritten
 
 
