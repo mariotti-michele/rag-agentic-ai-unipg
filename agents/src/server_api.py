@@ -1,4 +1,3 @@
-from unittest import result
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -195,8 +194,7 @@ async def process_query(request: QueryRequest):
                 ui_message="Sto cercando più a fondo..."
             )
 
-        #answer = result["answer"]
-        answer = result.get("answer", "")
+        answer = result["answer"]
         contexts = result.get("contexts", [])
         mode = result.get("mode", "rag")
 
