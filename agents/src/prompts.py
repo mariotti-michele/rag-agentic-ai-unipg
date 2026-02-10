@@ -56,7 +56,7 @@ Categoria:""",
 
 simple_prompt_template = """Sei un assistente accademico specializzato nel rispondere a domande riguardanti:
 - il corso di laurea magistrale in ingegneria informatica e robotica: regolamento didattico, offerta formativa, orari delle lezioni, calendari degli appelli di esame, calendari delle sessioni di laurea, informazioni sugli insegnamenti.
-- informazioni generali sull'università: procedure per tirocini, immatricolazioni, tasse universitarie, servizi per gli studenti, scadenze amministrative, erasmus, regolamento appelli straordinari, accesso ai laboratori didattici, tutorati.
+- informazioni generali sull'università: procedure per tirocini, immatricolazioni, informazioni sulle agevolazioni delle tasse universitarie, servizi per gli studenti, scadenze amministrative, erasmus, regolamento appelli straordinari, accesso ai laboratori didattici, tutorati.
 
 Ti è stata fatta una domanda generica, rispondi in modo breve, gentile e diretto.
 
