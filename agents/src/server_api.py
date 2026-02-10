@@ -1,3 +1,4 @@
+from unittest import result
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -26,12 +27,19 @@ class QueryRequest(BaseModel):
     question: str
     search_technique: Literal["dense", "sparse", "hybrid"] = "dense"
     session_id: Optional[str] = None
+    allow_fallback: bool = True
+    force_fallback: bool = False
 
 class QueryResponse(BaseModel):
+    status: str = "ok"
     answer: str
     contexts: List[str]
     mode: str
     search_technique: str
+
+    fallback_used: bool = False
+    fallback_reason: str = ""
+    ui_message: str = ""
 
 config = {
     "llm_model": "vllm",
@@ -133,7 +141,8 @@ async def health_check():
 async def process_query(request: QueryRequest):
     print(f"[DEBUG] Query ricevuta: {request.question[:50]}")
     print(f"[DEBUG] Search: {request.search_technique}, Reranking: {config['use_reranking']} ({config['rerank_method']})")
-    
+    print(f"[DEBUG] allow_fallback={request.allow_fallback} force_fallback={request.force_fallback}")
+
     if not components:
         raise HTTPException(status_code=503, detail="Sistema non inizializzato")
     
@@ -156,6 +165,8 @@ async def process_query(request: QueryRequest):
             "session_id": sid,
             "memory_context": memory_context,
             "search_technique": request.search_technique,
+            "allow_fallback": request.allow_fallback,
+            "force_fallback": request.force_fallback,
             "llm": components["llm"],
             "embedding_model": components["embedding_model"],
             "embedding_model_name": config["embedding_model"],
@@ -168,18 +179,42 @@ async def process_query(request: QueryRequest):
             "reranker": components.get("reranker"),
         })
 
+        if (
+            result.get("needs_fallback")
+            and request.allow_fallback
+            and not request.force_fallback
+        ):
+            return QueryResponse(
+                status="fallback_required",
+                answer="",
+                contexts=[],
+                mode=result.get("mode", "rag"),
+                search_technique=request.search_technique,
+                fallback_used=False,
+                fallback_reason=result.get("fallback_reason", ""),
+                ui_message="Sto cercando più a fondo..."
+            )
 
-        answer = result["answer"]
+        #answer = result["answer"]
+        answer = result.get("answer", "")
         contexts = result.get("contexts", [])
         mode = result.get("mode", "rag")
 
         mem.add_turn(request.question, answer)
+
+        fallback_used = bool(result.get("fallback_used", False))
+        fallback_reason = str(result.get("fallback_reason", "") or "")
+        ui_message = str(result.get("ui_message", "") or "")
         
         return QueryResponse(
+            status="ok",
             answer=answer,
             contexts=contexts,
             mode=mode,
-            search_technique=request.search_technique
+            search_technique=request.search_technique,
+            fallback_used=fallback_used,
+            fallback_reason=fallback_reason,
+            ui_message=ui_message
         )
 
     except Exception as e:

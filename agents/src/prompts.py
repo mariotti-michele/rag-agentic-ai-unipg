@@ -409,3 +409,47 @@ ANSWER_COMBINATION_PROMPT = PromptTemplate(
     input_variables=["original_question", "partial_answers"],
     template=answer_combination_prompt_template,
 )
+
+
+
+# === Fallback / Evaluation prompts ===
+
+EVAL_ANSWER_PROMPT = """
+Sei un valutatore di qualità per un sistema RAG.
+
+Input:
+- Domanda utente
+- Risposta del sistema
+- Numero di fonti usate
+
+Devi rispondere SOLO con:
+OK
+oppure
+FALLBACK: <breve motivo>
+
+Regole per FALLBACK:
+- Se la risposta è "Non presente nei documenti" o equivalente
+- Se la risposta dice che l'informazione è parziale/poco affidabile
+- Se non cita contenuti dei documenti o sembra generica rispetto alla domanda
+- Se le fonti sono 0
+
+Domanda: {question}
+Risposta: {answer}
+Numero fonti: {n_sources}
+"""
+
+QUERY_EXPANSION_PROMPT = """
+Riscrivi la query dell'utente aggiungendo sinonimi/termini correlati utili per la ricerca nei documenti.
+Non cambiare il significato.
+Rispondi SOLO con una singola query.
+
+Query: {query}
+"""
+
+MULTI_QUERY_PROMPT = """
+Genera 3 query alternative (brevi) semanticamente equivalenti alla query data,
+pensate per massimizzare il recupero nei documenti (sinonimi, riformulazioni).
+Rispondi SOLO con 3 righe, una query per riga, senza elenco o spiegazioni.
+
+Query: {query}
+"""
