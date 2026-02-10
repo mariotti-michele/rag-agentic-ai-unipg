@@ -304,7 +304,6 @@ def combine_answers_node(state: RAGState) -> RAGState:
     sub_answers = state.get("sub_answers", [])
     
     sub_answers_sorted = sorted(sub_answers, key=lambda x: x.get("idx", 10**9))
-    print(f"[INFO] Elenco risposte parziali (testo completo): {[x.get('answer', '') for x in sub_answers_sorted]}")
     
     print(f"[INFO] Combinazione di {len(sub_answers_sorted)} risposte parziali (ordine: {[x.get('idx', '?') for x in sub_answers_sorted]})")
     combined_answer = combine_answers(llm, original_question, sub_answers_sorted)
