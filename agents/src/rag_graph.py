@@ -116,7 +116,17 @@ def retrieve_dense_node(state: SingleQuestionState) -> SingleQuestionState:
         arg = "generale"
     emit = state.get("emit")
     if emit:
-        emit({"type": "status", "message": f"Sto cercando nei documenti la tua domanda sull'argomento: {arg}"})
+        subq_idx = state.get("subquestion_idx")
+        if subq_idx is not None:
+            emit({
+                "type": "status", 
+                "message": f"Sto cercando nei documenti la risposta alla tua  {subq_idx + 1}° sottodomanda sull'{arg}..."
+            })
+        else:
+            emit({
+                "type": "status", 
+                "message": f"Sto cercando nei documenti la risposta alla tua domanda sull'argomento: {arg}"
+            })
 
     state["docs"] = dense_search(
         query=state["rewritten_query"],
@@ -435,6 +445,13 @@ def combine_answers_node(state: RAGState) -> RAGState:
     sub_answers = state.get("sub_answers", [])
     
     sub_answers_sorted = sorted(sub_answers, key=lambda x: x.get("idx", 10**9))
+
+    emit = state.get("emit")
+    if emit:
+        emit({
+            "type": "status",
+            "message": f"Sto combinando {len(sub_answers_sorted)} risposte parziali..."
+        })
     
     print(f"[INFO] Combinazione di {len(sub_answers_sorted)} risposte parziali (ordine: {[x.get('idx', '?') for x in sub_answers_sorted]})")
     combined_answer = combine_answers(llm, original_question, sub_answers_sorted)
