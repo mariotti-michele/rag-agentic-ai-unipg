@@ -1,11 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, Literal, List, Optional
 import uvicorn
 import argparse
 import signal
 import sys
+import json
+import asyncio
+import threading
 
 from initializer import init_components, test_connection
 from retrieval import build_bm25, build_corpus, build_spacy_tokenizer
@@ -26,18 +30,14 @@ class QueryRequest(BaseModel):
     question: str
     search_technique: Literal["dense", "sparse", "hybrid"] = "dense"
     session_id: Optional[str] = None
-    allow_fallback: bool = True
     force_fallback: bool = False
+    stream: bool = False
 
 class QueryResponse(BaseModel):
     status: str = "ok"
     answer: str
     contexts: List[str]
-    mode: str
     search_technique: str
-
-    fallback_reason: str = ""
-    ui_message: str = ""
 
 config = {
     "llm_model": "vllm",
@@ -135,11 +135,11 @@ async def health_check():
         "embedding_model": config["embedding_model"]
     }
 
-@app.post("/query", response_model=QueryResponse)
+@app.post("/query")
 async def process_query(request: QueryRequest):
-    print(f"[DEBUG] Query ricevuta: {request.question[:50]}")
+    print(f"[DEBUG] Query ricevuta: {request.question}")
     print(f"[DEBUG] Search: {request.search_technique}, Reranking: {config['use_reranking']} ({config['rerank_method']})")
-    print(f"[DEBUG] allow_fallback={request.allow_fallback} force_fallback={request.force_fallback}")
+    print(f"[DEBUG] force_fallback={request.force_fallback}, stream={request.stream}")
 
     if not components:
         raise HTTPException(status_code=503, detail="Sistema non inizializzato")
@@ -147,23 +147,125 @@ async def process_query(request: QueryRequest):
     if not request.question or not request.question.strip():
         raise HTTPException(status_code=400, detail="La domanda non può essere vuota")
     
+    sid = request.session_id or "default"
+    mem = SESSION_MEMORIES.get(sid)
+    if mem is None:
+        mem = ConversationMemory(max_turns=4)
+        SESSION_MEMORIES[sid] = mem
+    memory_context = mem.get_context()
+
+    if request.stream:
+        return StreamingResponse(
+            stream_query_events(request, sid, memory_context, mem),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
+    else:
+        return await process_query_sync(request, sid, memory_context, mem)
+
+
+async def stream_query_events(request: QueryRequest, sid: str, memory_context: str, mem: ConversationMemory):
+    async_event_queue: asyncio.Queue = asyncio.Queue()
+    result_container = {}
+    error_container = {}
+    heartbeat_interval = 30
+    
+    loop = asyncio.get_running_loop()
+
+    def emit(event):
+        loop.call_soon_threadsafe(async_event_queue.put_nowait, event)
+    
+    def run_graph():
+        try:
+            result = rag_graph.invoke({
+                "question": request.question,
+                "session_id": sid,
+                "memory_context": memory_context,
+                "search_technique": request.search_technique,
+                "force_fallback": request.force_fallback,
+                "llm": components["llm"],
+                "embedding_model": components["embedding_model"],
+                "embedding_model_name": config["embedding_model"],
+                "vectorstores": components["vectorstores"],
+                "corpus": components["corpus"],
+                "bm25": components["bm25"],
+                "nlp": components["spacy_tokenizer"],
+                "use_reranking": config["use_reranking"],
+                "rerank_method": config["rerank_method"],
+                "reranker": components.get("reranker"),
+                "emit": emit,
+            })
+            result_container["result"] = result
+        except Exception as e:
+            print(f"[ERROR] Errore elaborazione query: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            error_container["error"] = str(e)
+        finally:
+            loop.call_soon_threadsafe(async_event_queue.put_nowait, None)
+
+    
+    # Avvia il grafo in un thread separato
+    thread = threading.Thread(target=run_graph, daemon=True, name=f"RAGThread-{sid}")
+    thread.start()
+    
     try:
-        sid = request.session_id or "default"
+        while True:
+            try:
+                event = await asyncio.wait_for(
+                    async_event_queue.get(), 
+                    timeout=heartbeat_interval
+                )
+            except asyncio.TimeoutError:
+                yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+                continue
+            
+            if event is None:
+                break
+            yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+    
+    except asyncio.CancelledError:
+        print(f"[WARN] Stream cancellato per sessione {sid}")
+        raise
+    
+    if "error" in error_container:
+        error_event = {
+            "type": "error",
+            "message": error_container["error"]
+        }
+        yield f"data: {json.dumps(error_event)}\n\n"
+    elif "result" in result_container:
+        result = result_container["result"]
+        answer = result["answer"]
+        contexts = result.get("contexts", [])
+        mem.add_turn(request.question, answer)
+        
+        final_event = {
+            "type": "result",
+            "status": "ok",
+            "answer": answer,
+            "contexts": contexts,
+            "search_technique": request.search_technique
+        }
+        yield f"data: {json.dumps(final_event, ensure_ascii=False)}\n\n"
+    else:
+        error_event = {
+            "type": "error",
+            "message": "Timeout o errore sconosciuto nell'elaborazione"
+        }
+        yield f"data: {json.dumps(error_event)}\n\n"
 
-        mem = SESSION_MEMORIES.get(sid)
-        if mem is None:
-            mem = ConversationMemory(max_turns=4)
-            SESSION_MEMORIES[sid] = mem
 
-        memory_context = mem.get_context()
-
-
+async def process_query_sync(request: QueryRequest, sid: str, memory_context: str, mem: ConversationMemory):
+    try:
         result = rag_graph.invoke({
             "question": request.question,
             "session_id": sid,
             "memory_context": memory_context,
             "search_technique": request.search_technique,
-            "allow_fallback": request.allow_fallback,
             "force_fallback": request.force_fallback,
             "llm": components["llm"],
             "embedding_model": components["embedding_model"],
@@ -177,38 +279,16 @@ async def process_query(request: QueryRequest):
             "reranker": components.get("reranker"),
         })
 
-        if (
-            result.get("needs_fallback")
-            and request.allow_fallback
-            and not request.force_fallback
-        ):
-            return QueryResponse(
-                status="fallback_required",
-                answer="",
-                contexts=[],
-                mode=result.get("mode", "rag"),
-                search_technique=request.search_technique,
-                fallback_reason=result.get("fallback_reason", ""),
-                ui_message="Sto cercando più a fondo..."
-            )
-
         answer = result["answer"]
         contexts = result.get("contexts", [])
-        mode = result.get("mode", "rag")
 
         mem.add_turn(request.question, answer)
-
-        fallback_reason = str(result.get("fallback_reason", "") or "")
-        ui_message = str(result.get("ui_message", "") or "")
         
         return QueryResponse(
             status="ok",
             answer=answer,
             contexts=contexts,
-            mode=mode,
             search_technique=request.search_technique,
-            fallback_reason=fallback_reason,
-            ui_message=ui_message
         )
 
     except Exception as e:
