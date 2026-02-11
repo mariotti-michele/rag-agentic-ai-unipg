@@ -1,4 +1,7 @@
 from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, QUERY_REWRITE_PROMPT, QUESTION_DECOMPOSITION_PROMPT, ANSWER_COMBINATION_PROMPT
+from urllib.parse import urlparse, unquote
+import os
+
 
 def build_context(docs: list) -> str:
     context = ""
@@ -7,21 +10,42 @@ def build_context(docs: list) -> str:
         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
     return context
 
+def _title_from_url(url: str) -> str:
+    try:
+        path = unquote(urlparse(url).path)
+        name = os.path.basename(path)
+        return name or url
+    except Exception:
+        return url
+
+
 def build_references(docs: list[dict]) -> list[dict]:
     refs = []
     seen = set()
+
     for d in docs:
-        url = d.get("source_url") or d.get("url") or ""
+        url = d.get("source_url") or ""
         if not url:
             continue
-        title = d.get("page_title") or d.get("title")
-        section = d.get("section_path") or d.get("section")
+
+        title = _title_from_url(url)
+
+        section = d.get("section_path") or ""
+        
+        if not title or title == url:
+            doc_id = d.get("doc_id") or ""
+            if doc_id:
+                title = doc_id
+
         key = (url, title, section)
         if key in seen:
             continue
         seen.add(key)
+
         refs.append({"url": url, "title": title, "section": section})
+
     return refs
+
 
 def rewrite_query(llm, question: str, memory_context: str) -> str:
     if not memory_context or not memory_context.strip():
