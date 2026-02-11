@@ -176,7 +176,10 @@ async def stream_query_events(request: QueryRequest, sid: str, memory_context: s
     loop = asyncio.get_running_loop()
 
     def emit(event):
-        loop.call_soon_threadsafe(async_event_queue.put_nowait, event)
+        try:
+            loop.call_soon_threadsafe(async_event_queue.put_nowait, event)
+        except RuntimeError:
+            pass
     
     def run_graph():
         try:
@@ -205,7 +208,10 @@ async def stream_query_events(request: QueryRequest, sid: str, memory_context: s
             traceback.print_exc()
             error_container["error"] = str(e)
         finally:
-            loop.call_soon_threadsafe(async_event_queue.put_nowait, None)
+            try:
+                loop.call_soon_threadsafe(async_event_queue.put_nowait, None)
+            except RuntimeError:
+                pass
 
     
     # Avvia il grafo in un thread separato
