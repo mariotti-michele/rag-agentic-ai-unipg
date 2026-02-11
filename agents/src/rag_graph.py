@@ -111,6 +111,13 @@ def route_retrieve(state: SingleQuestionState) -> str:
 
 
 def retrieve_dense_node(state: SingleQuestionState) -> SingleQuestionState:
+    arg = state.get("mode", "generale")
+    if arg == "rag":
+        arg = "generale"
+    emit = state.get("emit")
+    if emit:
+        emit({"type": "status", "message": f"Sto cercando nei documenti la tua domanda sull'argomento: {arg}"})
+
     state["docs"] = dense_search(
         query=state["rewritten_query"],
         embedding_model=state["embedding_model"],
