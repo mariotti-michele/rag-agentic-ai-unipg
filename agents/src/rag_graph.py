@@ -4,7 +4,8 @@ import operator
 from langgraph.graph import StateGraph, END
 from langgraph.types import Send
 
-from query_processing import classify_query, rewrite_query, process_query, decompose_question, combine_answers, fallback_retrieve_with_expansion
+from query_processing import classify_query, rewrite_query, process_query, decompose_question, combine_answers
+from fallback import fallback_retrieve_with_expansion
 from retrieval import dense_search, bm25_search, hybrid_search
 from prompts import simple_prompt_template, EVAL_ANSWER_PROMPT
 
@@ -198,12 +199,6 @@ def evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
         )
         return state
 
-    print(
-        f"[EVAL] low_quality=False | sid={state.get('session_id')} | "
-        f"sources={n_sources}"
-    )
-
-
     llm = state.get("llm")
     if llm:
         out = llm.invoke(EVAL_ANSWER_PROMPT.format(question=q, answer=ans, n_sources=n_sources))
@@ -227,6 +222,12 @@ def evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
     return state
 
 
+def route_after_evaluate(state: SingleQuestionState) -> str:
+    if not state.get("needs_fallback", False) and not state.get("force_fallback", False):
+        return "end"
+    return "fallback"
+
+
 def fallback_retrieve_node(state: SingleQuestionState) -> SingleQuestionState:
     print(f"[FALLBACK] entered | sid={state.get('session_id')} | technique={state.get('search_technique')}")
 
@@ -241,8 +242,6 @@ def fallback_retrieve_node(state: SingleQuestionState) -> SingleQuestionState:
         nlp=state.get("nlp"),
         llm=state.get("llm"),
         reranker=state.get("reranker"),
-        final_top_k=5,
-        candidate_k=25,  # <<< QUI controlli “più di 10 chunk”
     )
     state["docs"] = docs
     return state
@@ -259,14 +258,6 @@ def fallback_answer_node(state: SingleQuestionState) -> SingleQuestionState:
     state["answer"] = answer
     state["contexts"] = contexts
     return state
-
-
-def route_after_evaluate(state: SingleQuestionState) -> str:
-    if not state.get("needs_fallback", False) and not state.get("force_fallback", False):
-        return "end"
-    return "fallback"
-
-
 
 
 def _build_single_question_subgraph_internal():
