@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, Literal, List, Optional
 import uvicorn
 import argparse
@@ -26,6 +26,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class Reference(BaseModel):
+    url: str
+    title: Optional[str] = None
+    section: Optional[str] = None
+
 class QueryRequest(BaseModel):
     question: str
     search_technique: Literal["dense", "sparse", "hybrid"] = "dense"
@@ -36,7 +41,8 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     status: str = "ok"
     answer: str
-    contexts: List[str]
+    #contexts: List[str]
+    references: List[Reference] = Field(default_factory=list)
     search_technique: str
 
 config = {
@@ -246,14 +252,16 @@ async def stream_query_events(request: QueryRequest, sid: str, memory_context: s
     elif "result" in result_container:
         result = result_container["result"]
         answer = result["answer"]
-        contexts = result.get("contexts", [])
+        #contexts = result.get("contexts", [])
+        references = result.get("references", [])
         mem.add_turn(request.question, answer)
         
         final_event = {
             "type": "result",
             "status": "ok",
             "answer": answer,
-            "contexts": contexts,
+            #"contexts": contexts,
+            "references": references,
             "search_technique": request.search_technique
         }
         yield f"data: {json.dumps(final_event, ensure_ascii=False)}\n\n"
@@ -286,14 +294,16 @@ async def process_query_sync(request: QueryRequest, sid: str, memory_context: st
         })
 
         answer = result["answer"]
-        contexts = result.get("contexts", [])
+        #contexts = result.get("contexts", [])
+        references = result.get("references", [])
 
         mem.add_turn(request.question, answer)
         
         return QueryResponse(
             status="ok",
             answer=answer,
-            contexts=contexts,
+            #contexts=contexts,
+            references=references,
             search_technique=request.search_technique,
         )
 

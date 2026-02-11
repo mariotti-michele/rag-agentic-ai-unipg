@@ -7,6 +7,21 @@ def build_context(docs: list) -> str:
         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
     return context
 
+def build_references(docs: list[dict]) -> list[dict]:
+    refs = []
+    seen = set()
+    for d in docs:
+        url = d.get("source_url") or d.get("url") or ""
+        if not url:
+            continue
+        title = d.get("page_title") or d.get("title")
+        section = d.get("section_path") or d.get("section")
+        key = (url, title, section)
+        if key in seen:
+            continue
+        seen.add(key)
+        refs.append({"url": url, "title": title, "section": section})
+    return refs
 
 def rewrite_query(llm, question: str, memory_context: str) -> str:
     if not memory_context or not memory_context.strip():
@@ -59,7 +74,9 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     elif classification_mode == "calendario lauree":
         prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template, memory_context)
-    return answer, [d["text"] for d in docs]
+    references = build_references(docs)
+    #return answer, [d["text"] for d in docs]
+    return answer, references
 
 
 def classify_query(llm, query: str) -> str:

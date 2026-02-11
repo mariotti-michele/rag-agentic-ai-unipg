@@ -24,7 +24,8 @@ class RAGState(TypedDict, total=False):
     use_reranking: bool
     rerank_method: str
     docs: List[Dict[str, Any]]
-    contexts: List[str]
+    #contexts: List[str]
+    references: List[Dict[str, Any]]
     
     answer: str
 
@@ -54,7 +55,8 @@ class SingleQuestionState(TypedDict, total=False):
     docs: List[Dict[str, Any]]
     
     answer: str
-    contexts: List[str]
+    #contexts: List[str]
+    references: List[Dict[str, Any]]
     
     llm: Any
     embedding_model: Any
@@ -99,7 +101,8 @@ def simple_answer_node(state: SingleQuestionState) -> SingleQuestionState:
     if hasattr(ans, "content"):
         ans = ans.content
     state["answer"] = ans
-    state["contexts"] = []
+    #state["contexts"] = []
+    state["references"] = []
     return state
 
 
@@ -179,7 +182,8 @@ def answer_node(state: SingleQuestionState) -> SingleQuestionState:
                 "message": f"Sto generando la risposta alla tua domanda sull'argomento: {argument}"
             })
     
-    answer, contexts = process_query(
+    #answer, contexts = process_query(
+    answer, references = process_query(
         docs=state.get("docs", []),
         query=state["rewritten_query"],
         llm=state["llm"],
@@ -187,7 +191,8 @@ def answer_node(state: SingleQuestionState) -> SingleQuestionState:
         memory_context=state.get("memory_context", ""),
     )
     state["answer"] = answer
-    state["contexts"] = contexts
+    #state["contexts"] = contexts
+    state["references"] = references
     return state
 
 
@@ -196,7 +201,8 @@ def answer_node(state: SingleQuestionState) -> SingleQuestionState:
 def evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
     q = state.get("question", "")
     ans = state.get("answer", "") or ""
-    n_sources = len(state.get("contexts", []) or [])
+    #n_sources = len(state.get("contexts", []) or [])
+    n_sources = len(state.get("references", []) or [])
 
     state["needs_fallback"] = False
     state["fallback_reason"] = ""
@@ -268,7 +274,8 @@ def fallback_retrieve_node(state: SingleQuestionState) -> SingleQuestionState:
 
 
 def fallback_answer_node(state: SingleQuestionState) -> SingleQuestionState:
-    answer, contexts = process_query(
+    #answer, contexts = process_query(
+    answer, references = process_query(
         docs=state.get("docs", []),
         query=state["rewritten_query"],
         llm=state["llm"],
@@ -276,7 +283,8 @@ def fallback_answer_node(state: SingleQuestionState) -> SingleQuestionState:
         memory_context=state.get("memory_context", ""),
     )
     state["answer"] = answer
-    state["contexts"] = contexts
+    #state["contexts"] = contexts
+    state["references"] = references
     return state
 
 
@@ -406,7 +414,8 @@ def process_single_question_wrapper(state: RAGState) -> RAGState:
     result = SINGLE_QUESTION_SUBGRAPH.invoke(subgraph_state)
     
     state["answer"] = result["answer"]
-    state["contexts"] = result["contexts"]
+    #state["contexts"] = result["contexts"]
+    state["references"] = result.get("references", [])
     return state
 
 
@@ -441,7 +450,8 @@ def process_subquestion_wrapper(state: Dict[str, Any]) -> dict:
             "idx": idx,
             "question": sub_q,
             "answer": result["answer"],
-            "contexts": result["contexts"]
+            #"contexts": result["contexts"]
+            "references": result.get("references", [])
         }]
     }
 
@@ -463,12 +473,23 @@ def combine_answers_node(state: RAGState) -> RAGState:
     print(f"[INFO] Combinazione di {len(sub_answers_sorted)} risposte parziali (ordine: {[x.get('idx', '?') for x in sub_answers_sorted]})")
     combined_answer = combine_answers(llm, original_question, sub_answers_sorted)
     
-    all_contexts = []
+    #all_contexts = []
+    #for item in sub_answers_sorted:
+        #all_contexts.extend(item.get("contexts", []))
+
+    all_refs = []
+    seen = set()
     for item in sub_answers_sorted:
-        all_contexts.extend(item.get("contexts", []))
+        for r in item.get("references", []) or []:
+            key = (r.get("url"), r.get("title"), r.get("section"))
+            if key in seen:
+                continue
+            seen.add(key)
+            all_refs.append(r)
     
     state["answer"] = combined_answer
-    state["contexts"] = all_contexts
+    #state["contexts"] = all_contexts
+    state["references"] = all_refs
     return state
 
 
