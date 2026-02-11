@@ -13,7 +13,6 @@ class RAGState(TypedDict, total=False):
     question: str
     session_id: Optional[str]
     memory_context: str
-    rewritten_query: str
     mode: str
 
     is_composite: bool
@@ -37,9 +36,13 @@ class RAGState(TypedDict, total=False):
     nlp: Any
     reranker: Any
 
+    force_fallback: bool
+    emit: Any
+
 
 class SingleQuestionState(TypedDict, total=False):
     question: str
+    session_id: Optional[str]
     memory_context: str
     mode: str
     rewritten_query: str
@@ -60,6 +63,11 @@ class SingleQuestionState(TypedDict, total=False):
     bm25: Any
     nlp: Any
     reranker: Any
+
+    needs_fallback: bool
+    force_fallback: bool
+    fallback_reason: str
+    emit: Any
 
 
 def classify_question_node(state: SingleQuestionState) -> SingleQuestionState:
@@ -158,6 +166,109 @@ def answer_node(state: SingleQuestionState) -> SingleQuestionState:
     return state
 
 
+
+
+def evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
+    q = state.get("question", "")
+    ans = state.get("answer", "") or ""
+    n_sources = len(state.get("contexts", []) or [])
+
+    state["needs_fallback"] = False
+    state["fallback_reason"] = ""
+
+    low_quality = (
+        (n_sources == 0 and state.get("mode") != "semplice") or
+        "non presente nei documenti" in ans.lower() or
+        "non sono in grado di rispondere" in ans.lower() or
+        "parziale e poco affidabile" in ans.lower()
+    )
+
+    if low_quality:
+        state["needs_fallback"] = True
+        state["fallback_reason"] = "heuristic_low_quality"
+        emit = state.get("emit")
+        if emit:
+            emit({"type": "status", "message": "Sto cercando più a fondo..."})
+
+
+
+        print(
+            f"[EVAL] low_quality=True | sid={state.get('session_id')} | "
+            f"sources={n_sources} | reason={state['fallback_reason']}"
+        )
+        return state
+
+    print(
+        f"[EVAL] low_quality=False | sid={state.get('session_id')} | "
+        f"sources={n_sources}"
+    )
+
+
+    llm = state.get("llm")
+    if llm:
+        out = llm.invoke(EVAL_ANSWER_PROMPT.format(question=q, answer=ans, n_sources=n_sources))
+        if hasattr(out, "content"):
+            out = out.content
+        verdict = str(out).strip()
+
+        if verdict.startswith("FALLBACK"):
+            state["needs_fallback"] = True
+            state["fallback_reason"] = verdict
+            emit = state.get("emit")
+            if emit:
+                emit({"type": "status", "message": "Sto cercando più a fondo..."})
+        else:
+            state["needs_fallback"] = False
+            state["fallback_reason"] = ""
+    else:
+        state["needs_fallback"] = False
+        state["fallback_reason"] = ""
+
+    return state
+
+
+def fallback_retrieve_node(state: SingleQuestionState) -> SingleQuestionState:
+    print(f"[FALLBACK] entered | sid={state.get('session_id')} | technique={state.get('search_technique')}")
+
+    docs = fallback_retrieve_with_expansion(
+        query=state["rewritten_query"],
+        search_technique=state.get("search_technique", "dense"),
+        embedding_model=state["embedding_model"],
+        embedding_model_name=state["embedding_model_name"],
+        vectorstores=state["vectorstores"],
+        corpus=state.get("corpus"),
+        bm25=state.get("bm25"),
+        nlp=state.get("nlp"),
+        llm=state.get("llm"),
+        reranker=state.get("reranker"),
+        final_top_k=5,
+        candidate_k=25,  # <<< QUI controlli “più di 10 chunk”
+    )
+    state["docs"] = docs
+    return state
+
+
+def fallback_answer_node(state: SingleQuestionState) -> SingleQuestionState:
+    answer, contexts = process_query(
+        docs=state.get("docs", []),
+        query=state["rewritten_query"],
+        llm=state["llm"],
+        classification_mode=state["mode"],
+        memory_context=state.get("memory_context", ""),
+    )
+    state["answer"] = answer
+    state["contexts"] = contexts
+    return state
+
+
+def route_after_evaluate(state: SingleQuestionState) -> str:
+    if not state.get("needs_fallback", False) and not state.get("force_fallback", False):
+        return "end"
+    return "fallback"
+
+
+
+
 def _build_single_question_subgraph_internal():
     g = StateGraph(SingleQuestionState)
     
@@ -168,6 +279,10 @@ def _build_single_question_subgraph_internal():
     g.add_node("retrieve_sparse", retrieve_sparse_node)
     g.add_node("retrieve_hybrid", retrieve_hybrid_node)
     g.add_node("answer", answer_node)
+
+    g.add_node("evaluate", evaluate_node)
+    g.add_node("fallback_retrieve", fallback_retrieve_node)
+    g.add_node("fallback_answer", fallback_answer_node)
     
     g.set_entry_point("classify")
     
@@ -195,7 +310,19 @@ def _build_single_question_subgraph_internal():
     g.add_edge("retrieve_dense", "answer")
     g.add_edge("retrieve_sparse", "answer")
     g.add_edge("retrieve_hybrid", "answer")
-    g.add_edge("answer", END)
+    g.add_edge("answer", "evaluate")
+
+    g.add_conditional_edges(
+        "evaluate",
+        route_after_evaluate,
+        {
+            "end": END,
+            "fallback": "fallback_retrieve",
+        },
+    )
+
+    g.add_edge("fallback_retrieve", "fallback_answer")
+    g.add_edge("fallback_answer", END)
     
     return g.compile()
 
@@ -223,6 +350,7 @@ def route_after_decompose(state: RAGState) -> str | list[Send]:
                 {
                     "idx": idx,
                     "sub_question": sub_q,
+                    "session_id": state.get("session_id"),
                     "memory_context": state.get("memory_context", ""),
                     "search_technique": state.get("search_technique", "dense"),
                     "use_reranking": state.get("use_reranking", False),
@@ -235,6 +363,8 @@ def route_after_decompose(state: RAGState) -> str | list[Send]:
                     "bm25": state.get("bm25"),
                     "nlp": state.get("nlp"),
                     "reranker": state.get("reranker"),
+                    "force_fallback": state.get("force_fallback", False),
+                    "emit": state.get("emit"),
                 }
             )
             for idx, sub_q in enumerate(sub_questions)
@@ -245,6 +375,7 @@ def route_after_decompose(state: RAGState) -> str | list[Send]:
 def process_single_question_wrapper(state: RAGState) -> RAGState:
     subgraph_state: SingleQuestionState = {
         "question": state["question"],
+        "session_id": state.get("session_id"),
         "memory_context": state.get("memory_context", ""),
         "search_technique": state.get("search_technique", "dense"),
         "use_reranking": state.get("use_reranking", False),
@@ -257,6 +388,8 @@ def process_single_question_wrapper(state: RAGState) -> RAGState:
         "bm25": state.get("bm25"),
         "nlp": state.get("nlp"),
         "reranker": state.get("reranker"),
+        "force_fallback": state.get("force_fallback", False),
+        "emit": state.get("emit"),
     }
     
     result = SINGLE_QUESTION_SUBGRAPH.invoke(subgraph_state)
@@ -273,6 +406,7 @@ def process_subquestion_wrapper(state: Dict[str, Any]) -> dict:
     
     subgraph_state: SingleQuestionState = {
         "question": sub_q,
+        "session_id": state.get("session_id"),
         "memory_context": state.get("memory_context", ""),
         "search_technique": state.get("search_technique", "dense"),
         "use_reranking": state.get("use_reranking", False),
@@ -285,6 +419,8 @@ def process_subquestion_wrapper(state: Dict[str, Any]) -> dict:
         "bm25": state.get("bm25"),
         "nlp": state.get("nlp"),
         "reranker": state.get("reranker"),
+        "force_fallback": state.get("force_fallback", False),
+        "emit": state.get("emit"),
     }
     
     result = SINGLE_QUESTION_SUBGRAPH.invoke(subgraph_state)
@@ -318,117 +454,6 @@ def combine_answers_node(state: RAGState) -> RAGState:
     return state
 
 
-
-
-def evaluate_node(state: RAGState) -> RAGState:
-    q = state.get("question", "")
-    ans = state.get("answer", "") or ""
-    n_sources = len(state.get("contexts", []) or [])
-
-    # Heuristics veloci (prima dell’LLM)
-    low_quality = (
-        n_sources == 0 or
-        "non presente nei documenti" in ans.lower() or
-        "non sono in grado di rispondere" in ans.lower() or
-        "parziale e poco affidabile" in ans.lower()
-    )
-
-    if low_quality:
-        state["needs_fallback"] = True
-        state["fallback_reason"] = "heuristic_low_quality"
-        state["ui_message"] = "Sto cercando più a fondo..."
-
-        print(
-            f"[EVAL] low_quality=True | sid={state.get('session_id')} | "
-            f"sources={n_sources} | reason={state['fallback_reason']}"
-        )
-        return state
-
-    print(
-        f"[EVAL] low_quality=False | sid={state.get('session_id')} | "
-        f"sources={n_sources}"
-    )
-
-
-    # Valutazione LLM (agente “critic”)
-    llm = state.get("llm")
-    if llm:
-        out = llm.invoke(EVAL_ANSWER_PROMPT.format(question=q, answer=ans, n_sources=n_sources))
-        if hasattr(out, "content"):
-            out = out.content
-        verdict = str(out).strip()
-
-        if verdict.startswith("FALLBACK"):
-            state["needs_fallback"] = True
-            state["fallback_reason"] = verdict[:200]
-            state["ui_message"] = "Sto cercando più a fondo..."
-        else:
-            state["needs_fallback"] = False
-            state["fallback_reason"] = ""
-            state["ui_message"] = ""
-    else:
-        state["needs_fallback"] = False
-        state["fallback_reason"] = ""
-        state["ui_message"] = ""
-
-    if not state.get("needs_fallback", False):
-        state["fallback_used"] = False
-
-    return state
-
-
-def fallback_retrieve_node(state: RAGState) -> RAGState:
-    # segna fallback
-    state["fallback_used"] = True
-    print(f"[FALLBACK] entered | sid={state.get('session_id')} | technique={state.get('search_technique')}")
-
-    docs = fallback_retrieve_with_expansion(
-        query=state["rewritten_query"],
-        search_technique=state.get("search_technique", "dense"),
-        embedding_model=state["embedding_model"],
-        embedding_model_name=state["embedding_model_name"],
-        vectorstores=state["vectorstores"],
-        corpus=state["corpus"],
-        bm25=state["bm25"],
-        nlp=state["nlp"],
-        llm=state.get("llm"),
-        reranker=state.get("reranker"),
-        final_top_k=5,
-        candidate_k=25,  # <<< QUI controlli “più di 10 chunk”
-    )
-    state["docs"] = docs
-    return state
-
-
-def fallback_answer_node(state: RAGState) -> RAGState:
-    # riusa la stessa process_query che già usi :contentReference[oaicite:8]{index=8}
-    answer, contexts = process_query(
-        docs=state.get("docs", []),
-        query=state["rewritten_query"],
-        llm=state["llm"],
-        classification_mode=state["mode"],
-        memory_context=state.get("memory_context", ""),
-    )
-    state["answer"] = answer
-    state["contexts"] = contexts
-    return state
-
-
-def route_after_evaluate(state: RAGState) -> str:
-    if not state.get("needs_fallback", False):
-        return "end"
-
-    # fallback necessario, ma NON forzato → fermati qui
-    if not state.get("force_fallback", False):
-        return "end"
-
-    # fallback necessario E forzato → esegui fallback
-    return "fallback"
-
-
-
-
-
 def build_rag_graph():
     g = StateGraph(RAGState)
 
@@ -436,10 +461,6 @@ def build_rag_graph():
     g.add_node("process_single_question", process_single_question_wrapper)
     g.add_node("process_subquestion", process_subquestion_wrapper)
     g.add_node("combine_answers", combine_answers_node)
-
-    g.add_node("evaluate", evaluate_node)
-    g.add_node("fallback_retrieve", fallback_retrieve_node)
-    g.add_node("fallback_answer", fallback_answer_node)
 
     g.set_entry_point("decompose")
 
@@ -452,22 +473,9 @@ def build_rag_graph():
         }
     )
 
-    g.add_edge("process_single_question", "evaluate")
+    g.add_edge("process_single_question", END)
 
     g.add_edge("process_subquestion", "combine_answers")
-    g.add_edge("combine_answers", "evaluate")
-
-
-    g.add_conditional_edges(
-        "evaluate",
-        route_after_evaluate,
-        {
-            "end": END,
-            "fallback": "fallback_retrieve",
-        },
-    )
-
-    g.add_edge("fallback_retrieve", "fallback_answer")
-    g.add_edge("fallback_answer", END)
+    g.add_edge("combine_answers", END)
 
     return g.compile()

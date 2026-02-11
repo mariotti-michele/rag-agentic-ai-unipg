@@ -36,7 +36,6 @@ class QueryResponse(BaseModel):
     mode: str
     search_technique: str
 
-    fallback_used: bool = False
     fallback_reason: str = ""
     ui_message: str = ""
 
@@ -189,7 +188,6 @@ async def process_query(request: QueryRequest):
                 contexts=[],
                 mode=result.get("mode", "rag"),
                 search_technique=request.search_technique,
-                fallback_used=False,
                 fallback_reason=result.get("fallback_reason", ""),
                 ui_message="Sto cercando più a fondo..."
             )
@@ -200,7 +198,6 @@ async def process_query(request: QueryRequest):
 
         mem.add_turn(request.question, answer)
 
-        fallback_used = bool(result.get("fallback_used", False))
         fallback_reason = str(result.get("fallback_reason", "") or "")
         ui_message = str(result.get("ui_message", "") or "")
         
@@ -210,7 +207,6 @@ async def process_query(request: QueryRequest):
             contexts=contexts,
             mode=mode,
             search_technique=request.search_technique,
-            fallback_used=fallback_used,
             fallback_reason=fallback_reason,
             ui_message=ui_message
         )

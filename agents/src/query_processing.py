@@ -251,7 +251,7 @@ def fallback_retrieve_with_expansion(
     print(
         f"[FALLBACK_EXPANSION] "
         f"queries={len(queries)} | "
-        f"{' || '.join(q[:60] for q in queries)}"
+        f"{' || '.join(q for q in queries)}"
     )
 
     # 2) retrieval ampio su più query e merge "grezzo" (dedup)
