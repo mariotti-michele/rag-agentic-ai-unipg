@@ -86,6 +86,12 @@ def route_classify(state: SingleQuestionState) -> str:
 
 
 def simple_answer_node(state: SingleQuestionState) -> SingleQuestionState:
+    emit = state.get("emit")
+    if emit:
+        emit({
+                "type": "status", 
+                "message": f"Sto rispondendo alla tua domanda di carattere generale senza cercare nei documenti"
+            })        
     llm = state["llm"]
     q = state["question"]
     prompt = simple_prompt_template.format(question=q)
@@ -111,22 +117,13 @@ def route_retrieve(state: SingleQuestionState) -> str:
 
 
 def retrieve_dense_node(state: SingleQuestionState) -> SingleQuestionState:
-    arg = state.get("mode", "generale")
-    if arg == "rag":
-        arg = "generale"
     emit = state.get("emit")
     if emit:
-        subq_idx = state.get("subquestion_idx")
-        if subq_idx is not None:
-            emit({
+        emit({
                 "type": "status", 
-                "message": f"Sto cercando nei documenti la risposta alla tua  {subq_idx + 1}° sottodomanda sull'{arg}..."
+                "message": f"Sto cercando nei documenti la risposta alla tua domanda"
             })
-        else:
-            emit({
-                "type": "status", 
-                "message": f"Sto cercando nei documenti la risposta alla tua domanda sull'argomento: {arg}"
-            })
+            
 
     state["docs"] = dense_search(
         query=state["rewritten_query"],
@@ -172,6 +169,16 @@ def retrieve_hybrid_node(state: SingleQuestionState) -> SingleQuestionState:
 
 
 def answer_node(state: SingleQuestionState) -> SingleQuestionState:
+    emit = state.get("emit")
+    argument = state.get("mode", "generale")
+    if state.get("mode") == "rag":
+        argument = "generale"
+    if emit:
+        emit({
+                "type": "status", 
+                "message": f"Sto elaborando la risposta alla tua domanda sull'argomento: {argument}"
+            })
+    
     answer, contexts = process_query(
         docs=state.get("docs", []),
         query=state["rewritten_query"],
