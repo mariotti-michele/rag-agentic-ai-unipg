@@ -233,13 +233,9 @@ def fallback_retrieve_node(state: SingleQuestionState) -> SingleQuestionState:
 
     docs = fallback_retrieve_with_expansion(
         query=state["rewritten_query"],
-        search_technique=state.get("search_technique", "dense"),
         embedding_model=state["embedding_model"],
         embedding_model_name=state["embedding_model_name"],
         vectorstores=state["vectorstores"],
-        corpus=state.get("corpus"),
-        bm25=state.get("bm25"),
-        nlp=state.get("nlp"),
         llm=state.get("llm"),
         reranker=state.get("reranker"),
     )
