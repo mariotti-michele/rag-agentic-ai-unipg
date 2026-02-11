@@ -236,7 +236,7 @@ def route_after_evaluate(state: SingleQuestionState) -> str:
 
 
 def fallback_retrieve_node(state: SingleQuestionState) -> SingleQuestionState:
-    print(f"[FALLBACK] entered | sid={state.get('session_id')} | technique={state.get('search_technique')}")
+    print(f"[FALLBACK] entered | sid={state.get('session_id')} | technique={state.get('search_technique')} | reason={state.get('fallback_reason')} | answer_to_improve={state.get('answer')}")
 
     docs = fallback_retrieve_with_expansion(
         query=state["rewritten_query"],
