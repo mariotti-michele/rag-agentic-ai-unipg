@@ -176,7 +176,7 @@ def answer_node(state: SingleQuestionState) -> SingleQuestionState:
     if emit:
         emit({
                 "type": "status", 
-                "message": f"Sto elaborando la risposta alla tua domanda sull'argomento: {argument}"
+                "message": f"Sto generando la risposta alla tua domanda sull'argomento: {argument}"
             })
     
     answer, contexts = process_query(
