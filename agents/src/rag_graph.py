@@ -194,6 +194,7 @@ def answer_node(state: SingleQuestionState) -> SingleQuestionState:
     state["answer"] = answer
     #state["contexts"] = contexts
     state["references"] = references
+    print(f"[INFO] Risposta generata: {answer}")
     return state
 
 
