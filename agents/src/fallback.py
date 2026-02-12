@@ -1,5 +1,5 @@
 from prompts import QUERY_EXPANSION_PROMPT, MULTI_QUERY_PROMPT
-from retrieval import dense_search, bm25_search, hybrid_search
+from retrieval import dense_search
 from reranking import rerank_with_cross_encoder
     
 

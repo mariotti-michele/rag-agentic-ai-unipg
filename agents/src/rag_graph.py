@@ -100,6 +100,7 @@ def simple_answer_node(state: SingleQuestionState) -> SingleQuestionState:
         ans = ans.content
     state["answer"] = ans
     state["contexts"] = []
+    print(f"[INFO] Risposta generata per domanda semplice: {ans}")
     return state
 
 
@@ -188,6 +189,7 @@ def answer_node(state: SingleQuestionState) -> SingleQuestionState:
     )
     state["answer"] = answer
     state["contexts"] = contexts
+    print(f"[INFO] Risposta generata: {answer}\nContesti usati: {len(contexts)}")
     return state
 
 
@@ -211,12 +213,10 @@ def evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
     if low_quality:
         state["needs_fallback"] = True
         state["fallback_reason"] = "heuristic_low_quality"
+        state["mode"] = "rag"
         emit = state.get("emit")
         if emit:
             emit({"type": "status", "message": "Sto cercando più a fondo..."})
-
-
-
         print(
             f"[EVAL] low_quality=True | sid={state.get('session_id')} | "
             f"sources={n_sources} | reason={state['fallback_reason']}"
@@ -233,6 +233,7 @@ def evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
         if verdict.startswith("FALLBACK"):
             state["needs_fallback"] = True
             state["fallback_reason"] = verdict
+            state["mode"] = "rag"
             emit = state.get("emit")
             if emit:
                 emit({"type": "status", "message": "Sto cercando più a fondo..."})
@@ -277,7 +278,61 @@ def fallback_answer_node(state: SingleQuestionState) -> SingleQuestionState:
     )
     state["answer"] = answer
     state["contexts"] = contexts
+    print(f"[FALLBACK] nuova risposta generata: {answer}\nContesti usati: {len(contexts)}")
     return state
+
+def secondary_evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
+    ans = state.get("answer", "") or ""
+    n_sources = len(state.get("contexts", []) or [])
+
+    state["needs_fallback"] = False
+    state["fallback_reason"] = ""
+
+    low_quality = (
+        (n_sources == 0 and state.get("mode") != "semplice") or
+        "non presente nei documenti" in ans.lower() or
+        "non sono in grado di rispondere" in ans.lower()
+    )
+
+    if low_quality:
+        state["needs_fallback"] = True
+        state["fallback_reason"] = "heuristic_low_quality on second eval"
+        state["mode"] = "rag"
+        emit = state.get("emit")
+        if emit:
+            emit({"type": "status", "message": "Non riesco a trovare la risposta, faccio un ultimo tentativo..."})
+        print(
+            f"[Secondary EVAL] low_quality=True | sid={state.get('session_id')} | "
+            f"sources={n_sources} | reason={state['fallback_reason']}"
+        )
+    return state
+
+def route_after_secondary_evaluate(state: SingleQuestionState) -> str:
+    if not state.get("needs_fallback", False):
+        return "end"
+    return "fallback"
+
+
+def retrieval_without_memory_context_node(state: SingleQuestionState) -> SingleQuestionState:
+    print(f"[INFO] Riprovo facendo retrieval senza contesto di memoria | sid={state.get('session_id')}")
+    state["rewritten_query"] = state["question"]
+    return retrieve_dense_node(state)
+
+
+def answer_after_secondary_evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
+    answer, contexts = process_query(
+        docs=state.get("docs", []),
+        query=state["question"],
+        llm=state["llm"],
+        classification_mode=state["mode"],
+        memory_context=state.get("memory_context", ""),
+    )
+    state["answer"] = answer
+    state["contexts"] = contexts
+    print(f"[INFO] Risposta generata dopo secondary evaluate: {answer}\nContesti usati: {len(contexts)}")
+    return state
+
+
 
 
 def _build_single_question_subgraph_internal():
@@ -294,6 +349,10 @@ def _build_single_question_subgraph_internal():
     g.add_node("evaluate", evaluate_node)
     g.add_node("fallback_retrieve", fallback_retrieve_node)
     g.add_node("fallback_answer", fallback_answer_node)
+
+    g.add_node("secondary_evaluate", secondary_evaluate_node)
+    g.add_node("retrieval_without_memory_context", retrieval_without_memory_context_node)
+    g.add_node("answer_after_secondary_evaluate", answer_after_secondary_evaluate_node)
     
     g.set_entry_point("classify")
     
@@ -333,7 +392,17 @@ def _build_single_question_subgraph_internal():
     )
 
     g.add_edge("fallback_retrieve", "fallback_answer")
-    g.add_edge("fallback_answer", END)
+    g.add_edge("fallback_answer", "secondary_evaluate")
+    g.add_conditional_edges(
+        "secondary_evaluate",
+        route_after_secondary_evaluate,
+        {
+            "end": END,
+            "fallback": "retrieval_without_memory_context",
+        },
+    )
+    g.add_edge("retrieval_without_memory_context", "answer_after_secondary_evaluate")
+    g.add_edge("answer_after_secondary_evaluate", END)
     
     return g.compile()
 

@@ -39,6 +39,7 @@ def get_llm_answer(context: str, query: str, llm, prompt_template, memory_contex
     if memory_context:
         prompt = memory_context.strip() + "\n\n" + prompt
 
+    print(f"[DEBUG] Prompt per LLM:\n{prompt}\n")
     answer = llm.invoke(prompt)
     if hasattr(answer, "content"):
         answer = answer.content
