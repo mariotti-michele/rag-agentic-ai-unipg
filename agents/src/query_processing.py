@@ -78,7 +78,7 @@ def get_llm_answer(context: str, query: str, llm, prompt_template, memory_contex
     if memory_context:
         prompt = memory_context.strip() + "\n\n" + prompt
 
-    print(f"[DEBUG] Prompt per LLM:\n{prompt}\n")
+    #print(f"[DEBUG] Prompt per LLM:\n{prompt}\n")
     answer = llm.invoke(prompt)
     if hasattr(answer, "content"):
         answer = answer.content
@@ -89,9 +89,9 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     if not docs:
         return "Non presente nei documenti", []
     context = build_context(docs)
-    print("\n[DEBUG] ===== CONTEXT PASSATO ALL'LLM =====")
-    print(context)
-    print("[DEBUG] ===== FINE CONTEXT =====\n")
+    #print("\n[DEBUG] ===== CONTEXT PASSATO ALL'LLM =====")
+    #print(context)
+    #print("[DEBUG] ===== FINE CONTEXT =====\n")
     prompt_template = RAG_PROMPT
     if classification_mode == "orario":
         prompt_template = TIMETABLE_PROMPT
