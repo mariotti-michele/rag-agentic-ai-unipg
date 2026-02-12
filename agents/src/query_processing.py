@@ -31,6 +31,8 @@ def build_references(docs: list[dict]) -> list[dict]:
         title = _title_from_url(url)
 
         section = d.get("section_path") or ""
+
+        print(f"[DEBUG] Elaborazione riferimento: URL='{url}', Title='{title}', Section='{section}'")
         
         if not title or title == url:
             doc_id = d.get("doc_id") or ""
