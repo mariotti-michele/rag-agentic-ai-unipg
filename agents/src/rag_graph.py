@@ -285,12 +285,12 @@ def fallback_answer_node(state: SingleQuestionState) -> SingleQuestionState:
     state["answer"] = answer
     #state["contexts"] = contexts
     state["references"] = references
-    print(f"[FALLBACK] nuova risposta generata: {answer}\nContesti usati: {len(contexts)}")
+    print(f"[FALLBACK] nuova risposta generata: {answer}")
     return state
 
 def secondary_evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
     ans = state.get("answer", "") or ""
-    n_sources = len(state.get("contexts", []) or [])
+    n_sources = len(state.get("references", []) or [])
 
     state["needs_fallback"] = False
     state["fallback_reason"] = ""
@@ -327,7 +327,7 @@ def retrieval_without_memory_context_node(state: SingleQuestionState) -> SingleQ
 
 
 def answer_after_secondary_evaluate_node(state: SingleQuestionState) -> SingleQuestionState:
-    answer, contexts = process_query(
+    answer, references = process_query(
         docs=state.get("docs", []),
         query=state["question"],
         llm=state["llm"],
@@ -335,8 +335,8 @@ def answer_after_secondary_evaluate_node(state: SingleQuestionState) -> SingleQu
         memory_context=state.get("memory_context", ""),
     )
     state["answer"] = answer
-    state["contexts"] = contexts
-    print(f"[INFO] Risposta generata dopo secondary evaluate: {answer}\nContesti usati: {len(contexts)}")
+    state["references"] = references
+    print(f"[INFO] Risposta generata dopo secondary evaluate: {answer}")
     return state
 
 
