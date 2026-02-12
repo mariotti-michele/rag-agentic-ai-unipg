@@ -1,4 +1,7 @@
 from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, QUERY_REWRITE_PROMPT, QUESTION_DECOMPOSITION_PROMPT, ANSWER_COMBINATION_PROMPT
+from urllib.parse import urlparse, unquote
+import os
+
 
 def build_context(docs: list) -> str:
     context = ""
@@ -6,6 +9,42 @@ def build_context(docs: list) -> str:
         section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
         context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
     return context
+
+def _title_from_url(url: str) -> str:
+    try:
+        path = unquote(urlparse(url).path)
+        name = os.path.basename(path)
+        return name or url
+    except Exception:
+        return url
+
+
+def build_references(docs: list[dict]) -> list[dict]:
+    refs = []
+    seen = set()
+
+    for d in docs:
+        url = d.get("source_url") or ""
+        if not url:
+            continue
+
+        title = _title_from_url(url)
+
+        section = d.get("section_path") or ""
+        
+        if not title or title == url:
+            doc_id = d.get("doc_id") or ""
+            if doc_id:
+                title = doc_id
+
+        key = (url, title, section)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        refs.append({"url": url, "title": title, "section": section})
+
+    return refs
 
 
 def rewrite_query(llm, question: str, memory_context: str) -> str:
@@ -50,6 +89,9 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     if not docs:
         return "Non presente nei documenti", []
     context = build_context(docs)
+    print("\n[DEBUG] ===== CONTEXT PASSATO ALL'LLM =====")
+    print(context)
+    print("[DEBUG] ===== FINE CONTEXT =====\n")
     prompt_template = RAG_PROMPT
     if classification_mode == "orario":
         prompt_template = TIMETABLE_PROMPT
@@ -60,7 +102,9 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     elif classification_mode == "calendario lauree":
         prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template, memory_context)
-    return answer, [d["text"] for d in docs]
+    references = build_references(docs)
+    #return answer, [d["text"] for d in docs]
+    return answer, references
 
 
 def classify_query(llm, query: str) -> str:
