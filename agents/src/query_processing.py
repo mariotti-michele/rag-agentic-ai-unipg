@@ -36,6 +36,10 @@ def build_references(docs: list[dict]) -> list[dict]:
             doc_id = d.get("doc_id") or ""
             if doc_id:
                 title = doc_id
+        
+        if url == "manual" and "orari" in d.get("description", "").lower():
+            title = "Orari lezioni"
+            url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/orario-lezioni"
 
         key = (url, title, section)
         if key in seen:

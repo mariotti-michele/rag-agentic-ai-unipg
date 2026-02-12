@@ -540,6 +540,7 @@ def combine_answers_node(state: RAGState) -> RAGState:
     
     print(f"[INFO] Combinazione di {len(sub_answers_sorted)} risposte parziali (ordine: {[x.get('idx', '?') for x in sub_answers_sorted]})")
     combined_answer = combine_answers(llm, original_question, sub_answers_sorted)
+    print(f"[INFO] Risposta combinata: {combined_answer}")
     
     #all_contexts = []
     #for item in sub_answers_sorted:
