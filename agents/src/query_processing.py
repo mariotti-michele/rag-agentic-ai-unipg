@@ -40,10 +40,18 @@ def build_references(docs: list[dict]) -> list[dict]:
                 title = doc_id
         
         if url == "manual":
-            print("[debug] Riferimento manuale identificato come orari lezioni, titolo e URL impostati di conseguenza")
-            title = "Orari lezioni"
-            url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/orario-lezioni"
-            section = ""
+            if d.get("collection") == "ing_info_mag_orari":
+                title = "Orari lezioni"
+                url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/orario-lezioni"
+                section = ""
+            elif d.get("collection") == "ing_info_mag_calendario_esami" or d.get("collection") == "ing_info_calendario_lauree":
+                title = "Calendario esami"
+                url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/calendario-di-esami-e-lauree"
+                section = ""
+            elif d.get("collection") == "ing_info_mag_regolamenti_didattici_tabelle" or d.get("collection") == "ing_info_mag_regolamenti_didattici":
+                title = "Regolamento didattico"
+                url = "https://www.unipg.it/didattica/corsi-di-laurea-e-laurea-magistrale/archivio/offerta-formativa-2025-26?view=elenco&idcorso=8643&annoregolamento=2025&tab=ART"
+                section = ""
 
         key = (url, title, section)
         if key in seen:
