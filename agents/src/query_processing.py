@@ -31,8 +31,6 @@ def build_references(docs: list[dict]) -> list[dict]:
         title = _title_from_url(url)
 
         section = d.get("section_path") or ""
-
-        print(f"[DEBUG] Elaborazione riferimento: URL='{url}', Title='{title}', Section='{section}'")
         
         if not title or title == url:
             doc_id = d.get("doc_id") or ""
@@ -45,7 +43,7 @@ def build_references(docs: list[dict]) -> list[dict]:
                 url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/orario-lezioni"
                 section = ""
             elif d.get("collection") == "ing_info_mag_calendario_esami" or d.get("collection") == "ing_info_calendario_lauree":
-                title = "Calendario esami"
+                title = "Calendario esami e lauree"
                 url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/calendario-di-esami-e-lauree"
                 section = ""
             elif d.get("collection") == "ing_info_mag_regolamenti_didattici_tabelle" or d.get("collection") == "ing_info_mag_regolamenti_didattici":
