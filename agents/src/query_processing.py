@@ -1,4 +1,5 @@
-from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, QUERY_REWRITE_PROMPT, QUESTION_DECOMPOSITION_PROMPT, ANSWER_COMBINATION_PROMPT
+import re
+from prompts import EXAM_CALENDAR_PROMPT, GRADUATION_CALENDAR_PROMPT, MODULES_PROMPT, RAG_PROMPT, TIMETABLE_PROMPT, CLASSIFIER_PROMPT, QUERY_REWRITE_PROMPT, QUESTION_DECOMPOSITION_PROMPT, ANSWER_COMBINATION_PROMPT, SOURCE_IDENTIFICATION_PROMPT
 from urllib.parse import urlparse, unquote
 import os
 
@@ -60,6 +61,43 @@ def build_references(docs: list[dict]) -> list[dict]:
     return refs
 
 
+def identify_used_sources(llm, context: str, answer: str) -> list[int]:
+    answer_lower = answer.lower().strip()
+    no_info_phrases = [
+        "non presente nei documenti",
+        "non sono in grado di rispondere",
+        "non trattata nei documenti"
+    ]
+    
+    if any(phrase in answer_lower for phrase in no_info_phrases):
+        return []
+    
+    try:
+        prompt = SOURCE_IDENTIFICATION_PROMPT.format(context=context, answer=answer)
+        response = llm.invoke(prompt)
+        if hasattr(response, "content"):
+            response = response.content
+        
+        response_text = str(response).strip().upper()
+        
+        if "NESSUNA" in response_text:
+            print("[DEBUG] LLM ha identificato nessuna fonte utilizzata") #da commentare
+            return []
+        
+        used_indices = []
+        numbers = re.findall(r'\d+', response_text)
+        used_indices = [int(n) for n in numbers if n.isdigit()]
+        
+        if used_indices:
+            print(f"[DEBUG] Fonti identificate come utilizzate: {used_indices}") #da commentare
+        return used_indices
+    
+    except Exception as e:
+        print(f"[WARN] Errore nell'identificazione delle fonti utilizzate: {e}")
+        num_sources = context.count("[Fonte ")
+        return list(range(1, num_sources + 1))
+
+
 def rewrite_query(llm, question: str, memory_context: str) -> str:
     if not memory_context or not memory_context.strip():
         return question
@@ -102,9 +140,9 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     if not docs:
         return "Non presente nei documenti", []
     context = build_context(docs)
-    print("\n[DEBUG] ===== CONTEXT PASSATO ALL'LLM =====")
-    print(context)
-    print("[DEBUG] ===== FINE CONTEXT =====\n")
+    print("\n[DEBUG] ===== CONTEXT PASSATO ALL'LLM =====") #da commentare
+    print(context) #da commentare
+    print("[DEBUG] ===== FINE CONTEXT =====\n") #da commentare
     prompt_template = RAG_PROMPT
     if classification_mode == "orario":
         prompt_template = TIMETABLE_PROMPT
@@ -116,7 +154,16 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
         prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template, memory_context)
 
-    references = build_references(docs)
+    used_source_indices = identify_used_sources(llm, context, answer)
+    
+    if used_source_indices:
+        used_docs = [docs[i-1] for i in used_source_indices if 0 < i <= len(docs)]
+        print(f"[DEBUG] Restituisco {len(used_docs)} fonti su {len(docs)} totali") #da commentare
+    else:
+        used_docs = []
+        print("[DEBUG] Nessuna fonte da restituire") #da commentare
+    
+    references = build_references(used_docs)
     #return answer, [d["text"] for d in docs]
     return answer, references
 

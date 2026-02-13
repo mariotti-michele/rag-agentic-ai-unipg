@@ -412,6 +412,9 @@ ANSWER_COMBINATION_PROMPT = PromptTemplate(
 
 
 
+
+
+
 # === Fallback / Evaluation prompts ===
 
 EVAL_ANSWER_PROMPT = """
@@ -453,3 +456,66 @@ Rispondi SOLO con 3 righe, una query per riga, senza elenco o spiegazioni.
 
 Query: {query}
 """
+
+
+source_identification_prompt_template = """Sei un analizzatore che identifica quali fonti sono state effettivamente utilizzate per generare una risposta.
+
+Ti verranno forniti:
+1. Un contesto con fonti numerate (es. [Fonte 1], [Fonte 2], ecc.)
+2. Una risposta generata da un assistente
+
+Il tuo compito è identificare quali fonti sono state utilizzate (anche parzialmente) per generare la risposta.
+
+Regole:
+- Rispondi SOLO con i numeri delle fonti utilizzate, separati da virgola (es. "1, 3, 5")
+- Se la risposta è "Non presente nei documenti", "Non sono in grado di rispondere" o varianti simili, rispondi SOLO con: "NESSUNA"
+- Se la risposta contiene informazioni parziali o incomplete dai documenti, indica comunque le fonti parzialmente utilizzate
+- Considera utilizzata una fonte se anche solo una parte del suo contenuto è stata usata nella risposta
+- Non inventare numeri di fonti che non esistono nel contesto
+
+Esempi:
+
+Contesto:
+[Fonte 1]
+Il corso di Machine Learning si tiene il lunedì alle 9:00
+[Fonte 2]
+Il corso di Deep Learning vale 6 CFU
+[Fonte 3]
+Il docente di Machine Learning è il Prof. Rossi
+
+Risposta:
+Il corso di Machine Learning si tiene il lunedì alle 9:00 ed è tenuto dal Prof. Rossi.
+
+Output atteso:
+1, 3
+
+---
+
+Contesto:
+[Fonte 1]
+Informazioni su Robotics
+[Fonte 2]
+Calendario delle festività
+
+Risposta:
+Non sono in grado di rispondere alla domanda in quanto non trattata nei documenti a cui ho accesso.
+
+Output atteso:
+NESSUNA
+
+---
+
+Ora analizza:
+
+Contesto:
+{context}
+
+Risposta:
+{answer}
+
+Fonti utilizzate:"""
+
+SOURCE_IDENTIFICATION_PROMPT = PromptTemplate(
+    input_variables=["context", "answer"],
+    template=source_identification_prompt_template,
+)
