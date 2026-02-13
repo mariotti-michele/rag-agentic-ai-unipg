@@ -2,116 +2,76 @@
   "corso_di_laurea": "Ingegneria Informatica e Robotica",
   "anno_accademico": "2025/2026",
   "anno": "II",
-  "semestre": "I",
-  "periodo": "15/09/2025 - 12/12/2025",
+  "semestre": "II",
+  "periodo": "16/02/2026 - 22/05/2026",
   "orario": {
     "Lunedì": {
-      "08:30-10:30": [
+      "11:30-13:30": [
         {
-          "corso": "MODELS AND ALGORITHMS FOR DATA VISUALIZATION",
-          "aula": "2",
+          "corso": "DATA SCIENCE FOR HEALTH SYSTEMS",
+          "aula": "3",
           "curriculum": "data science and data engineering",
-          "professore": "G. Liotta"
+          "professore": "A. De Angelis"
         }
       ],
-      "14:30-16:30": [
+      "14:30-17:30": [
         {
-          "corso": "DEEP LEARNING AND ROBOT PERCEPTION",
-          "aula": "1",
-          "curriculum": "robotics",
-          "professore": "G. Costante"
+          "corso": "VIRTUAL NETWORKS AND CLOUD COMPUTING",
+          "aula": "10",
+          "curriculum": "data science and data engineering",
+          "professore": "G. Reali"
         }
       ]
     },
     "Martedì": {
+      "08:30-11:30": [
+        {
+          "corso": "VIRTUAL NETWORKS AND CLOUD COMPUTING",
+          "aula": "8",
+          "curriculum": "data science and data engineering",
+          "professore": "G. Reali"
+        }
+      ],
       "11:30-13:30": [
         {
-          "corso": "AUTONOMOUS ROBOTICS",
-          "aula": "LAB MULT",
-          "curriculum": "robotics",
-          "professore": "P. Valigi"
-        }
-      ],
-      "14:30-16:30": [
-        {
-          "corso": "DEEP LEARNING AND ROBOT PERCEPTION",
-          "aula": "B",
-          "curriculum": "robotics",
-          "professore": "G. Costante"
-        }
-      ],
-      "16:30-18:30": [
-        {
-          "corso": "DATA SECURITY AND BLOCKCHAIN",
-          "aula": "11",
+          "corso": "DATA INTENSIVE APPLICATIONS AND BIG DATA",
+          "aula": "10",
           "curriculum": "data science and data engineering",
-          "professore": "L. Grilli"
+          "professore": "F. Montecchiani"
+        }
+      ],
+      "14:30-17:30": [
+        {
+          "corso": "NONLINEAR AND ROBUST CONTROL",
+          "aula": "2",
+          "curriculum": "robotics",
+          "professore": "F. Ferrante"
         }
       ]
     },
     "Mercoledì": {
-      "14:30-17:30": [
-        {
-          "corso": "SIGNAL PROCESSING AND OPTIMIZATION FOR BIG DATA",
-          "aula": "9",
-          "curriculum": "data science and data engineering",
-          "professore": "P. Banelli"
-        }
-      ]
-    },
-    "Giovedì": {
-      "09:30-11:30": [
-        {
-          "corso": "DATA SECURITY AND BLOCKCHAIN",
-          "aula": "10",
-          "curriculum": "data science and data engineering",
-          "professore": "L. Grilli"
-        }
-      ],
-      "11:30-13:30": [
-        {
-          "corso": "AUTONOMOUS ROBOTICS",
-          "aula": "10",
-          "curriculum": "robotics",
-          "professore": "P. Valigi"
-        },
-        {
-          "corso": "MODELS AND ALGORITHMS FOR DATA VISUALIZATION",
-          "aula": "11",
-          "curriculum": "data science and data engineering",
-          "professore": "G. Liotta"
-        }
-      ]
-    },
-    "Venerdì": {
       "08:30-11:30": [
         {
-          "corso": "SIGNAL PROCESSING AND OPTIMIZATION FOR BIG DATA",
-          "aula": "11",
-          "curriculum": "data science and data engineering",
-          "professore": "P. Banelli"
+          "corso": "NONLINEAR AND ROBUST CONTROL",
+          "aula": "8",
+          "curriculum": "robotics",
+          "professore": "F. Ferrante"
         }
       ],
       "11:30-13:30": [
         {
-          "corso": "DEEP LEARNING AND ROBOT PERCEPTION",
-          "aula": "11",
-          "curriculum": "robotics",
-          "professore": "G. Costante"
+          "corso": "DATA INTENSIVE APPLICATIONS AND BIG DATA",
+          "aula": "8",
+          "curriculum": "data science and data engineering",
+          "professore": "F. Montecchiani"
         }
       ],
       "14:30-16:30": [
         {
-          "corso": "AUTONOMOUS ROBOTICS",
+          "corso": "DATA SCIENCE FOR HEALTH SYSTEMS",
           "aula": "10",
-          "curriculum": "robotics",
-          "professore": "P. Valigi"
-        },
-        {
-          "corso": "MODELS AND ALGORITHMS FOR DATA VISUALIZATION",
-          "aula": "11",
           "curriculum": "data science and data engineering",
-          "professore": "G. Liotta"
+          "professore": "A. De Angelis"
         }
       ]
     }
