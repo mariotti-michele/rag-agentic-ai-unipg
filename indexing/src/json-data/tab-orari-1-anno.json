@@ -2,112 +2,112 @@
   "corso_di_laurea": "Ingegneria Informatica e Robotica",
   "anno_accademico": "2025/2026",
   "anno": "I",
-  "semestre": "I",
-  "periodo": "15/09/2025 - 12/12/2025",
+  "semestre": "II",
+  "periodo": "16/02/2026 - 22/05/2026",
   "orario": {
     "Lunedì": {
       "08:30-10:30": [
         {
-          "corso": "INTELLIGENT AND SECURE NETWORKS",
+          "corso": "INFORMATION AND ESTIMATION THEORY",
           "aula": "9",
           "curriculum": "comune",
+          "professore": ["G. Baruffa", "L. Rugini"]
+        }
+      ],
+      "10:30-13:30": [
+        {
+          "corso": "COMPUTATIONAL MODELS AND ADVANCED ALGORITHMS",
+          "aula": "11",
+          "curriculum": "data science and data engineering",
+          "professore": "W. Didimo"
+        }
+      ],
+      "14:30-16:30": [
+        {
+          "corso": "MACHINE TO MACHINE NETWORKS",
+          "aula": "DIING",
+          "curriculum": "robotics",
           "professore": "M. Femminella"
+        }
+      ],
+      "16:30-18:30": [
+        {
+          "corso": "INDUSTRIAL ROBOTICS",
+          "aula": "1",
+          "curriculum": "robotics",
+          "professore": ["F. Ferrante", "F. Crocetti"]
         }
       ]
     },
     "Martedì": {
-      "08:30-10:30": [
+      "09:30-11:30": [
         {
-          "corso": "DIGITAL SIGNAL PROCESSING",
+          "corso": "MACHINE TO MACHINE NETWORKS",
           "aula": "DIING",
           "curriculum": "robotics",
-          "professore": "F. Frescura"
-        }
-      ],
-      "10:30-13:30": [
-        {
-          "corso": "MACHINE LEARNING LEARNING AND DATA ANALYSIS",
-          "aula": "11",
-          "curriculum": "comune",
-          "professore": "G. Costante"
-        }
-      ],
-      "16:30-18:30": [
-        {
-          "corso": "INTELLIGENT AND SECURE NETWORKS",
-          "aula": "9",
-          "curriculum": "comune",
           "professore": "M. Femminella"
         }
-      ]
-    },
-    "Mercoledì": {
-      "10:30-13:30": [
+      ],
+      "11:30-13:30": [
         {
-          "corso": "EMBEDDED ELECTRONIC SYSTEMS",
-          "aula": "9",
-          "curriculum": "robotics",
-          "professore": "P. Placidi"
+          "corso": "INFORMATION AND ESTIMATION THEORY",
+          "aula": "11",
+          "curriculum": "comune",
+          "professore": ["G. Baruffa", "L. Rugini"]
         }
       ],
       "14:30-17:30": [
         {
-          "corso": "MACHINE LEARNING LEARNING AND DATA ANALYSIS",
-          "aula": "10",
-          "curriculum": "comune",
-          "professore": "G. Costante"
-        }
-      ]
-    },
-    "Giovedì": {
-      "10:30-12:30": [
-        {
-          "corso": "DIGITAL SIGNAL PROCESSING",
-          "aula": "LIS",
-          "curriculum": "robotics",
-          "professore": "F. Frescura"
-        }
-      ],
-      "14:30-16:30": [
-        {
-          "corso": "INTERNET AND WEB PROGRAMMING",
-          "aula": "11 LIS",
+          "corso": "SOFTWARE ENGINEERING AND AI-ENABLED SYSTEMS",
+          "aula": "8",
           "curriculum": "data science and data engineering",
-          "professore": "W. Didimo"
-        }
-      ],
-      "16:30-18:30": [
-        {
-          "corso": "INTELLIGENT AND SECURE NETWORKS",
-          "aula": "10",
-          "curriculum": "comune",
-          "professore": "M. Femminella"
+          "professore": "F. Montecchiani"
         }
       ]
     },
-    "Venerdì": {
+    "Mercoledì": {
       "08:30-10:30": [
         {
-          "corso": "DIGITAL SIGNAL PROCESSING",
+          "corso": "MACHINE TO MACHINE NETWORKS",
           "aula": "DIING",
           "curriculum": "robotics",
-          "professore": "F. Frescura"
+          "professore": "M. Femminella"
         }
       ],
       "10:30-13:30": [
         {
-          "corso": "EMBEDDED ELECTRONIC SYSTEMS",
-          "aula": "9",
-          "curriculum": "robotics",
-          "professore": "P. Placidi"
+          "corso": "COMPUTATIONAL MODELS AND ADVANCED ALGORITHMS",
+          "aula": "11",
+          "curriculum": "data science and data engineering",
+          "professore": "W. Didimo"
         }
       ],
       "14:30-16:30": [
         {
-          "corso": "INTERNET AND WEB PROGRAMMING",
-          "aula": "8 LIS",
+          "corso": "INDUSTRIAL ROBOTICS",
+          "aula": "8",
+          "curriculum": "robotics",
+          "professore": ["F. Ferrante", "F. Crocetti"]
+        }
+      ]
+    },
+    "Giovedì": {
+      "08:30-11:30": [
+        {
+          "corso": "SOFTWARE ENGINEERING AND AI-ENABLED SYSTEMS",
+          "aula": "9",
           "curriculum": "data science and data engineering",
-          "professore": "W. Didimo"
+          "professore": "F. Montecchiani"
+        }
+      ]
+    },
+    "Venerdì": {
+      "09:30-11:30": [
+        {
+          "corso": "INFORMATION AND ESTIMATION THEORY",
+          "aula": "11",
+          "curriculum": "comune",
+          "professore": ["G. Baruffa", "L. Rugini"]
         }
       ]
     }
