@@ -6,8 +6,7 @@ import os
 def build_context(docs: list) -> str:
     context = ""
     for i, d in enumerate(docs, 1):
-        section = f" | Sezione: {d.get('section_path','')}" if d.get("section_path") else ""
-        context += f"[Fonte {i}] ({d.get('collection','N/A')}){section}\n{d['text']}\n\n"
+        context += f"[Fonte {i}]\n{d['text']}\n\n"
     return context
 
 def _title_from_url(url: str) -> str:
@@ -116,6 +115,7 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     elif classification_mode == "calendario lauree":
         prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template, memory_context)
+
     references = build_references(docs)
     #return answer, [d["text"] for d in docs]
     return answer, references
