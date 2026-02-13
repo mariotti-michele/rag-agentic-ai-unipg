@@ -30,6 +30,7 @@ class Reference(BaseModel):
     url: str
     title: Optional[str] = None
     section: Optional[str] = None
+    indices: List[int] = Field(default_factory=list)
 
 class QueryRequest(BaseModel):
     question: str

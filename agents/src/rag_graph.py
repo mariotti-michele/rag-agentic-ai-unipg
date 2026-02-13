@@ -542,23 +542,28 @@ def combine_answers_node(state: RAGState) -> RAGState:
     print(f"[INFO] Combinazione di {len(sub_answers_sorted)} risposte parziali (ordine: {[x.get('idx', '?') for x in sub_answers_sorted]})")
     combined_answer = combine_answers(llm, original_question, sub_answers_sorted)
     print(f"[INFO] Risposta combinata: {combined_answer}")
-    
-    #all_contexts = []
-    #for item in sub_answers_sorted:
-        #all_contexts.extend(item.get("contexts", []))
 
     all_refs = []
-    seen = set()
+    seen_keys = {}
     for item in sub_answers_sorted:
         for r in item.get("references", []) or []:
             key = (r.get("url"), r.get("title"), r.get("section"))
-            if key in seen:
-                continue
-            seen.add(key)
-            all_refs.append(r)
+            if key in seen_keys:
+                existing_ref = seen_keys[key]
+                for idx in r.get("indices", []):
+                    if idx not in existing_ref["indices"]:
+                        existing_ref["indices"].append(idx)
+            else:
+                new_ref = {
+                    "url": r.get("url"),
+                    "title": r.get("title"),
+                    "section": r.get("section"),
+                    "indices": r.get("indices", []).copy()
+                }
+                seen_keys[key] = new_ref
+                all_refs.append(new_ref)
     
     state["answer"] = combined_answer
-    #state["contexts"] = all_contexts
     state["references"] = all_refs
     return state
 

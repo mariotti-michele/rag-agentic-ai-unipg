@@ -19,11 +19,10 @@ def _title_from_url(url: str) -> str:
         return url
 
 
-def build_references(docs: list[dict]) -> list[dict]:
-    refs = []
-    seen = set()
+def build_references(docs: list[dict], used_source_indices: list[int]) -> list[dict]:
+    refs_dict = {}
 
-    for d in docs:
+    for idx, d in zip(used_source_indices, docs):
         url = d.get("source_url") or ""
         if not url:
             continue
@@ -52,13 +51,16 @@ def build_references(docs: list[dict]) -> list[dict]:
                 section = ""
 
         key = (url, title, section)
-        if key in seen:
-            continue
-        seen.add(key)
+        if key not in refs_dict:
+            refs_dict[key] = {
+                "url": url,
+                "title": title,
+                "section": section,
+                "indices": []
+            }
+        refs_dict[key]["indices"].append(idx)
 
-        refs.append({"url": url, "title": title, "section": section})
-
-    return refs
+    return list(refs_dict.values())
 
 
 def identify_used_sources(llm, context: str, answer: str) -> list[int]:
@@ -161,9 +163,10 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
         print(f"[DEBUG] Restituisco {len(used_docs)} fonti su {len(docs)} totali") #da commentare
     else:
         used_docs = []
+        used_source_indices = []
         print("[DEBUG] Nessuna fonte da restituire") #da commentare
     
-    references = build_references(used_docs)
+    references = build_references(used_docs, used_source_indices)
     #return answer, [d["text"] for d in docs]
     return answer, references
 
