@@ -102,9 +102,9 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     if not docs:
         return "Non presente nei documenti", []
     context = build_context(docs)
-    #print("\n[DEBUG] ===== CONTEXT PASSATO ALL'LLM =====")
-    #print(context)
-    #print("[DEBUG] ===== FINE CONTEXT =====\n")
+    print("\n[DEBUG] ===== CONTEXT PASSATO ALL'LLM =====")
+    print(context)
+    print("[DEBUG] ===== FINE CONTEXT =====\n")
     prompt_template = RAG_PROMPT
     if classification_mode == "orario":
         prompt_template = TIMETABLE_PROMPT
