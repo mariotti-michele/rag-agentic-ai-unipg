@@ -172,13 +172,26 @@ def evaluate_variant(rag_graph, embedding_model, vectorstores, corpus, bm25, nlp
                 initial_delay=2.0,
                 backoff_factor=2.0
             )
+
+            # Normalizza subito dopo il ritorno dal grafo
+            ctxs_clean = []
+            for c in (ctxs or []):
+                if isinstance(c, str):
+                    ctxs_clean.append(c)
+                elif hasattr(c, "page_content"):       # LangChain Document
+                    ctxs_clean.append(c.page_content)
+                elif isinstance(c, dict):
+                    ctxs_clean.append(c.get("page_content", str(c)))
+                else:
+                    ctxs_clean.append(str(c))
+
             answers.append(response)
-            retrieved_contexts.append(ctxs)
+            retrieved_contexts.append(ctxs_clean or [""])
             errors.append("")  # Nessun errore
         except Exception as e:
             print(f"Errore permanente durante la domanda '{q}': {e}")
             answers.append("")
-            retrieved_contexts.append([])
+            retrieved_contexts.append([""])
             errors.append(str(e))
 
     dataset = Dataset.from_dict({
