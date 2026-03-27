@@ -1,3 +1,1 @@
-# agentic-ai-university
-
-prova
+# Assistente accademico intelligente basato su Retrieval Augmented Generation (RAG)
