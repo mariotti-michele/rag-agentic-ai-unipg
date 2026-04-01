@@ -33,217 +33,206 @@ Sei un classificatore di query accademiche.
 
 Devi scegliere una sola categoria tra:
 - "semplice"
-- "orario"
-- "calendario esami"
-- "calendario lauree"
-- "insegnamenti"
 - "rag"
 
-Rispondi SOLO con una di queste 6 parole.
+Rispondi SOLO con una di queste 2 parole.
 
 Regole:
 - Se la domanda contiene solo saluti, convenevoli o curiosità non universitarie (es. "ciao", "buongiorno", "come stai", "grazie", "che tempo fa", "chi sei"), rispondi esattamente: "semplice"
-- Se la domanda riguarda esclusivamente l'orario delle lezioni, rispondi esattamente: "orario"
-- Se la domanda riguarda esclusivamente il calendario degli appelli di esame o le date degli appelli di esame (NON delle sessioni di laurea o del calendario delle festività), rispondi esattamente: "calendario esami"
-- Se la domanda riguarda esclusivamente il calendario degli sessioni di laurea (NON degli appelli di esame o del calendario delle festività), rispondi: "calendario lauree"
-- Se la domanda riguarda esclusivamente informazioni sugli insegnamenti previsti, come numero di cfu, semestre di svolgimento o elenco degli insegnamenti, rispondi esattamente: "insegnamenti"
-- In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, corsi, lezioni, orari, esami, tesi, lauree, tirocini, regolamenti, o informazioni accademiche, rispondi: "rag"
+- In TUTTI gli altri casi, anche se la domanda è breve ma riguarda università, orientamento, corsi, regolamenti, procedure amministrative o qualsiasi informazione accademica, rispondi: "rag"
 
 Domanda: {question}
 Categoria:""",
 )
 
 
-simple_prompt_template = """Sei un assistente accademico specializzato nel rispondere a domande riguardanti:
-- il corso di laurea magistrale in ingegneria informatica e robotica: regolamento didattico, offerta formativa, orari delle lezioni, calendari degli appelli di esame, calendari delle sessioni di laurea, informazioni sugli insegnamenti.
-- informazioni generali sull'università: procedure per tirocini, immatricolazioni, informazioni sulle agevolazioni delle tasse universitarie, servizi per gli studenti, scadenze amministrative, erasmus, regolamento appelli straordinari, accesso ai laboratori didattici, tutorati.
-
+simple_prompt_template = """Sei un assistente accademico specializzato nel rispondere a domande riguardanti l'orientamento universitario.
 Ti è stata fatta una domanda generica, rispondi in modo breve, gentile e diretto.
 
 Domanda: {question}
 Risposta:"""
 
 
-timetable_prompt_template = """Sei un assistente specializzato nella gestione degli orari dei corsi
-del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
+# timetable_prompt_template = """Sei un assistente specializzato nella gestione degli orari dei corsi
+# del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
 
-Hai nella tua conoscenza le tabelle degli orari delle lezioni in formato JSON strutturato con questa forma:
+# Hai nella tua conoscenza le tabelle degli orari delle lezioni in formato JSON strutturato con questa forma:
 
-{{
-  "corso_di_laurea": "...",
-  "anno_accademico": "...",
-  "anno": "...",
-  "semestre": "...",
-  "periodo": "...",
-  "orario": {{
-    "Giorno": {{
-      "OraInizio-OraFine": [[
-        {{ "corso": "...", "aula": "...", "curriculum": "..."}}
-      ]]
-    }}
-  }}
-}}
+# {{
+#   "corso_di_laurea": "...",
+#   "anno_accademico": "...",
+#   "anno": "...",
+#   "semestre": "...",
+#   "periodo": "...",
+#   "orario": {{
+#     "Giorno": {{
+#       "OraInizio-OraFine": [[
+#         {{ "corso": "...", "aula": "...", "curriculum": "..."}}
+#       ]]
+#     }}
+#   }}
+# }}
 
-Rispondi alle domande relative a giorni, orari, corsi e aule in base ai dati forniti.
+# Rispondi alle domande relative a giorni, orari, corsi e aule in base ai dati forniti.
 
-Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
-Se non trovi riferimenti, rispondi esattamente: "Non presente nei documenti".
+# Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
+# Se non trovi riferimenti, rispondi esattamente: "Non presente nei documenti".
 
-Domanda: {question}
+# Domanda: {question}
 
-Contesto:
-{context}
+# Contesto:
+# {context}
 
-Risposta:"""
+# Risposta:"""
 
-TIMETABLE_PROMPT = PromptTemplate(
-    input_variables=["context", "question"],
-    template=timetable_prompt_template,
-)
-
-
-exam_calendar_prompt_template = """Sei un assistente specializzato nella gestione degli appelli di esame degli insegnamenti
-del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
-
-Hai nella tua conoscenza un JSON strutturato con questa forma:
-
-{{
-  "universita": "nome università",
-  "corso_di_laurea": "nome corso di laurea",
-  "anno_accademico": "XXXX-XXXX",
-  "calendario_appelli": {{
-    "I_ANNO": {{
-      "I_SEMESTRE": [[
-        {{
-          "insegnamento": "Nome Insegnamento",
-          "date": {{
-            "2025": {{ "dicembre": [[...]] }},
-            "2026": {{ "gennaio": [[...]], ...}}
-          }},
-          "commissione": [["Professore A", "Professore B", ...]]
-        }},
-        ...
-    }}
-    ...
-}}
-
-Nota: gli appelli di aprile sono straordinari, dovrai sempre specificarlo nelle risposte.
-
-Rispondi in base ai dati forniti.
-
-Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
-Se non trovi riferimenti, come ad esempio il nome dell'insegnamento di cui si vogliono ottenere le date degli appelli di esame, rispondi esattamente: "Non presente nei documenti".
-
-Domanda: {question}
-
-Contesto:
-{context}
-
-Risposta:"""
-
-EXAM_CALENDAR_PROMPT = PromptTemplate(
-    input_variables=["context", "question"],
-    template=exam_calendar_prompt_template,
-)
+# TIMETABLE_PROMPT = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=timetable_prompt_template,
+# )
 
 
+# exam_calendar_prompt_template = """Sei un assistente specializzato nella gestione degli appelli di esame degli insegnamenti
+# del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
 
-modules_prompt_template = """Sei un assistente specializzato per rispondere a domande sugli insegnamenti previsti del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
+# Hai nella tua conoscenza un JSON strutturato con questa forma:
 
-Hai nella tua conoscenza, oltre ad estratti di documenti, hai anche dei JSON strutturati con questa forma:
+# {{
+#   "universita": "nome università",
+#   "corso_di_laurea": "nome corso di laurea",
+#   "anno_accademico": "XXXX-XXXX",
+#   "calendario_appelli": {{
+#     "I_ANNO": {{
+#       "I_SEMESTRE": [[
+#         {{
+#           "insegnamento": "Nome Insegnamento",
+#           "date": {{
+#             "2025": {{ "dicembre": [[...]] }},
+#             "2026": {{ "gennaio": [[...]], ...}}
+#           }},
+#           "commissione": [["Professore A", "Professore B", ...]]
+#         }},
+#         ...
+#     }}
+#     ...
+# }}
 
-{{
-  "curriculum": "<nome del curriculum>",
-  "ciclo": "<anno di attivazione del ciclo>",
-  "anni": {{
-    "<anno accademico>": {{
-      "totale_cfu": <numero>,
-      "insegnamenti": [[
-        {{
-          "attivita_formativa": "<tipo attività formativa>",
-          "ambito_disciplinare": "<ambito disciplinare> (opzionale)",
-          "denominazione": "<nome dell'insegnamento>",
-          "SSD": "<codice SSD>",
-          "CFU": <numero>,
-          "modalita_verifica": "<tipologia di verifica>",
-          "semestre": "<I | II>"
-        }}
-      ]]
-    }}
-  }}
-}}
+# Nota: gli appelli di aprile sono straordinari, dovrai sempre specificarlo nelle risposte.
 
+# Rispondi in base ai dati forniti.
 
-Nota: in alcuni casi gli insegnamenti possono essere a scelta e raggruppati, esempio:
-{{
-    "attivita_formativa": "Affine",
-    "denominazione": "Uno tra i seguenti insegnamenti: Data Science for Health Systems | Deep Learning and Robot Perception",
-    "SSD": "ING-INF/07 | ING-INF/04",
-    "CFU": 6,
-    "modalita_verifica": "esame",
-    "semestre": "II | I"
-}}
+# Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
+# Se non trovi riferimenti, come ad esempio il nome dell'insegnamento di cui si vogliono ottenere le date degli appelli di esame, rispondi esattamente: "Non presente nei documenti".
 
-Rispondi in base ai dati forniti.
+# Domanda: {question}
 
-Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
-Se non trovi riferimenti, rispondi esattamente: "Non presente nei documenti".
+# Contesto:
+# {context}
 
-Domanda: {question}
+# Risposta:"""
 
-Contesto:
-{context}
-
-Risposta:"""
+# EXAM_CALENDAR_PROMPT = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=exam_calendar_prompt_template,
+# )
 
 
-MODULES_PROMPT = PromptTemplate(
-    input_variables=["context", "question"],
-    template=modules_prompt_template,
-)
+
+# modules_prompt_template = """Sei un assistente specializzato per rispondere a domande sugli insegnamenti previsti del Corso di Laurea Magistrale in Ingegneria Informatica e Robotica.
+
+# Hai nella tua conoscenza, oltre ad estratti di documenti, hai anche dei JSON strutturati con questa forma:
+
+# {{
+#   "curriculum": "<nome del curriculum>",
+#   "ciclo": "<anno di attivazione del ciclo>",
+#   "anni": {{
+#     "<anno accademico>": {{
+#       "totale_cfu": <numero>,
+#       "insegnamenti": [[
+#         {{
+#           "attivita_formativa": "<tipo attività formativa>",
+#           "ambito_disciplinare": "<ambito disciplinare> (opzionale)",
+#           "denominazione": "<nome dell'insegnamento>",
+#           "SSD": "<codice SSD>",
+#           "CFU": <numero>,
+#           "modalita_verifica": "<tipologia di verifica>",
+#           "semestre": "<I | II>"
+#         }}
+#       ]]
+#     }}
+#   }}
+# }}
 
 
-graduation_calendar_prompt_template = """Sei un assistente specializzato nella gestione delle sessioni di laurea.
+# Nota: in alcuni casi gli insegnamenti possono essere a scelta e raggruppati, esempio:
+# {{
+#     "attivita_formativa": "Affine",
+#     "denominazione": "Uno tra i seguenti insegnamenti: Data Science for Health Systems | Deep Learning and Robot Perception",
+#     "SSD": "ING-INF/07 | ING-INF/04",
+#     "CFU": 6,
+#     "modalita_verifica": "esame",
+#     "semestre": "II | I"
+# }}
 
-Hai nella tua conoscenza un JSON strutturato con questa forma:
-{{
-  "consiglio": "<nome consiglio di corso di laurea>",
-  "anno_accademico": "<XXXX-XXXX>, ovvero l'anno accademico delle sessioni di laurea riportate in seguito",
-  "corsi_di_laurea": [[
-    {{
-      "nome": "<nome corso di laurea>",
-      "classe": "<classe>"
-    }},
-    ...
-  ]],
-  "sessioni": [[
-    {{
-      "sessione": "<nome sessione>",
-      "domanda_esame_e_consegna_titolo_tesi": "<data>",
-      "consegna_tesi": "<data>",
-      "discussione_tesi": "<data>"
-    }},
-    ...
-  ]]
-}}
-I corsi riportati nello stesso json condividono le stesse sessioni di laurea.
+# Rispondi in base ai dati forniti.
 
-Rispondi in base ai dati forniti.
+# Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
+# Se non trovi riferimenti, rispondi esattamente: "Non presente nei documenti".
 
-Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
-Se non trovi riferimenti, rispondi esattamente: "Non presente nei documenti".
+# Domanda: {question}
 
-Domanda: {question}
+# Contesto:
+# {context}
 
-Contesto:
-{context}
+# Risposta:"""
 
-Risposta:"""
 
-GRADUATION_CALENDAR_PROMPT = PromptTemplate(
-    input_variables=["context", "question"],
-    template=graduation_calendar_prompt_template,
-)
+# MODULES_PROMPT = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=modules_prompt_template,
+# )
+
+
+# graduation_calendar_prompt_template = """Sei un assistente specializzato nella gestione delle sessioni di laurea.
+
+# Hai nella tua conoscenza un JSON strutturato con questa forma:
+# {{
+#   "consiglio": "<nome consiglio di corso di laurea>",
+#   "anno_accademico": "<XXXX-XXXX>, ovvero l'anno accademico delle sessioni di laurea riportate in seguito",
+#   "corsi_di_laurea": [[
+#     {{
+#       "nome": "<nome corso di laurea>",
+#       "classe": "<classe>"
+#     }},
+#     ...
+#   ]],
+#   "sessioni": [[
+#     {{
+#       "sessione": "<nome sessione>",
+#       "domanda_esame_e_consegna_titolo_tesi": "<data>",
+#       "consegna_tesi": "<data>",
+#       "discussione_tesi": "<data>"
+#     }},
+#     ...
+#   ]]
+# }}
+# I corsi riportati nello stesso json condividono le stesse sessioni di laurea.
+
+# Rispondi in base ai dati forniti.
+
+# Usa SOLO il contesto fornito, senza aggiungere informazioni esterne.
+# Se non trovi riferimenti, rispondi esattamente: "Non presente nei documenti".
+
+# Domanda: {question}
+
+# Contesto:
+# {context}
+
+# Risposta:"""
+
+# GRADUATION_CALENDAR_PROMPT = PromptTemplate(
+#     input_variables=["context", "question"],
+#     template=graduation_calendar_prompt_template,
+# )
 
 
 query_rewrite_prompt_template = """Sei un assistente che RISCRIVE la domanda dell'utente per renderla autonoma.

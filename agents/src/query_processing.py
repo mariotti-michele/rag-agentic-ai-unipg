@@ -37,18 +37,21 @@ def build_references(docs: list[dict], used_source_indices: list[int]) -> list[d
                 title = doc_id
         
         if url == "manual":
-            if d.get("collection") == "ing_info_mag_orari":
-                title = "Orari lezioni"
-                url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/orario-lezioni"
-                section = ""
-            elif d.get("collection") == "ing_info_mag_calendario_esami" or d.get("collection") == "ing_info_calendario_lauree":
-                title = "Calendario esami e lauree"
-                url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/calendario-di-esami-e-lauree"
-                section = ""
-            elif d.get("collection") == "ing_info_mag_regolamenti_didattici_tabelle" or d.get("collection") == "ing_info_mag_regolamenti_didattici":
-                title = "Regolamento didattico"
-                url = "https://www.unipg.it/didattica/corsi-di-laurea-e-laurea-magistrale/archivio/offerta-formativa-2025-26?view=elenco&idcorso=8643&annoregolamento=2025&tab=ART"
-                section = ""
+            # if d.get("collection") == "ing_info_mag_orari":
+            #     title = "Orari lezioni"
+            #     url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/orario-lezioni"
+            #     section = ""
+            # elif d.get("collection") == "ing_info_mag_calendario_esami" or d.get("collection") == "ing_info_calendario_lauree":
+            #     title = "Calendario esami e lauree"
+            #     url = "https://ing.unipg.it/didattica/studiare-nei-nostri-corsi/calendario-di-esami-e-lauree"
+            #     section = ""
+            # elif d.get("collection") == "ing_info_mag_regolamenti_didattici_tabelle" or d.get("collection") == "ing_info_mag_regolamenti_didattici":
+            #     title = "Regolamento didattico"
+            #     url = "https://www.unipg.it/didattica/corsi-di-laurea-e-laurea-magistrale/archivio/offerta-formativa-2025-26?view=elenco&idcorso=8643&annoregolamento=2025&tab=ART"
+            #     section = ""
+            title = "File non presente nel sito, caricato manualmente"
+            url = "https://www.unipg.it"
+            section = ""
 
         key = (url, title, section)
         if key not in refs_dict:
@@ -146,14 +149,14 @@ def process_query(docs: list, query: str, llm, classification_mode, memory_conte
     print(context) #da commentare
     print("[DEBUG] ===== FINE CONTEXT =====\n") #da commentare
     prompt_template = RAG_PROMPT
-    if classification_mode == "orario":
-        prompt_template = TIMETABLE_PROMPT
-    elif classification_mode == "calendario esami":
-        prompt_template = EXAM_CALENDAR_PROMPT
-    elif classification_mode == "insegnamenti":
-        prompt_template = MODULES_PROMPT
-    elif classification_mode == "calendario lauree":
-        prompt_template = GRADUATION_CALENDAR_PROMPT
+    # if classification_mode == "orario":
+    #     prompt_template = TIMETABLE_PROMPT
+    # elif classification_mode == "calendario esami":
+    #     prompt_template = EXAM_CALENDAR_PROMPT
+    # elif classification_mode == "insegnamenti":
+    #     prompt_template = MODULES_PROMPT
+    # elif classification_mode == "calendario lauree":
+    #     prompt_template = GRADUATION_CALENDAR_PROMPT
     answer = get_llm_answer(context, query, llm, prompt_template, memory_context)
 
     used_source_indices = identify_used_sources(llm, context, answer)
@@ -181,18 +184,18 @@ def classify_query(llm, query: str) -> str:
         if "semplice" in classification:
             print("[INFO] Query classificata come semplice.")
             return "semplice"
-        elif "orario" in classification:
-            print("[INFO] Query classificata come orario.")
-            return "orario"
-        elif "calendario esami" in classification:
-            print("[INFO] Query classificata come calendario esami.")
-            return "calendario esami"
-        elif "insegnamenti" in classification:
-            print("[INFO] Query classificata come insegnamenti.")
-            return "insegnamenti"
-        elif "calendario lauree" in classification:
-            print("[INFO] Query classificata come calendario lauree.")
-            return "calendario lauree"
+        # elif "orario" in classification:
+        #     print("[INFO] Query classificata come orario.")
+        #     return "orario"
+        # elif "calendario esami" in classification:
+        #     print("[INFO] Query classificata come calendario esami.")
+        #     return "calendario esami"
+        # elif "insegnamenti" in classification:
+        #     print("[INFO] Query classificata come insegnamenti.")
+        #     return "insegnamenti"
+        # elif "calendario lauree" in classification:
+        #     print("[INFO] Query classificata come calendario lauree.")
+        #     return "calendario lauree"
         else:
             return "rag"
     except Exception as e:

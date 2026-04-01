@@ -137,8 +137,8 @@ def dense_search(query: str, embedding_model, embedding_model_name: str, vectors
         query = "query: " + query
 
     collection_filter_value = None
-    if classification_mode != "rag":
-        collection_filter_value = collection_filter(classification_mode)
+    # if classification_mode != "rag":
+    #     collection_filter_value = collection_filter(classification_mode)
 
     vec = embedding_model.embed_query(query)
     hits = []

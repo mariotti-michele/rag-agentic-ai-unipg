@@ -1,0 +1,3 @@
+COLLECTION_NAMES=orientamento
+
+il resto tutto uguale

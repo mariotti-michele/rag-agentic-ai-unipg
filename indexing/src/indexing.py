@@ -217,31 +217,31 @@ if __name__ == "__main__":
     LINKS_FILE = Path(__file__).resolve().parent / "links.txt"
 
     asyncio.run(main())
-    indexing_json_collection(
-        collection_name="ing_info_mag_calendario_esami",
-        json_files=["tab-calendario-esami.json"],
-        description_prefix="Calendario appelli Ingegneria Informatica e Robotica 2025-26"
-    )
+    # indexing_json_collection(
+    #     collection_name="ing_info_mag_calendario_esami",
+    #     json_files=["tab-calendario-esami.json"],
+    #     description_prefix="Calendario appelli Ingegneria Informatica e Robotica 2025-26"
+    # )
 
-    indexing_json_collection(
-        collection_name="ing_info_mag_regolamenti_didattici_tabelle",
-        json_files=[
-            "tab-regolamento-data-science.json",
-            "tab-regolamento-data-science-2024.json",
-            "tab-regolamento-robotics.json",
-            "tab-regolamento-robotics-2024.json",
-        ],
-        description_prefix="Regolamento didattico"
-    )
+    # indexing_json_collection(
+    #     collection_name="ing_info_mag_regolamenti_didattici_tabelle",
+    #     json_files=[
+    #         "tab-regolamento-data-science.json",
+    #         "tab-regolamento-data-science-2024.json",
+    #         "tab-regolamento-robotics.json",
+    #         "tab-regolamento-robotics-2024.json",
+    #     ],
+    #     description_prefix="Regolamento didattico"
+    # )
 
-    indexing_json_collection(
-        collection_name="ing_info_mag_orari",
-        json_files=["tab-orari-1-anno.json", "tab-orari-2-anno.json"],
-        description_prefix="Orari lezioni"
-    )
+    # indexing_json_collection(
+    #     collection_name="ing_info_mag_orari",
+    #     json_files=["tab-orari-1-anno.json", "tab-orari-2-anno.json"],
+    #     description_prefix="Orari lezioni"
+    # )
 
-    indexing_json_collection(
-        collection_name="ing_info_calendario_lauree",
-        json_files=["tab-calendario-lauree.json"],
-        description_prefix="Calendario lauree"
-    )
+    # indexing_json_collection(
+    #     collection_name="ing_info_calendario_lauree",
+    #     json_files=["tab-calendario-lauree.json"],
+    #     description_prefix="Calendario lauree"
+    # )
