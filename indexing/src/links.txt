@@ -1,2 +1,2 @@
 # orientamento
-https://www.unipg.it/chi-sei/studente-futuro --depth 3
+https://www.unipg.it/chi-sei/studente-futuro --depth 3 --no-pdf
