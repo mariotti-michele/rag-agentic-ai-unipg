@@ -175,7 +175,7 @@ Il RAG base (Naive RAG) presenta dei limiti in caso di query ambigue, dipendenti
 
 <div align="center">
 
-<img src="img/flusso-rag-verticale.jpg" alt="Diagramma del flusso RAG verticale" width="400"/>
+<img src="img/flusso-rag-verticale.jpg" alt="Diagramma del flusso RAG verticale" width="600"/>
 
 *Grafo di stati della pipeline RAG*
 
