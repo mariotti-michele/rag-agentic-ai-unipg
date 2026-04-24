@@ -2,7 +2,7 @@
 
 > **Progettazione e Sviluppo di un Assistente Accademico Intelligente basato su Retrieval-Augmented Generation**
 >
-> Tesi Magistrale — Corso di Laurea in Ingegneria Informatica e Robotica, UniPG (A.A. 2024/2025)
+> Tesi Magistrale — Corso di Laurea in Ingegneria Informatica e Robotica, UniPG (A.A. 2024/2025) —
 > Candidato: Michele Mariotti | Relatore: Prof. Fabrizio Montecchiani
 
 ---
@@ -175,7 +175,7 @@ Il RAG base (Naive RAG) presenta dei limiti in caso di query ambigue, dipendenti
 
 <div align="center">
 
-![Diagramma del flusso RAG](img/flusso-rag-verticale.jpg)
+<img src="flusso-rag-verticale.jpg" alt="Diagramma del flusso RAG verticale" width="400"/>
 
 *Grafo di stati della pipeline RAG*
 
